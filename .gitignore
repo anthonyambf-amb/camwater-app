@@ -1,6 +1,8 @@
 # Données locales (la prod utilise un disque persistant Render)
 data/*.db
 data/*.db-journal
+data/*.db-shm
+data/*.db-wal
 data/objectifs/*.xlsx
 data/objectifs/*.xls
 
