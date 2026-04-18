@@ -1,5 +1,18 @@
 # Render.com — Configuration automatique du service CAMWATER
-# Quand vous connectez ce dépôt à Render, ce fichier est lu et tout est configuré.
+#
+# ⚠️ Plan Free : pas de disque persistant. Les données sont stockées dans
+# /tmp (stockage éphémère) et SONT EFFACÉES à chaque redéploiement/restart.
+# Utilisation : démonstration, tests, validation UX.
+#
+# Pour activer la persistance des données en production, 2 options :
+#
+#   Option A — Upgrader ce service en plan "Starter" (7 $/mois) et décommenter
+#              le bloc `disk` ci-dessous. Persistance immédiate, zéro migration.
+#
+#   Option B — Rester en plan Free et brancher une base Postgres externe
+#              gratuite (Neon, Supabase…) via DATABASE_URL. Nécessite une
+#              migration du code SQLite → Postgres.
+#
 services:
   - type: web
     name: camwater
@@ -14,10 +27,12 @@ services:
       - key: CAMWATER_DEBUG
         value: "0"
       - key: CAMWATER_DATA_DIR
-        value: /var/data
+        value: /tmp/camwater   # ⚠️ éphémère — remettre /var/data avec le disque
       - key: CAMWATER_SECRET_KEY
-        generateValue: true   # Render génère une clé aléatoire forte
-    disk:
-      name: camwater-data
-      mountPath: /var/data
-      sizeGB: 1
+        generateValue: true    # Render génère une clé aléatoire forte
+
+    # ─── DISQUE PERSISTANT (décommenter après upgrade Starter) ───
+    # disk:
+    #   name: camwater-data
+    #   mountPath: /var/data
+    #   sizeGB: 1
