@@ -1,0 +1,23 @@
+# Render.com — Configuration automatique du service CAMWATER
+# Quand vous connectez ce dépôt à Render, ce fichier est lu et tout est configuré.
+services:
+  - type: web
+    name: camwater
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app:app --bind 0.0.0.0:$PORT --workers 2 --timeout 120
+    autoDeploy: true
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.9
+      - key: CAMWATER_DEBUG
+        value: "0"
+      - key: CAMWATER_DATA_DIR
+        value: /var/data
+      - key: CAMWATER_SECRET_KEY
+        generateValue: true   # Render génère une clé aléatoire forte
+    disk:
+      name: camwater-data
+      mountPath: /var/data
+      sizeGB: 1

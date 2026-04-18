@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CAMWATER - Saisie Recette du Jour</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <div class="rj-container">
+        <header class="rj-header">
+            <div>
+                <h1>Recette du Jour</h1>
+                <p class="rj-subtitle">CAMWATER - Exercice 2026</p>
+            </div>
+            <a href="/recettes-jour" class="rj-logout-btn">Changer</a>
+        </header>
+
+        <!-- Barre d'informations -->
+        <div class="rj-info-bar">
+            <div class="rj-info-item">
+                <span class="rj-info-label">Agence / Centre</span>
+                <span class="rj-info-value" id="rj-agence-nom">--</span>
+            </div>
+            <div class="rj-info-item">
+                <span class="rj-info-label">Direction R&eacute;gionale</span>
+                <span class="rj-info-value" id="rj-dr-code">--</span>
+            </div>
+            <div class="rj-info-item">
+                <span class="rj-info-label">Date</span>
+                <span class="rj-info-value" id="rj-date-display">--</span>
+            </div>
+            <div class="rj-info-item">
+                <span class="rj-info-label">Cumul Recettes Enregistr&eacute;es</span>
+                <span class="rj-info-value rj-cumul-highlight" id="rj-cumul-total">--</span>
+            </div>
+        </div>
+
+        <!-- Statut verrouillage -->
+        <div class="rj-lock-status" id="rj-lock-status" style="display:none;">
+            Donn&eacute;es enregistr&eacute;es et verrouill&eacute;es pour cette date.
+        </div>
+
+        <!-- Formulaire de saisie -->
+        <div class="rj-form" id="rj-form">
+            <h2>Encaissements du jour (FCFA)</h2>
+            <table class="rj-table">
+                <thead><tr><th>Cat&eacute;gorie</th><th>Montant (FCFA)</th></tr></thead>
+                <tbody>
+                    <tr><td>Caisses commerciales</td><td><input type="number" id="rj-caisse" class="rj-input" step="1" placeholder="0"></td></tr>
+                    <tr><td>Ch&egrave;ques</td><td><input type="number" id="rj-cheques" class="rj-input" step="1" placeholder="0"></td></tr>
+                    <tr><td>Hors-sites</td><td><input type="number" id="rj-hors-sites" class="rj-input" step="1" placeholder="0"></td></tr>
+                    <tr><td>Virements</td><td><input type="number" id="rj-virements" class="rj-input" step="1" placeholder="0"></td></tr>
+                    <tr><td>Paiements &eacute;lectroniques</td><td><input type="number" id="rj-elec" class="rj-input" step="1" placeholder="0"></td></tr>
+                </tbody>
+                <tfoot>
+                    <tr class="total-row"><td><strong>TOTAL</strong></td><td id="rj-total" class="total-val">0</td></tr>
+                </tfoot>
+            </table>
+
+            <h2>Justificatif</h2>
+            <div class="rj-justif">
+                <div class="rj-field">
+                    <label>Type de pi&egrave;ce</label>
+                    <select id="rj-type-piece">
+                        <option value="">-- S&eacute;lectionner --</option>
+                        <option value="Pi&egrave;ce de caisse">Pi&egrave;ce de caisse</option>
+                        <option value="Bordereau de versement">Bordereau de versement</option>
+                        <option value="Re&ccedil;u">Re&ccedil;u</option>
+                        <option value="Autre">Autre</option>
+                    </select>
+                </div>
+                <div class="rj-field">
+                    <label>Num&eacute;ro de pi&egrave;ce</label>
+                    <input type="text" id="rj-num-piece" placeholder="N&deg; de pi&egrave;ce de caisse">
+                </div>
+                <div class="rj-field">
+                    <label>Convoyeur de fonds</label>
+                    <select id="rj-convoyeur">
+                        <option value="">-- S&eacute;lectionner --</option>
+                        <option value="Cotrava">Cotrava</option>
+                        <option value="Transval">Transval</option>
+                        <option value="Autre">Autre (&agrave; pr&eacute;ciser)</option>
+                    </select>
+                </div>
+                <div class="rj-field" id="rj-convoyeur-autre-wrap" style="display:none;">
+                    <label>Pr&eacute;ciser le convoyeur</label>
+                    <input type="text" id="rj-convoyeur-autre" placeholder="Nom du convoyeur">
+                </div>
+                <div class="rj-field">
+                    <label>Banque de d&eacute;p&ocirc;t des fonds</label>
+                    <select id="rj-banque-depot">
+                        <option value="">-- S&eacute;lectionner --</option>
+                        <option value="BGFI">BGFI</option>
+                        <option value="BICEC">BICEC</option>
+                        <option value="SGC">SGC</option>
+                        <option value="SCB">SCB</option>
+                        <option value="NFC Bank">NFC Bank</option>
+                        <option value="CAMPOST">CAMPOST</option>
+                        <option value="Express Union">Express Union</option>
+                        <option value="Orange Money">Orange Money</option>
+                    </select>
+                </div>
+            </div>
+
+            <button class="btn-definitif rj-submit" id="rj-submit-btn" onclick="submitRecetteJour()">
+                Enregistrer la recette du jour
+            </button>
+            <div class="save-status" id="rj-save-status" style="margin-top:12px;"></div>
+        </div>
+    </div>
+
+    <script src="/static/js/recettes_jour.js"></script>
+</body>
+</html>

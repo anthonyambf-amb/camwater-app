@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CAMWATER - Saisie Branchements du Jour</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <div class="rj-container">
+        <header class="rj-header">
+            <div>
+                <h1>Branchements du Jour</h1>
+                <p class="rj-subtitle">CAMWATER - Exercice 2026</p>
+            </div>
+            <a href="/branchements-jour" class="rj-logout-btn">Changer</a>
+        </header>
+
+        <!-- Barre d'informations -->
+        <div class="rj-info-bar">
+            <div class="rj-info-item">
+                <span class="rj-info-label">Agence / Centre</span>
+                <span class="rj-info-value" id="bj-agence-nom">--</span>
+            </div>
+            <div class="rj-info-item">
+                <span class="rj-info-label">Direction R&eacute;gionale</span>
+                <span class="rj-info-value" id="bj-dr-code">--</span>
+            </div>
+            <div class="rj-info-item">
+                <span class="rj-info-label">Date</span>
+                <span class="rj-info-value" id="bj-date-display">--</span>
+            </div>
+            <div class="rj-info-item">
+                <span class="rj-info-label">Cumul Branchements Enregistr&eacute;s</span>
+                <span class="rj-info-value bj-cumul-highlight" id="bj-cumul-total">--</span>
+            </div>
+        </div>
+
+        <!-- Statut verrouillage -->
+        <div class="rj-lock-status" id="bj-lock-status" style="display:none;">
+            Donn&eacute;es enregistr&eacute;es et verrouill&eacute;es pour cette date.
+        </div>
+
+        <!-- Formulaire de saisie -->
+        <div class="rj-form" id="bj-form">
+            <h2>Branchements du jour</h2>
+            <table class="rj-table">
+                <thead><tr><th>Cat&eacute;gorie</th><th>Nombre &empty;40</th><th>Nombre &empty;20</th><th>Total</th></tr></thead>
+                <tbody>
+                    <tr>
+                        <td>Vendus</td>
+                        <td><input type="number" id="bj-vendus-d40" class="bj-input" data-cat="vendus" data-diam="d40" step="1" min="0" placeholder="0"></td>
+                        <td><input type="number" id="bj-vendus-d20" class="bj-input" data-cat="vendus" data-diam="d20" step="1" min="0" placeholder="0"></td>
+                        <td class="bj-cat-total" id="bj-vendus-total"><strong>0</strong></td>
+                    </tr>
+                    <tr>
+                        <td>Ex&eacute;cut&eacute;s</td>
+                        <td><input type="number" id="bj-executes-d40" class="bj-input" data-cat="executes" data-diam="d40" step="1" min="0" placeholder="0"></td>
+                        <td><input type="number" id="bj-executes-d20" class="bj-input" data-cat="executes" data-diam="d20" step="1" min="0" placeholder="0"></td>
+                        <td class="bj-cat-total" id="bj-executes-total"><strong>0</strong></td>
+                    </tr>
+                    <tr>
+                        <td>PEC en machine</td>
+                        <td><input type="number" id="bj-pec-d40" class="bj-input" data-cat="pec" data-diam="d40" step="1" min="0" placeholder="0"></td>
+                        <td><input type="number" id="bj-pec-d20" class="bj-input" data-cat="pec" data-diam="d20" step="1" min="0" placeholder="0"></td>
+                        <td class="bj-cat-total" id="bj-pec-total"><strong>0</strong></td>
+                    </tr>
+                    <tr>
+                        <td>Moratoire</td>
+                        <td><input type="number" id="bj-moratoire-d40" class="bj-input" data-cat="moratoire" data-diam="d40" step="1" min="0" placeholder="0"></td>
+                        <td><input type="number" id="bj-moratoire-d20" class="bj-input" data-cat="moratoire" data-diam="d20" step="1" min="0" placeholder="0"></td>
+                        <td class="bj-cat-total" id="bj-moratoire-total"><strong>0</strong></td>
+                    </tr>
+                </tbody>
+                <tfoot>
+                    <tr class="total-row"><td><strong>TOTAL</strong></td><td id="bj-total-d40" class="total-val">0</td><td id="bj-total-d20" class="total-val">0</td><td id="bj-total" class="total-val">0</td></tr>
+                </tfoot>
+            </table>
+
+            <h2>Observations</h2>
+            <div class="rj-justif">
+                <div class="rj-field">
+                    <label>Observations / Commentaires</label>
+                    <textarea id="bj-observations" rows="3" style="width:100%;padding:10px 12px;border:1px solid #d0d5dd;border-radius:6px;font-size:0.9rem;font-family:inherit;resize:vertical;" placeholder="Observations &eacute;ventuelles..."></textarea>
+                </div>
+            </div>
+
+            <button class="btn-definitif rj-submit" id="bj-submit-btn" onclick="submitBranchementJour()">
+                Enregistrer les branchements du jour
+            </button>
+            <div class="save-status" id="bj-save-status" style="margin-top:12px;"></div>
+        </div>
+    </div>
+
+    <script src="/static/js/branchements_jour.js"></script>
+</body>
+</html>

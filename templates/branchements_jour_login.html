@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CAMWATER - Branchements du Jour</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body class="index-body">
+    <div class="index-container">
+        <div class="index-header">
+            <h1>CAMWATER</h1>
+            <p class="index-subtitle">Suivi Quotidien des Branchements</p>
+            <span class="index-exercice">Exercice 2026</span>
+        </div>
+
+        <div class="login-section">
+            <h2>Identification - Branchements du jour</h2>
+            <div class="login-form">
+                <div class="login-field">
+                    <label>Matricule</label>
+                    <input type="text" id="bj-matricule" placeholder="Ex : 1A23" maxlength="4"
+                           style="text-transform:uppercase;letter-spacing:3px;font-size:1.1rem;text-align:center;"
+                           autocomplete="off">
+                    <span style="display:block;font-size:0.72rem;color:#999;margin-top:4px;">
+                        Format : 1 chiffre, 1 lettre, 2 chiffres
+                    </span>
+                </div>
+                <div class="login-field">
+                    <label>Direction R&eacute;gionale</label>
+                    <select id="bj-dr" onchange="updateAgences()">
+                        <option value="">-- S&eacute;lectionner la DR --</option>
+                        {% for code in structure_keys %}
+                        <option value="{{ code }}">{{ code }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="login-field">
+                    <label>Agence / Centre</label>
+                    <select id="bj-agence" disabled>
+                        <option value="">-- S&eacute;lectionner d'abord la DR --</option>
+                    </select>
+                </div>
+                <div class="login-field">
+                    <label>Date de saisie</label>
+                    <input type="date" id="bj-date">
+                </div>
+                <div class="login-error" id="bj-error"></div>
+                <button class="btn-login" onclick="doBjLogin()">Acc&eacute;der &agrave; la saisie</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        var AGENCES = {{ agences | tojson }};
+
+        // Date du jour par d&eacute;faut
+        document.getElementById('bj-date').valueAsDate = new Date();
+
+        // --- Menu d&eacute;roulant conditionn&eacute; DR &rarr; Agences ---
+        function updateAgences() {
+            var dr = document.getElementById('bj-dr').value;
+            var sel = document.getElementById('bj-agence');
+            sel.innerHTML = '';
+            if (!dr) {
+                sel.innerHTML = '<option value="">-- S\u00e9lectionner d\'abord la DR --</option>';
+                sel.disabled = true;
+                return;
+            }
+            sel.disabled = false;
+            sel.innerHTML = '<option value="">-- S\u00e9lectionner l\'agence --</option>';
+            AGENCES.filter(function(a) { return a.dr_code === dr; }).forEach(function(a) {
+                var opt = document.createElement('option');
+                opt.value = a.id;
+                opt.textContent = a.nom;
+                sel.appendChild(opt);
+            });
+        }
+
+        // --- Matricule : forcer majuscule + validation ---
+        var matInput = document.getElementById('bj-matricule');
+        matInput.addEventListener('input', function() {
+            this.value = this.value.toUpperCase().replace(/[^0-9A-Z]/g, '');
+        });
+
+        function validateMatricule(val) {
+            return /^[0-9][A-Z][0-9][0-9]$/.test(val);
+        }
+
+        // --- Restaurer depuis localStorage ---
+        var saved = JSON.parse(localStorage.getItem('camwater_bj_op') || '{}');
+        if (saved.matricule) matInput.value = saved.matricule;
+        if (saved.dr_code) {
+            document.getElementById('bj-dr').value = saved.dr_code;
+            updateAgences();
+            if (saved.agence_id) {
+                setTimeout(function() {
+                    document.getElementById('bj-agence').value = saved.agence_id;
+                }, 50);
+            }
+        }
+
+        // --- Login ---
+        function doBjLogin() {
+            var matricule = matInput.value.trim().toUpperCase();
+            var dr_code = document.getElementById('bj-dr').value;
+            var agence_id = document.getElementById('bj-agence').value;
+            var date_saisie = document.getElementById('bj-date').value;
+            var errEl = document.getElementById('bj-error');
+
+            if (!matricule || !agence_id || !date_saisie) {
+                errEl.textContent = 'Tous les champs sont requis.';
+                return;
+            }
+            if (!validateMatricule(matricule)) {
+                errEl.textContent = 'Matricule invalide. Format requis : 1 chiffre, 1 lettre, 2 chiffres (ex: 1A23)';
+                return;
+            }
+            errEl.textContent = '';
+
+            fetch('/api/branchements-jour/login', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ matricule: matricule, agence_id: parseInt(agence_id), date_saisie: date_saisie })
+            })
+            .then(function(r) { return r.json().then(function(d) { return { ok: r.ok, data: d }; }); })
+            .then(function(result) {
+                if (!result.ok) { errEl.textContent = result.data.error; return; }
+                localStorage.setItem('camwater_bj_op', JSON.stringify({
+                    matricule: matricule,
+                    agence_id: agence_id,
+                    agence_nom: result.data.agence_nom,
+                    dr_code: result.data.dr_code,
+                    date_saisie: date_saisie
+                }));
+                window.location.href = '/branchements-jour/saisie';
+            });
+        }
+
+        // Enter key
+        matInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') document.getElementById('bj-dr').focus();
+        });
+    </script>
+</body>
+</html>

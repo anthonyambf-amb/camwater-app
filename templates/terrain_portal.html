@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CAMWATER - Espace Agent Terrain</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <style>
+        .terrain-badge {
+            display:inline-block;background:#e8f0fa;color:#0056b3;
+            padding:4px 12px;border-radius:14px;font-size:0.8rem;margin-top:6px;
+        }
+        .terrain-op-info {
+            background:rgba(255,255,255,0.08);padding:10px 14px;border-radius:8px;
+            font-size:0.85rem;color:#fff;margin-bottom:10px;
+        }
+        .terrain-logout {
+            display:inline-block;margin-top:22px;color:#fff;
+            background:rgba(231,76,60,0.8);padding:8px 18px;border-radius:8px;
+            text-decoration:none;font-size:0.85rem;
+        }
+        .terrain-logout:hover { background:#c0392b; }
+    </style>
+</head>
+<body class="index-body">
+    <div class="index-container">
+        <div class="index-header">
+            <h1>CAMWATER</h1>
+            <p class="index-subtitle">Espace Agent Terrain &mdash; Saisie &agrave; distance</p>
+            <span class="terrain-badge">&#128205; Acc&egrave;s limit&eacute; &agrave; votre agence</span>
+        </div>
+
+        {% if op_recettes.matricule or op_branchements.matricule %}
+        <div class="terrain-op-info">
+            {% if op_recettes.matricule %}
+            <div>&#128176; Recettes &mdash; Agence <strong>{{ op_recettes.agence_nom }}</strong>
+                ({{ op_recettes.dr_code }}) &mdash; Mat. <strong>{{ op_recettes.matricule }}</strong>
+                &mdash; Date : {{ op_recettes.date_saisie }}</div>
+            {% endif %}
+            {% if op_branchements.matricule %}
+            <div>&#128736; Branchements &mdash; Agence <strong>{{ op_branchements.agence_nom }}</strong>
+                ({{ op_branchements.dr_code }}) &mdash; Mat. <strong>{{ op_branchements.matricule }}</strong>
+                &mdash; Date : {{ op_branchements.date_saisie }}</div>
+            {% endif %}
+        </div>
+        {% endif %}
+
+        <p style="color:rgba(255,255,255,0.75);text-align:center;margin-bottom:18px;font-size:0.9rem;">
+            S&eacute;lectionnez l'op&eacute;ration &agrave; saisir
+        </p>
+
+        <div class="cards-row">
+            <a href="/recettes-jour" class="index-card card-recettes">
+                <div class="card-icon">&#128176;</div>
+                <h2>Recettes du Jour</h2>
+                <p>Saisie quotidienne des recettes encaiss&eacute;es &agrave; votre agence</p>
+            </a>
+            <a href="/branchements-jour" class="index-card card-branchements">
+                <div class="card-icon">&#128736;</div>
+                <h2>Branchements du Jour</h2>
+                <p>Saisie quotidienne des branchements r&eacute;alis&eacute;s &agrave; votre agence</p>
+            </a>
+        </div>
+
+        <div style="text-align:center;margin-top:18px;">
+            <a href="/terrain/logout" class="terrain-logout">&#128682; Se d&eacute;connecter</a>
+        </div>
+
+        <p style="color:rgba(255,255,255,0.55);text-align:center;margin-top:22px;font-size:0.78rem;">
+            Vos saisies sont transmises en temps r&eacute;el au niveau central.<br>
+            En cas de probl&egrave;me, contactez votre superviseur &agrave; la DR.
+        </p>
+    </div>
+</body>
+</html>

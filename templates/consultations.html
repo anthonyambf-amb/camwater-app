@@ -1,0 +1,889 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CAMWATER - Consultations</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <div class="app-layout">
+        <!-- Sidebar -->
+        <nav class="sidebar">
+            <div class="sidebar-header">
+                <h2>CAMWATER</h2>
+                <span class="sidebar-date" id="sidebar-date"></span>
+                <span class="exercice">Exercice 2026</span>
+            </div>
+            <a href="/" class="nav-btn accueil-btn">&#127968; Accueil</a>
+
+            <div class="nav-section">CONSULTATIONS</div>
+            <a href="/consultations/impayes_detail" class="nav-link {% if fenetre=='impayes_detail' %}active{% endif %}">Portefeuille Impay&eacute;s</a>
+            <a href="/consultations/reporting" class="nav-link {% if fenetre=='reporting' %}active{% endif %}">Donn&eacute;es du Reporting</a>
+            <a href="/consultations/fiscal" class="nav-link {% if fenetre=='fiscal' %}active{% endif %}">Donn&eacute;es Fiscales</a>
+            <a href="/consultations/budget" class="nav-link {% if fenetre=='budget' %}active{% endif %}">Donn&eacute;es du Budget</a>
+
+            <div class="nav-section">OBJECTIFS &amp; R&Eacute;ALISATIONS</div>
+            <a href="/consultations/objectifs" class="nav-link {% if fenetre=='objectifs' %}active{% endif %}">Objectifs Commerciaux</a>
+            <a href="/consultations/realisations" class="nav-link {% if fenetre=='realisations' %}active{% endif %}">R&eacute;alisations N-1</a>
+
+            <div class="nav-section">PAIEMENTS</div>
+            <a href="/paiements-electroniques" class="nav-link">Paiements &Eacute;lectroniques</a>
+
+            <a href="/dashboard" class="nav-btn dashboard-btn" style="margin-top:auto;">&#9889; Tableau de bord Commercial</a>
+        </nav>
+
+        <!-- Main content -->
+        <main class="main-content">
+
+            {% if fenetre == 'impayes_detail' %}
+            <!-- ════════ PORTEFEUILLE IMPAYÉS PAR DR ════════ -->
+            <h1>Portefeuille des Impay&eacute;s par DR</h1>
+            <p class="form-desc">D&eacute;tail des impay&eacute;s par Direction R&eacute;gionale, ventil&eacute; par agence</p>
+            <div class="consult-filters" style="margin-bottom:1rem;display:flex;gap:1rem;align-items:center;">
+                <label>Mois</label>
+                <select id="imp-det-mois" onchange="loadImpayesDetail()">
+                    {% for m in mois %}
+                    <option value="{{ loop.index }}">{{ m }}</option>
+                    {% endfor %}
+                </select>
+                <label>DR</label>
+                <select id="imp-det-dr" onchange="loadImpayesDetail()">
+                    <option value="">Toutes les DR</option>
+                    {% for dr_code in structure_keys %}
+                    <option value="{{ dr_code }}">{{ dr_code }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <table class="data-table" id="imp-det-table">
+                <thead><tr><th>DR</th><th>Agence</th><th style="text-align:right">Actifs (FCFA)</th><th style="text-align:right">R&eacute;sili&eacute;s (FCFA)</th><th style="text-align:right">Total (FCFA)</th></tr></thead>
+                <tbody id="imp-det-body"><tr><td colspan="5" style="text-align:center;color:#888;">Chargement...</td></tr></tbody>
+                <tfoot><tr class="total-row"><td colspan="2"><strong>TOTAL</strong></td><td id="imp-det-actifs-total" style="text-align:right">0</td><td id="imp-det-resilies-total" style="text-align:right">0</td><td id="imp-det-grand-total" style="text-align:right"><strong>0</strong></td></tr></tfoot>
+            </table>
+
+            {% elif fenetre == 'reporting' %}
+            <!-- ════════ DONNÉES DU REPORTING ════════ -->
+            <h1>Donn&eacute;es du Reporting</h1>
+            <p class="form-desc">Synth&egrave;se des donn&eacute;es commerciales class&eacute;es par Direction R&eacute;gionale &mdash; fid&egrave;le au mod&egrave;le de consolidation</p>
+            <div class="consult-filters" style="margin-bottom:1rem;display:flex;gap:1rem;align-items:center;flex-wrap:wrap;">
+                <label>P&eacute;riode du</label>
+                <select id="rep-mois-debut" onchange="loadReporting()">
+                    {% for m in mois %}
+                    <option value="{{ loop.index }}" {% if loop.index == 1 %}selected{% endif %}>{{ m }}</option>
+                    {% endfor %}
+                </select>
+                <label>au</label>
+                <select id="rep-mois-fin" onchange="loadReporting()">
+                    {% for m in mois %}
+                    <option value="{{ loop.index }}" {% if loop.index == 3 %}selected{% endif %}>{{ m }}</option>
+                    {% endfor %}
+                </select>
+                <button type="button" class="btn-save" onclick="downloadReporting()" title="T&eacute;l&eacute;charger Excel">&#128190; Export Excel</button>
+            </div>
+
+            <h3 style="margin-top:1.5rem;color:#1F4E79;">&#128202; PRODUCTION &amp; CHIFFRE D'AFFAIRES</h3>
+            <div style="overflow-x:auto;">
+            <table class="data-table" id="rep-ca-table">
+                <thead>
+                    <tr>
+                        <th>DR</th>
+                        <th style="text-align:right">Volumes (m&sup3;)</th>
+                        <th style="text-align:right;background:#D6E4F0">(A) CA VE</th>
+                        <th style="text-align:right">dont CA auto</th>
+                        <th style="text-align:right">dont CA sp&eacute;c.</th>
+                        <th style="text-align:right">dont Locations</th>
+                        <th style="text-align:right;background:#D6E4F0">(B) Trvx Remb.</th>
+                        <th style="text-align:right">Brchts neufs</th>
+                        <th style="text-align:right">P&eacute;nalit&eacute;s</th>
+                        <th style="text-align:right">D&eacute;vis ext.</th>
+                        <th style="text-align:right">Autres trvx</th>
+                        <th style="text-align:right">Fraudes</th>
+                        <th style="text-align:right;background:#BDD7EE">CA Global (A+B)</th>
+                    </tr>
+                </thead>
+                <tbody id="rep-ca-body"><tr><td colspan="13" style="text-align:center;color:#888;">Chargement...</td></tr></tbody>
+            </table>
+            </div>
+
+            <h3 style="margin-top:1.5rem;color:#1F4E79;">&#128178; ENCAISSEMENTS</h3>
+            <div style="overflow-x:auto;">
+            <table class="data-table" id="rep-enc-table">
+                <thead>
+                    <tr>
+                        <th>DR</th>
+                        <th style="text-align:right">Caisse Cciale</th>
+                        <th style="text-align:right">Caisse ADM</th>
+                        <th style="text-align:right">Banques</th>
+                        <th style="text-align:right;background:#D6E4F0">Total VE</th>
+                        <th style="text-align:right">Travaux</th>
+                        <th style="text-align:right">ASC</th>
+                        <th style="text-align:right;background:#BDD7EE">TOTAL Enc.</th>
+                    </tr>
+                </thead>
+                <tbody id="rep-enc-body"><tr><td colspan="8" style="text-align:center;color:#888;">Chargement...</td></tr></tbody>
+            </table>
+            </div>
+
+            <h3 style="margin-top:1.5rem;color:#1F4E79;">&#127919; TAUX, RECOUVREMENT &amp; IMPAY&Eacute;S</h3>
+            <div style="overflow-x:auto;">
+            <table class="data-table" id="rep-taux-table">
+                <thead>
+                    <tr>
+                        <th>DR</th>
+                        <th style="text-align:right">Taux Enc. VE</th>
+                        <th style="text-align:right">Taux Enc. Trvx</th>
+                        <th style="text-align:right;background:#D6E4F0">Taux Enc. Global</th>
+                        <th style="text-align:right">Facturation EF</th>
+                        <th style="text-align:right">Recouvrement EF</th>
+                        <th style="text-align:right;background:#D6E4F0">Taux Recouv. EF</th>
+                        <th style="text-align:right">Impay&eacute;s Actifs</th>
+                        <th style="text-align:right">Impay&eacute;s R&eacute;sili&eacute;s</th>
+                        <th style="text-align:right;background:#BDD7EE">Total Impay&eacute;s</th>
+                    </tr>
+                </thead>
+                <tbody id="rep-taux-body"><tr><td colspan="10" style="text-align:center;color:#888;">Chargement...</td></tr></tbody>
+            </table>
+            </div>
+
+            {% elif fenetre == 'fiscal' %}
+            <!-- ════════ DONNÉES FISCALES ════════ -->
+            <h1>Donn&eacute;es Fiscales</h1>
+            <p class="form-desc">Ventilation fiscale par Direction R&eacute;gionale &mdash; base de calcul HT/TTC, tranche sociale, CA administrations</p>
+            <div class="consult-filters" style="margin-bottom:1rem;display:flex;gap:1rem;align-items:center;flex-wrap:wrap;">
+                <label>P&eacute;riode du</label>
+                <select id="fisc-mois-debut" onchange="loadFiscal()">
+                    {% for m in mois %}
+                    <option value="{{ loop.index }}" {% if loop.index == 1 %}selected{% endif %}>{{ m }}</option>
+                    {% endfor %}
+                </select>
+                <label>au</label>
+                <select id="fisc-mois-fin" onchange="loadFiscal()">
+                    {% for m in mois %}
+                    <option value="{{ loop.index }}" {% if loop.index == 3 %}selected{% endif %}>{{ m }}</option>
+                    {% endfor %}
+                </select>
+                <button type="button" class="btn-save" onclick="downloadFiscal()" title="T&eacute;l&eacute;charger Excel">&#128190; Export Excel</button>
+            </div>
+
+            <div style="overflow-x:auto;">
+            <table class="data-table" id="fisc-table">
+                <thead>
+                    <tr>
+                        <th>DR</th>
+                        <th style="text-align:right">Tranche sociale</th>
+                        <th style="text-align:right">CA ADM HT</th>
+                        <th style="text-align:right">CA Hors ADM HT</th>
+                        <th style="text-align:right;background:#D6E4F0">CA Total TTC</th>
+                        <th style="text-align:right">Travaux TTC</th>
+                        <th style="text-align:right;background:#BDD7EE">Total TTC</th>
+                    </tr>
+                </thead>
+                <tbody id="fisc-body"><tr><td colspan="7" style="text-align:center;color:#888;">Chargement...</td></tr></tbody>
+            </table>
+            </div>
+
+            {% elif fenetre == 'budget' %}
+            <!-- ════════ DONNÉES DU BUDGET ════════ -->
+            <h1>Donn&eacute;es du Budget</h1>
+            <p class="form-desc">R&eacute;partition budg&eacute;taire par Direction R&eacute;gionale (r&eacute;alisations) vs objectifs proratis&eacute;s sur la p&eacute;riode</p>
+            <div class="consult-filters" style="margin-bottom:1rem;display:flex;gap:1rem;align-items:center;flex-wrap:wrap;">
+                <label>P&eacute;riode du</label>
+                <select id="bud-mois-debut" onchange="loadBudget()">
+                    {% for m in mois %}
+                    <option value="{{ loop.index }}" {% if loop.index == 1 %}selected{% endif %}>{{ m }}</option>
+                    {% endfor %}
+                </select>
+                <label>au</label>
+                <select id="bud-mois-fin" onchange="loadBudget()">
+                    {% for m in mois %}
+                    <option value="{{ loop.index }}" {% if loop.index == 3 %}selected{% endif %}>{{ m }}</option>
+                    {% endfor %}
+                </select>
+                <label>Vue</label>
+                <select id="bud-vue" onchange="loadBudget()">
+                    <option value="realisations" selected>R&eacute;alisations par DR</option>
+                    <option value="objectifs">Objectifs vs R&eacute;alisations</option>
+                </select>
+                <button type="button" class="btn-save" onclick="downloadBudget()" title="T&eacute;l&eacute;charger Excel">&#128190; Export Excel</button>
+            </div>
+
+            <!-- Vue réalisations par DR -->
+            <div id="bud-vue-realisations">
+            <h3 style="margin-top:0.5rem;color:#1F4E79;">&#128181; R&Eacute;ALISATIONS BUDGET PAR DR</h3>
+            <div style="overflow-x:auto;">
+            <table class="data-table" id="bud-table">
+                <thead>
+                    <tr>
+                        <th>DR</th>
+                        <th style="text-align:right;background:#D6E4F0">Vente eau TTC</th>
+                        <th style="text-align:right">Trvx Remb.</th>
+                        <th style="text-align:right">Recouv. Impay&eacute;s</th>
+                        <th style="text-align:right">Fraude</th>
+                        <th style="text-align:right">Sinistre</th>
+                        <th style="text-align:right">P&eacute;nalit&eacute;s</th>
+                        <th style="text-align:right">Locations TTC</th>
+                        <th style="text-align:right">Branchements</th>
+                        <th style="text-align:right;background:#BDD7EE">TOTAL</th>
+                    </tr>
+                </thead>
+                <tbody id="bud-body"><tr><td colspan="10" style="text-align:center;color:#888;">Chargement...</td></tr></tbody>
+            </table>
+            </div>
+            </div>
+
+            <!-- Vue objectifs vs réalisations -->
+            <div id="bud-vue-objectifs" style="display:none;">
+            <h3 style="margin-top:0.5rem;color:#1F4E79;">&#127919; OBJECTIFS vs R&Eacute;ALISATIONS (NATIONAL)</h3>
+            <div style="overflow-x:auto;">
+            <table class="data-table" id="bud-obj-table">
+                <thead>
+                    <tr>
+                        <th>Rubrique</th>
+                        <th style="text-align:right">Objectif proratis&eacute;</th>
+                        <th style="text-align:right">R&eacute;alisation</th>
+                        <th style="text-align:right">&Eacute;cart</th>
+                        <th style="text-align:right">Taux (%)</th>
+                    </tr>
+                </thead>
+                <tbody id="bud-obj-body"><tr><td colspan="5" style="text-align:center;color:#888;">Chargement...</td></tr></tbody>
+            </table>
+            </div>
+            <p style="color:#888;font-size:0.8rem;margin-top:0.5rem;">Objectifs annuels proratis&eacute;s : <span id="bud-nb-mois">-</span> mois sur 12</p>
+            </div>
+
+            {% elif fenetre == 'objectifs' %}
+            <!-- ════════ OBJECTIFS COMMERCIAUX ════════ -->
+            <h1>Objectifs Commerciaux</h1>
+            <p class="form-desc">Charger un fichier Excel contenant les objectifs par site et rubrique.<br>
+                Format : colonnes <strong>scope_type</strong> (national/dr/agence) | <strong>scope_id</strong> (code DR ou nom agence) | <strong>rubrique</strong> | <strong>valeur</strong></p>
+
+            <div class="upload-zone">
+                <form id="upload-obj-form" enctype="multipart/form-data">
+                    <div class="upload-field">
+                        <label>Fichier Excel (.xlsx)</label>
+                        <input type="file" id="obj-file" accept=".xlsx,.xls">
+                    </div>
+                    <div class="upload-field">
+                        <label>Exercice</label>
+                        <select id="obj-exercice" onchange="loadObjectifs()">
+                            <option value="2026" selected>2026</option>
+                            <option value="2025">2025</option>
+                        </select>
+                    </div>
+                    <button type="button" class="btn-save" onclick="uploadObjectifs()">Charger les objectifs</button>
+                    <div class="save-status" id="obj-upload-status"></div>
+                </form>
+            </div>
+
+            <div style="display:flex;align-items:center;gap:1rem;margin-top:2rem;">
+                <h2>Fichiers charg&eacute;s</h2>
+                <button type="button" class="btn-danger-sm" onclick="deleteObjectifs()" title="Supprimer tous les objectifs">&#128465; Effacer tout</button>
+            </div>
+            <table class="data-table" id="fichiers-table">
+                <thead><tr><th>Fichier</th><th>Date</th><th>Exercice</th><th>Lignes import&eacute;es</th><th>Op&eacute;rateur</th></tr></thead>
+                <tbody id="fichiers-body"></tbody>
+            </table>
+
+            <h2 style="margin-top:2rem">Objectifs enregistr&eacute;s</h2>
+            <p style="color:#888;font-size:0.82rem;margin-bottom:0.8rem;">Les objectifs sont &eacute;labor&eacute;s sur une base mensuelle &mdash; les valeurs affich&eacute;es sont identiques pour chaque mois.</p>
+            <table class="data-table" id="obj-table">
+                <thead><tr><th>Scope</th><th>Site</th><th>Rubrique</th><th style="text-align:right">Valeur</th></tr></thead>
+                <tbody id="obj-body"></tbody>
+            </table>
+
+            {% elif fenetre == 'realisations' %}
+            <!-- ════════ RÉALISATIONS N-1 ════════ -->
+            <h1>R&eacute;alisations Ant&eacute;rieures (N-1)</h1>
+            <p class="form-desc">Importez les donn&eacute;es de r&eacute;alisations pass&eacute;es (N-1) par agence et par DR.<br>
+                Format Excel : <strong>DR | Agence | Rubrique | P&eacute;riode | Valeur</strong><br>
+                <span style="color:#888;">Rubriques : Volumes, CA Vente Eau, CA Travaux, Encaissements, Impay&eacute;s Actifs, Impay&eacute;s R&eacute;sili&eacute;s, Branchements Vendus, Branchements Ex&eacute;cut&eacute;s</span></p>
+
+            <div class="upload-zone">
+                <form id="upload-real-form" enctype="multipart/form-data">
+                    <div class="upload-field">
+                        <label>Fichier Excel (.xlsx)</label>
+                        <input type="file" id="real-file" accept=".xlsx,.xls">
+                    </div>
+                    <div class="upload-field">
+                        <label>Exercice de r&eacute;f&eacute;rence</label>
+                        <select id="real-exercice" onchange="loadRealisations(1)">
+                            <option value="2025" selected>2025 (N-1)</option>
+                            <option value="2024">2024</option>
+                        </select>
+                    </div>
+                    <button type="button" class="btn-save" onclick="uploadRealisations()">Charger les r&eacute;alisations</button>
+                    <div class="save-status" id="real-upload-status"></div>
+                </form>
+            </div>
+
+            <div style="display:flex;align-items:center;gap:1rem;margin-top:2rem;">
+                <h2>R&eacute;alisations enregistr&eacute;es</h2>
+                <button type="button" class="btn-danger-sm" onclick="deleteRealisations()" title="Supprimer toutes les r&eacute;alisations">&#128465; Effacer tout</button>
+            </div>
+
+            <!-- Filtres de consultation -->
+            <div class="consult-filters" style="margin-bottom:1rem;display:flex;gap:1rem;align-items:center;flex-wrap:wrap;">
+                <label>Rubrique</label>
+                <select id="real-rubrique-filter" onchange="loadRealisations(1)">
+                    <option value="">Toutes</option>
+                    <option value="CA Vente Eau">Chiffre d'Affaires VE</option>
+                    <option value="CA Travaux">CA Travaux</option>
+                    <option value="Encaissements">Encaissements</option>
+                    <option value="Volumes">Volumes</option>
+                    <option value="Impay&eacute;s Actifs">Impay&eacute;s Actifs</option>
+                    <option value="Impay&eacute;s R&eacute;sili&eacute;s">Impay&eacute;s R&eacute;sili&eacute;s</option>
+                    <option value="Branchements Vendus">Branchements Vendus</option>
+                    <option value="Branchements Ex&eacute;cut&eacute;s">Branchements Ex&eacute;cut&eacute;s</option>
+                </select>
+                <label>DR</label>
+                <select id="real-dr-filter" onchange="loadRealisations(1)">
+                    <option value="">Toutes les DR</option>
+                    {% for dr_code in structure_keys %}
+                    <option value="{{ dr_code }}">{{ dr_code }}</option>
+                    {% endfor %}
+                </select>
+                <label>Mois</label>
+                <select id="real-mois-filter" onchange="loadRealisations(1)">
+                    <option value="">Tous</option>
+                    {% for m in mois %}
+                    <option value="{{ loop.index }}">{{ m }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div id="real-summary" style="margin-bottom:1rem;"></div>
+            <table class="data-table" id="real-table">
+                <thead><tr><th>DR</th><th>Agence</th><th>Rubrique</th><th>Mois</th><th style="text-align:right">Valeur</th></tr></thead>
+                <tbody id="real-body"><tr><td colspan="5" style="text-align:center;color:#888;">Chargement...</td></tr></tbody>
+            </table>
+            <div id="real-pagination"></div>
+
+            {% else %}
+            <h1>Consultations</h1>
+            <p class="form-desc">S&eacute;lectionnez une rubrique dans le volet de gauche.</p>
+            {% endif %}
+
+        </main>
+    </div>
+
+    <script>
+        // --- Date du jour ---
+        (function() {
+            var now = new Date();
+            var jours = ['Dimanche','Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi'];
+            var moisNoms = ['Janvier','F\u00e9vrier','Mars','Avril','Mai','Juin','Juillet','Ao\u00fbt','Septembre','Octobre','Novembre','D\u00e9cembre'];
+            var el = document.getElementById('sidebar-date');
+            if (el) el.textContent = jours[now.getDay()] + ' ' + now.getDate() + ' ' + moisNoms[now.getMonth()] + ' ' + now.getFullYear();
+        })();
+
+        function fmt(n) {
+            if (!n && n !== 0) return '-';
+            return Math.round(n).toLocaleString('fr-FR');
+        }
+
+        const FENETRE = '{{ fenetre }}';
+
+        var MOIS_NOMS = ['Janvier','F\u00e9vrier','Mars','Avril','Mai','Juin','Juillet','Ao\u00fbt','Septembre','Octobre','Novembre','D\u00e9cembre'];
+
+        // Auto-load
+        if (FENETRE === 'impayes_detail') loadImpayesDetail();
+        else if (FENETRE === 'reporting') loadReporting();
+        else if (FENETRE === 'fiscal') loadFiscal();
+        else if (FENETRE === 'budget') loadBudget();
+        else if (FENETRE === 'objectifs') loadObjectifs();
+        else if (FENETRE === 'realisations') loadRealisations();
+
+        // ═══════ Impay&eacute;s D&eacute;tail par DR ═══════
+        function loadImpayesDetail() {
+            var mois = document.getElementById('imp-det-mois') ? document.getElementById('imp-det-mois').value : 1;
+            var dr = document.getElementById('imp-det-dr') ? document.getElementById('imp-det-dr').value : '';
+            fetch('/api/consultation/impayes-detail?mois=' + mois + '&dr=' + encodeURIComponent(dr))
+                .then(function(r) { return r.json(); })
+                .then(function(data) {
+                    var tb = document.getElementById('imp-det-body');
+                    tb.innerHTML = '';
+                    var tActifs = 0, tResilies = 0, tTotal = 0;
+                    if (!data.lignes || data.lignes.length === 0) {
+                        tb.innerHTML = '<tr><td colspan="5" style="text-align:center;color:#888;">Aucune donn\u00e9e pour cette p\u00e9riode</td></tr>';
+                    } else {
+                        var lastDr = '';
+                        data.lignes.forEach(function(l) {
+                            var drCell = l.dr_code;
+                            if (l.dr_code === lastDr) drCell = '';
+                            else lastDr = l.dr_code;
+                            var actifs = l.actifs || 0;
+                            var resilies = l.resilies || 0;
+                            var tot = actifs + resilies;
+                            if (!l.is_subtotal) { tActifs += actifs; tResilies += resilies; tTotal += tot; }
+                            var cls = l.is_subtotal ? ' class="subtotal-row"' : '';
+                            tb.innerHTML += '<tr' + cls + '><td>' + (l.is_subtotal ? '<strong>'+drCell+'</strong>' : drCell) + '</td><td>' + (l.is_subtotal ? '<strong>'+l.agence+'</strong>' : l.agence) + '</td><td style="text-align:right">' + fmt(actifs) + '</td><td style="text-align:right">' + fmt(resilies) + '</td><td style="text-align:right">' + (l.is_subtotal ? '<strong>'+fmt(tot)+'</strong>' : fmt(tot)) + '</td></tr>';
+                        });
+                    }
+                    document.getElementById('imp-det-actifs-total').innerHTML = '<strong>' + fmt(tActifs) + '</strong>';
+                    document.getElementById('imp-det-resilies-total').innerHTML = '<strong>' + fmt(tResilies) + '</strong>';
+                    document.getElementById('imp-det-grand-total').innerHTML = '<strong>' + fmt(tTotal) + '</strong>';
+                });
+        }
+
+        function fmtPct(n) {
+            if (n === null || n === undefined) return '-';
+            return (n * 100).toFixed(1) + '%';
+        }
+
+        // Helper pour rendre une cellule TR par DR (avec ligne nationale en gras)
+        function trClass(dr_code) {
+            return dr_code === 'ENSEMBLE CAMWATER' ? ' class="total-row"' : '';
+        }
+        function wrapStrong(val, dr_code) {
+            if (dr_code === 'ENSEMBLE CAMWATER') return '<strong>' + val + '</strong>';
+            return val;
+        }
+
+        // ═══════ Reporting ═══════
+        function getRepParams() {
+            return {
+                mois_debut: document.getElementById('rep-mois-debut') ? document.getElementById('rep-mois-debut').value : 1,
+                mois_fin: document.getElementById('rep-mois-fin') ? document.getElementById('rep-mois-fin').value : 3
+            };
+        }
+        function loadReporting() {
+            var p = getRepParams();
+            fetch('/api/consultation/reporting?mois_debut=' + p.mois_debut + '&mois_fin=' + p.mois_fin)
+                .then(function(r) { return r.json(); })
+                .then(function(data) {
+                    var rows = (data.drs || []).concat([data.national]);
+                    renderReportingCA(rows);
+                    renderReportingEnc(rows);
+                    renderReportingTaux(rows);
+                });
+        }
+
+        function renderReportingCA(rows) {
+            var tb = document.getElementById('rep-ca-body');
+            if (!tb) return;
+            var html = '';
+            rows.forEach(function(d) {
+                var k = d.dr_code;
+                var cls = trClass(k);
+                html += '<tr' + cls + '>' +
+                    '<td>' + wrapStrong(k, k) + '</td>' +
+                    '<td style="text-align:right">' + wrapStrong(fmt(d.total_volumes), k) + '</td>' +
+                    '<td style="text-align:right;background:#F0F6FA">' + wrapStrong(fmt(d.total_ve), k) + '</td>' +
+                    '<td style="text-align:right">' + fmt(d.total_ca_auto) + '</td>' +
+                    '<td style="text-align:right">' + fmt(d.total_ca_spec) + '</td>' +
+                    '<td style="text-align:right">' + fmt(d.total_locations) + '</td>' +
+                    '<td style="text-align:right;background:#F0F6FA">' + wrapStrong(fmt(d.total_trvx_remb), k) + '</td>' +
+                    '<td style="text-align:right">' + fmt(d.brchts_neufs) + '</td>' +
+                    '<td style="text-align:right">' + fmt(d.penalites) + '</td>' +
+                    '<td style="text-align:right">' + fmt(d.devis_ext) + '</td>' +
+                    '<td style="text-align:right">' + fmt(d.autres_trvx) + '</td>' +
+                    '<td style="text-align:right">' + fmt(d.fraudes_trvx) + '</td>' +
+                    '<td style="text-align:right;background:#E6EFF7">' + wrapStrong(fmt(d.ca_global), k) + '</td>' +
+                    '</tr>';
+            });
+            tb.innerHTML = html;
+        }
+
+        function renderReportingEnc(rows) {
+            var tb = document.getElementById('rep-enc-body');
+            if (!tb) return;
+            var html = '';
+            rows.forEach(function(d) {
+                var k = d.dr_code;
+                var cls = trClass(k);
+                html += '<tr' + cls + '>' +
+                    '<td>' + wrapStrong(k, k) + '</td>' +
+                    '<td style="text-align:right">' + fmt(d.enc_cciale) + '</td>' +
+                    '<td style="text-align:right">' + fmt(d.enc_adm_enc) + '</td>' +
+                    '<td style="text-align:right">' + fmt(d.enc_banques) + '</td>' +
+                    '<td style="text-align:right;background:#F0F6FA">' + wrapStrong(fmt(d.enc_vte_eau), k) + '</td>' +
+                    '<td style="text-align:right">' + fmt(d.enc_travaux) + '</td>' +
+                    '<td style="text-align:right">' + fmt(d.enc_asc) + '</td>' +
+                    '<td style="text-align:right;background:#E6EFF7">' + wrapStrong(fmt(d.total_encaissements), k) + '</td>' +
+                    '</tr>';
+            });
+            tb.innerHTML = html;
+        }
+
+        function renderReportingTaux(rows) {
+            var tb = document.getElementById('rep-taux-body');
+            if (!tb) return;
+            var html = '';
+            rows.forEach(function(d) {
+                var k = d.dr_code;
+                var cls = trClass(k);
+                html += '<tr' + cls + '>' +
+                    '<td>' + wrapStrong(k, k) + '</td>' +
+                    '<td style="text-align:right">' + fmtPct(d.taux_enc_ve) + '</td>' +
+                    '<td style="text-align:right">' + fmtPct(d.taux_enc_trvx) + '</td>' +
+                    '<td style="text-align:right;background:#F0F6FA">' + wrapStrong(fmtPct(d.taux_enc_global), k) + '</td>' +
+                    '<td style="text-align:right">' + fmt(d.facturation_ef) + '</td>' +
+                    '<td style="text-align:right">' + fmt(d.recouvrement_ef) + '</td>' +
+                    '<td style="text-align:right;background:#F0F6FA">' + wrapStrong(fmtPct(d.taux_recouvrement_ef), k) + '</td>' +
+                    '<td style="text-align:right">' + fmt(d.impayes_actifs) + '</td>' +
+                    '<td style="text-align:right">' + fmt(d.impayes_resilies) + '</td>' +
+                    '<td style="text-align:right;background:#E6EFF7">' + wrapStrong(fmt(d.impayes_total), k) + '</td>' +
+                    '</tr>';
+            });
+            tb.innerHTML = html;
+        }
+
+        function downloadReporting() {
+            var p = getRepParams();
+            window.open('/api/export/reporting?mois_debut=' + p.mois_debut + '&mois_fin=' + p.mois_fin + '&site_type=national', '_blank');
+        }
+
+        // ═══════ Fiscal ═══════
+        function getFiscParams() {
+            return {
+                mois_debut: document.getElementById('fisc-mois-debut') ? document.getElementById('fisc-mois-debut').value : 1,
+                mois_fin: document.getElementById('fisc-mois-fin') ? document.getElementById('fisc-mois-fin').value : 3
+            };
+        }
+        function loadFiscal() {
+            var p = getFiscParams();
+            fetch('/api/consultation/fiscal?mois_debut=' + p.mois_debut + '&mois_fin=' + p.mois_fin)
+                .then(function(r) { return r.json(); })
+                .then(function(data) {
+                    var tb = document.getElementById('fisc-body');
+                    if (!tb) return;
+                    var rows = (data.drs || []).concat([data.national]);
+                    var html = '';
+                    rows.forEach(function(d) {
+                        var k = d.dr_code;
+                        var cls = trClass(k);
+                        html += '<tr' + cls + '>' +
+                            '<td>' + wrapStrong(k, k) + '</td>' +
+                            '<td style="text-align:right">' + fmt(d.tranche_sociale) + '</td>' +
+                            '<td style="text-align:right">' + fmt(d.ca_adm_ht) + '</td>' +
+                            '<td style="text-align:right">' + fmt(d.ca_hors_adm_ht) + '</td>' +
+                            '<td style="text-align:right;background:#F0F6FA">' + wrapStrong(fmt(d.ca_total_ttc), k) + '</td>' +
+                            '<td style="text-align:right">' + fmt(d.trvx_ttc) + '</td>' +
+                            '<td style="text-align:right;background:#E6EFF7">' + wrapStrong(fmt(d.total_ttc), k) + '</td>' +
+                            '</tr>';
+                    });
+                    tb.innerHTML = html;
+                });
+        }
+        function downloadFiscal() {
+            var p = getFiscParams();
+            window.open('/api/export/fiscal?mois_debut=' + p.mois_debut + '&mois_fin=' + p.mois_fin + '&site_type=national', '_blank');
+        }
+
+        // ═══════ Budget ═══════
+        function getBudParams() {
+            return {
+                mois_debut: document.getElementById('bud-mois-debut') ? document.getElementById('bud-mois-debut').value : 1,
+                mois_fin: document.getElementById('bud-mois-fin') ? document.getElementById('bud-mois-fin').value : 3,
+                vue: document.getElementById('bud-vue') ? document.getElementById('bud-vue').value : 'realisations'
+            };
+        }
+        function loadBudget() {
+            var p = getBudParams();
+            // Toggle visibilité des vues
+            var vR = document.getElementById('bud-vue-realisations');
+            var vO = document.getElementById('bud-vue-objectifs');
+            if (vR && vO) {
+                vR.style.display = p.vue === 'realisations' ? '' : 'none';
+                vO.style.display = p.vue === 'objectifs' ? '' : 'none';
+            }
+            fetch('/api/consultation/budget?mois_debut=' + p.mois_debut + '&mois_fin=' + p.mois_fin)
+                .then(function(r) { return r.json(); })
+                .then(function(data) {
+                    renderBudgetRealisations(data);
+                    renderBudgetObjectifs(data);
+                });
+        }
+
+        function renderBudgetRealisations(data) {
+            var tb = document.getElementById('bud-body');
+            if (!tb) return;
+            var rows = (data.drs || []).concat([data.national]);
+            var html = '';
+            rows.forEach(function(d) {
+                var k = d.dr_code;
+                var cls = trClass(k);
+                html += '<tr' + cls + '>' +
+                    '<td>' + wrapStrong(k, k) + '</td>' +
+                    '<td style="text-align:right;background:#F0F6FA">' + wrapStrong(fmt(d.vente_eau), k) + '</td>' +
+                    '<td style="text-align:right">' + fmt(d.trvx_remb) + '</td>' +
+                    '<td style="text-align:right">' + fmt(d.recouvrement_impayes) + '</td>' +
+                    '<td style="text-align:right">' + fmt(d.fraude) + '</td>' +
+                    '<td style="text-align:right">' + fmt(d.sinistre) + '</td>' +
+                    '<td style="text-align:right">' + fmt(d.penalites) + '</td>' +
+                    '<td style="text-align:right">' + fmt(d.locations) + '</td>' +
+                    '<td style="text-align:right">' + fmt(d.branchements) + '</td>' +
+                    '<td style="text-align:right;background:#E6EFF7">' + wrapStrong(fmt(d.total), k) + '</td>' +
+                    '</tr>';
+            });
+            tb.innerHTML = html;
+        }
+
+        function renderBudgetObjectifs(data) {
+            var tb = document.getElementById('bud-obj-body');
+            if (!tb) return;
+            var obj = data.objectifs_national || {};
+            var nat = data.national || {};
+            var nbMoisEl = document.getElementById('bud-nb-mois');
+            if (nbMoisEl) nbMoisEl.textContent = data.nb_mois || '-';
+
+            // Mapping rubrique objectifs → réalisation dans le modèle
+            var RUB_MAP = [
+                { label: 'Vente eau TTC', obj_keys: ['Vente eau TTC', 'Vente eau', 'CA Vente Eau'], real: nat.vente_eau },
+                { label: 'Travaux remboursables', obj_keys: ['Travaux remboursables', 'Trvx Remb', 'CA Travaux'], real: nat.trvx_remb },
+                { label: 'Recouvrement impay\u00e9s', obj_keys: ['Recouvrement impay\u00e9s', 'Impay\u00e9s CDE'], real: nat.recouvrement_impayes },
+                { label: 'Fraude', obj_keys: ['Fraude', 'Fraudes'], real: nat.fraude },
+                { label: 'Sinistre', obj_keys: ['Sinistre', 'Sinistres'], real: nat.sinistre },
+                { label: 'P\u00e9nalit\u00e9s', obj_keys: ['P\u00e9nalit\u00e9s', 'Penalites'], real: nat.penalites },
+                { label: 'Locations TTC', obj_keys: ['Locations TTC', 'Locations'], real: nat.locations },
+                { label: 'Branchements', obj_keys: ['Branchements', 'CA Branchements'], real: nat.branchements }
+            ];
+
+            var html = '';
+            var totObj = 0, totReal = 0;
+            RUB_MAP.forEach(function(r) {
+                var o = 0;
+                for (var i = 0; i < r.obj_keys.length; i++) {
+                    if (obj[r.obj_keys[i]]) { o = obj[r.obj_keys[i]]; break; }
+                }
+                var real = r.real || 0;
+                var ecart = real - o;
+                var taux = o > 0 ? (real / o * 100) : 0;
+                totObj += o;
+                totReal += real;
+                var tauxColor = taux >= 100 ? '#27ae60' : (taux >= 75 ? '#f39c12' : '#e74c3c');
+                html += '<tr>' +
+                    '<td>' + r.label + '</td>' +
+                    '<td style="text-align:right">' + fmt(o) + '</td>' +
+                    '<td style="text-align:right">' + fmt(real) + '</td>' +
+                    '<td style="text-align:right;color:' + (ecart >= 0 ? '#27ae60' : '#e74c3c') + '">' + fmt(ecart) + '</td>' +
+                    '<td style="text-align:right;color:' + tauxColor + ';font-weight:600">' + (o > 0 ? taux.toFixed(1) + '%' : '-') + '</td>' +
+                    '</tr>';
+            });
+            // Ligne total
+            var totTaux = totObj > 0 ? (totReal / totObj * 100) : 0;
+            html += '<tr class="total-row">' +
+                '<td><strong>TOTAL</strong></td>' +
+                '<td style="text-align:right"><strong>' + fmt(totObj) + '</strong></td>' +
+                '<td style="text-align:right"><strong>' + fmt(totReal) + '</strong></td>' +
+                '<td style="text-align:right"><strong>' + fmt(totReal - totObj) + '</strong></td>' +
+                '<td style="text-align:right"><strong>' + (totObj > 0 ? totTaux.toFixed(1) + '%' : '-') + '</strong></td>' +
+                '</tr>';
+            tb.innerHTML = html;
+        }
+
+        function downloadBudget() {
+            var p = getBudParams();
+            window.open('/api/export/budget?mois_debut=' + p.mois_debut + '&mois_fin=' + p.mois_fin + '&site_type=national', '_blank');
+        }
+
+        // ═══════ Objectifs Commerciaux ═══════
+        function uploadObjectifs() {
+            var file = document.getElementById('obj-file').files[0];
+            if (!file) { document.getElementById('obj-upload-status').textContent = 'S\u00e9lectionnez un fichier.'; return; }
+            var fd = new FormData();
+            fd.append('file', file);
+            fd.append('exercice', document.getElementById('obj-exercice').value);
+            document.getElementById('obj-upload-status').textContent = 'Chargement en cours...';
+            fetch('/api/objectifs/upload', { method: 'POST', body: fd })
+                .then(function(r) { return r.json(); })
+                .then(function(data) {
+                    if (data.error) {
+                        document.getElementById('obj-upload-status').textContent = 'Erreur: ' + data.error;
+                    } else {
+                        document.getElementById('obj-upload-status').textContent =
+                            data.lignes_importees + ' lignes import\u00e9es depuis ' + data.fichier;
+                        loadObjectifs();
+                    }
+                });
+        }
+
+        function loadObjectifs() {
+            var exEl = document.getElementById('obj-exercice');
+            if (!exEl) return;
+            fetch('/api/objectifs?exercice=' + exEl.value)
+                .then(function(r) { return r.json(); })
+                .then(function(data) {
+                    var fb = document.getElementById('fichiers-body');
+                    if (fb) {
+                        fb.innerHTML = '';
+                        (data.fichiers || []).forEach(function(f) {
+                            fb.innerHTML += '<tr><td>' + f.nom_fichier + '</td><td>' + f.date_upload + '</td><td>' + f.exercice + '</td><td>' + f.nb_lignes_importees + '</td><td>' + (f.operateur_nom || '-') + '</td></tr>';
+                        });
+                        if (!data.fichiers || data.fichiers.length === 0) {
+                            fb.innerHTML = '<tr><td colspan="5" style="text-align:center;color:#888;">Aucun fichier charg\u00e9</td></tr>';
+                        }
+                    }
+                    var ob = document.getElementById('obj-body');
+                    if (ob) {
+                        ob.innerHTML = '';
+                        var seen = {};
+                        var lastScope = '';
+                        (data.objectifs || []).forEach(function(o) {
+                            var key = o.scope_type + '|' + (o.site_label || '') + '|' + o.rubrique;
+                            if (seen[key]) return;
+                            seen[key] = true;
+                            var siteLabel = o.site_label || '-';
+                            var isNational = o.scope_type === 'national' || siteLabel.toLowerCase().indexOf('camwater') !== -1;
+                            var scopeLabel = isNational ? 'National' : (o.scope_type === 'dr' ? 'DR' : o.scope_type);
+                            if (scopeLabel !== lastScope) {
+                                ob.innerHTML += '<tr class="section-header"><td colspan="4">' + (isNational ? 'OBJECTIFS NATIONAUX' : 'OBJECTIFS PAR DR') + '</td></tr>';
+                                lastScope = scopeLabel;
+                            }
+                            ob.innerHTML += '<tr><td>' + scopeLabel + '</td><td><strong>' + siteLabel + '</strong></td><td>' + o.rubrique + '</td><td style="text-align:right">' + fmt(o.valeur) + '</td></tr>';
+                        });
+                        if (Object.keys(seen).length === 0) {
+                            ob.innerHTML = '<tr><td colspan="4" style="text-align:center;color:#888;">Aucun objectif enregistr\u00e9</td></tr>';
+                        }
+                    }
+                });
+        }
+
+        function deleteObjectifs() {
+            if (!confirm('ATTENTION : Cette action supprimera d\u00e9finitivement TOUS les objectifs pour l\'exercice s\u00e9lectionn\u00e9.\n\nConfirmer ?')) return;
+            var exercice = document.getElementById('obj-exercice') ? document.getElementById('obj-exercice').value : 2026;
+            fetch('/api/objectifs/delete?exercice=' + exercice, { method: 'DELETE' })
+                .then(function(r) { return r.json(); })
+                .then(function(data) {
+                    document.getElementById('obj-upload-status').textContent = data.message || 'Objectifs supprim\u00e9s';
+                    loadObjectifs();
+                });
+        }
+
+        // ═══════ R\u00e9alisations Ant\u00e9rieures (N-1) — Optimis\u00e9 5000+ lignes ═══════
+        var realCurrentPage = 1;
+        var realPerPage = 500;
+
+        function uploadRealisations() {
+            var file = document.getElementById('real-file').files[0];
+            if (!file) { document.getElementById('real-upload-status').textContent = 'S\u00e9lectionnez un fichier.'; return; }
+            var fd = new FormData();
+            fd.append('file', file);
+            fd.append('exercice', document.getElementById('real-exercice').value);
+            var statusEl = document.getElementById('real-upload-status');
+            statusEl.textContent = 'Import en cours... (fichiers volumineux : quelques secondes)';
+            statusEl.style.color = '#0056b3';
+            var t0 = Date.now();
+            fetch('/api/realisations/upload', { method: 'POST', body: fd })
+                .then(function(r) { return r.json(); })
+                .then(function(data) {
+                    var elapsed = ((Date.now() - t0) / 1000).toFixed(1);
+                    if (data.error) {
+                        statusEl.textContent = 'Erreur: ' + data.error;
+                        statusEl.style.color = '#e74c3c';
+                    } else {
+                        statusEl.textContent = data.lignes + ' lignes import\u00e9es en ' + elapsed + 's (format ' + (data.format || 'auto') + ')';
+                        statusEl.style.color = '#27ae60';
+                        realCurrentPage = 1;
+                        loadRealisations();
+                    }
+                })
+                .catch(function() {
+                    statusEl.textContent = 'Erreur r\u00e9seau';
+                    statusEl.style.color = '#e74c3c';
+                });
+        }
+
+        function loadRealisations(page) {
+            var exEl = document.getElementById('real-exercice');
+            if (!exEl) return;
+            if (page) realCurrentPage = page;
+            var exercice = exEl.value;
+            var rubrique = document.getElementById('real-rubrique-filter') ? document.getElementById('real-rubrique-filter').value : '';
+            var dr = document.getElementById('real-dr-filter') ? document.getElementById('real-dr-filter').value : '';
+            var moisFilter = document.getElementById('real-mois-filter') ? document.getElementById('real-mois-filter').value : '';
+
+            var url = '/api/realisations?exercice=' + exercice + '&page=' + realCurrentPage + '&per_page=' + realPerPage;
+            if (rubrique) url += '&rubrique=' + encodeURIComponent(rubrique);
+            if (dr) url += '&dr=' + encodeURIComponent(dr);
+            if (moisFilter) url += '&mois=' + moisFilter;
+
+            var tb = document.getElementById('real-body');
+            if (tb) tb.innerHTML = '<tr><td colspan="5" style="text-align:center;color:#888;">Chargement...</td></tr>';
+
+            fetch(url)
+                .then(function(r) { return r.json(); })
+                .then(function(data) {
+                    if (!tb) return;
+                    var lignes = data.lignes || [];
+                    var summary = data.summary || [];
+                    var totalCount = data.total_count || 0;
+                    var totalPages = data.total_pages || 1;
+
+                    // R\u00e9sum\u00e9 (depuis le serveur, couvre toutes les pages)
+                    var summaryHtml = '<div style="display:flex;gap:0.8rem;flex-wrap:wrap;align-items:center;">';
+                    summaryHtml += '<span style="font-size:0.82rem;color:#555;"><strong>' + fmt(totalCount) + '</strong> lignes</span>';
+                    summary.forEach(function(s) {
+                        summaryHtml += '<div style="background:#f0f4f8;padding:5px 12px;border-radius:6px;font-size:0.82rem;">';
+                        summaryHtml += '<strong>' + s.rubrique + '</strong> : ' + fmt(s.total) + ' (' + s.count + ')';
+                        summaryHtml += '</div>';
+                    });
+                    summaryHtml += '</div>';
+                    document.getElementById('real-summary').innerHTML = summaryHtml;
+
+                    if (lignes.length === 0) {
+                        tb.innerHTML = '<tr><td colspan="5" style="text-align:center;color:#888;">Aucune donn\u00e9e</td></tr>';
+                        document.getElementById('real-pagination').innerHTML = '';
+                        return;
+                    }
+
+                    // Rendu rapide : construire tout le HTML en une seule string puis injecter
+                    var parts = [];
+                    var lastDr = '';
+                    for (var i = 0; i < lignes.length; i++) {
+                        var l = lignes[i];
+                        var periodeLabel = '-';
+                        if (l.mois && l.mois >= 1 && l.mois <= 12) {
+                            periodeLabel = MOIS_NOMS[l.mois - 1];
+                        } else if (l.mois === 0 || l.mois === null) {
+                            periodeLabel = 'Annuel';
+                        }
+                        var drCell = (l.dr_code || '-');
+                        if (drCell === lastDr) drCell = '';
+                        else lastDr = drCell;
+                        parts.push('<tr><td>' + drCell + '</td><td>' + (l.agence || '-') + '</td><td>' + l.rubrique + '</td><td>' + periodeLabel + '</td><td style="text-align:right">' + fmt(l.valeur) + '</td></tr>');
+                    }
+                    tb.innerHTML = parts.join('');
+
+                    // Pagination
+                    var pagHtml = '';
+                    if (totalPages > 1) {
+                        pagHtml = '<div style="display:flex;gap:0.5rem;align-items:center;margin-top:0.8rem;flex-wrap:wrap;">';
+                        if (realCurrentPage > 1) {
+                            pagHtml += '<button class="btn-brouillon" onclick="loadRealisations(' + (realCurrentPage - 1) + ')" style="padding:4px 10px;font-size:0.8rem;">&laquo; Pr\u00e9c.</button>';
+                        }
+                        // Afficher les pages proches
+                        var startP = Math.max(1, realCurrentPage - 3);
+                        var endP = Math.min(totalPages, realCurrentPage + 3);
+                        if (startP > 1) pagHtml += '<span style="font-size:0.8rem;color:#888;">1 ...</span>';
+                        for (var p = startP; p <= endP; p++) {
+                            if (p === realCurrentPage) {
+                                pagHtml += '<strong style="padding:4px 8px;background:#0056b3;color:#fff;border-radius:4px;font-size:0.8rem;">' + p + '</strong>';
+                            } else {
+                                pagHtml += '<button class="btn-brouillon" onclick="loadRealisations(' + p + ')" style="padding:4px 8px;font-size:0.8rem;">' + p + '</button>';
+                            }
+                        }
+                        if (endP < totalPages) pagHtml += '<span style="font-size:0.8rem;color:#888;">... ' + totalPages + '</span>';
+                        if (realCurrentPage < totalPages) {
+                            pagHtml += '<button class="btn-brouillon" onclick="loadRealisations(' + (realCurrentPage + 1) + ')" style="padding:4px 10px;font-size:0.8rem;">Suiv. &raquo;</button>';
+                        }
+                        pagHtml += '<span style="font-size:0.78rem;color:#888;margin-left:0.5rem;">Page ' + realCurrentPage + '/' + totalPages + '</span>';
+                        pagHtml += '</div>';
+                    }
+                    document.getElementById('real-pagination').innerHTML = pagHtml;
+                });
+        }
+
+        function deleteRealisations() {
+            if (!confirm('ATTENTION : Cette action supprimera d\u00e9finitivement TOUTES les r\u00e9alisations pour l\'exercice s\u00e9lectionn\u00e9.\n\nConfirmer ?')) return;
+            var exercice = document.getElementById('real-exercice') ? document.getElementById('real-exercice').value : 2025;
+            fetch('/api/realisations/delete?exercice=' + exercice, { method: 'DELETE' })
+                .then(function(r) { return r.json(); })
+                .then(function(data) {
+                    document.getElementById('real-upload-status').textContent = data.message || 'R\u00e9alisations supprim\u00e9es';
+                    realCurrentPage = 1;
+                    loadRealisations();
+                });
+        }
+    </script>
+</body>
+</html>

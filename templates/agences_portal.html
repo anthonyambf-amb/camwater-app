@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CAMWATER - Portail Agences</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <style>
+        .back-home { color:rgba(255,255,255,0.7);font-size:0.85rem;text-decoration:none;display:inline-block;margin-top:20px; }
+        .back-home:hover { color:#fff; }
+        @media (max-width: 700px) {
+            .cards-row { flex-direction:column; }
+            .index-card { width:100% !important; margin-bottom:12px; }
+        }
+    </style>
+</head>
+<body class="index-body">
+    <div class="index-container">
+        <div class="index-header">
+            <h1>CAMWATER</h1>
+            <p class="index-subtitle">Portail Agents Terrain</p>
+            <span class="index-exercice">Saisie quotidienne &agrave; distance</span>
+        </div>
+
+        <p style="color:rgba(255,255,255,0.75);text-align:center;margin:0 0 18px;font-size:0.95rem;">
+            S&eacute;lectionnez le type de saisie &agrave; effectuer.
+        </p>
+
+        <div class="cards-row">
+            <a href="/recettes-jour" class="index-card card-recettes">
+                <div class="card-icon">&#128176;</div>
+                <h2>Recettes du Jour</h2>
+                <p>Saisie quotidienne des recettes pour votre agence / centre.</p>
+            </a>
+
+            <a href="/branchements-jour" class="index-card card-branchements">
+                <div class="card-icon">&#128736;</div>
+                <h2>Branchements du Jour</h2>
+                <p>Saisie quotidienne des branchements pour votre agence / centre.</p>
+            </a>
+        </div>
+
+        <div style="text-align:center;">
+            <a href="/" class="back-home">&larr; Retour &agrave; l'accueil</a>
+        </div>
+    </div>
+</body>
+</html>

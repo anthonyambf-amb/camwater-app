@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CAMWATER - Objectifs Commerciaux</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <div class="app-layout">
+        <nav class="sidebar">
+            <div class="sidebar-header">
+                <h2>CAMWATER</h2>
+                <span class="sidebar-date" id="sidebar-date"></span>
+                <span class="exercice">Exercice 2026</span>
+            </div>
+            <a href="/" class="nav-btn accueil-btn">&#127968; Accueil</a>
+
+            <div class="nav-section">OBJECTIFS</div>
+            <a href="/objectifs" class="nav-link {% if fenetre=='objectifs' %}active{% endif %}">Charger les objectifs</a>
+            <a href="/objectifs/realisations" class="nav-link {% if fenetre=='realisations' %}active{% endif %}">Charger les r&eacute;alisations N-1</a>
+
+            <a href="/dashboard" class="nav-btn dashboard-btn" style="margin-top:auto;">&#9889; Tableau de bord Commercial</a>
+        </nav>
+
+        <main class="main-content">
+
+            {% if fenetre == 'realisations' %}
+            <!-- ════════ RÉALISATIONS ANTÉRIEURES ════════ -->
+            <h1>Charger les R&eacute;alisations Ant&eacute;rieures</h1>
+            <p class="form-desc">Importez les donn&eacute;es de r&eacute;alisations pass&eacute;es (N-1) par agence et par DR.<br>
+                Format Excel attendu : <strong>DR | Agence | Rubrique | P&eacute;riode | Valeur</strong><br>
+                <span style="color:#888;">P&eacute;riode = mois de facturation (1 &agrave; 12, ou nom du mois : Janvier, F&eacute;vrier, etc.)</span><br>
+                <span style="color:#888;">Rubriques reconnues : Volumes, CA Vente Eau, CA Travaux, Encaissements, Impay&eacute;s Actifs, Impay&eacute;s R&eacute;sili&eacute;s, Branchements Vendus, Branchements Ex&eacute;cut&eacute;s</span></p>
+
+            <div class="upload-zone">
+                <form id="upload-real-form" enctype="multipart/form-data">
+                    <div class="upload-field">
+                        <label>Fichier Excel (.xlsx)</label>
+                        <input type="file" id="real-file" accept=".xlsx,.xls">
+                    </div>
+                    <div class="upload-field">
+                        <label>Exercice de r&eacute;f&eacute;rence</label>
+                        <select id="real-exercice">
+                            <option value="2025" selected>2025 (N-1)</option>
+                            <option value="2024">2024</option>
+                        </select>
+                    </div>
+                    <button type="button" class="btn-save" onclick="uploadRealisations()">Charger les r&eacute;alisations</button>
+                    <div class="save-status" id="real-upload-status"></div>
+                </form>
+            </div>
+
+            <div style="display:flex;align-items:center;gap:1rem;margin-top:2rem;">
+                <h2>R&eacute;alisations enregistr&eacute;es</h2>
+                <button type="button" class="btn-danger-sm" onclick="deleteRealisations()" title="Supprimer toutes les r&eacute;alisations">&#128465; Effacer tout</button>
+            </div>
+            <p style="color:#888;font-size:0.82rem;margin-bottom:0.8rem;">Donn&eacute;es agr&eacute;g&eacute;es par DR pour l'exercice s&eacute;lectionn&eacute;. Servent de base comparative (N-1) dans le tableau de bord.</p>
+            <table class="data-table" id="real-table">
+                <thead><tr><th>DR</th><th>Agence</th><th>Rubrique</th><th>P&eacute;riode</th><th style="text-align:right">Valeur</th></tr></thead>
+                <tbody id="real-body"><tr><td colspan="5" style="text-align:center;color:#888;">Aucune donn&eacute;e</td></tr></tbody>
+            </table>
+
+            {% else %}
+            <!-- ════════ OBJECTIFS ════════ -->
+            <h1>Objectifs Commerciaux</h1>
+            <p class="form-desc">Charger un fichier Excel contenant les objectifs par site et rubrique.<br>
+                Format : colonnes <strong>scope_type</strong> (national/dr/agence) | <strong>scope_id</strong> (code DR ou nom agence) | <strong>rubrique</strong> | <strong>valeur</strong></p>
+
+            <div class="upload-zone">
+                <form id="upload-form" enctype="multipart/form-data">
+                    <div class="upload-field">
+                        <label>Fichier Excel (.xlsx)</label>
+                        <input type="file" id="obj-file" accept=".xlsx,.xls">
+                    </div>
+                    <div class="upload-field">
+                        <label>Exercice</label>
+                        <select id="obj-exercice" onchange="loadObjectifs()">
+                            <option value="2026" selected>2026</option>
+                            <option value="2025">2025</option>
+                        </select>
+                    </div>
+                    <button type="button" class="btn-save" onclick="uploadObjectifs()">Charger les objectifs</button>
+                    <div class="save-status" id="upload-status"></div>
+                </form>
+            </div>
+
+            <div style="display:flex;align-items:center;gap:1rem;margin-top:2rem;">
+                <h2>Fichiers charg&eacute;s</h2>
+                <button type="button" class="btn-danger-sm" onclick="deleteObjectifs()" title="Supprimer tous les objectifs et fichiers">&#128465; Effacer tout</button>
+            </div>
+            <table class="data-table" id="fichiers-table">
+                <thead><tr><th>Fichier</th><th>Date</th><th>Exercice</th><th>Lignes import&eacute;es</th><th>Op&eacute;rateur</th></tr></thead>
+                <tbody id="fichiers-body"></tbody>
+            </table>
+
+            <h2 style="margin-top:2rem">Objectifs enregistr&eacute;s</h2>
+            <p style="color:#888;font-size:0.82rem;margin-bottom:0.8rem;">Les objectifs sont &eacute;labor&eacute;s sur une base mensuelle &mdash; les valeurs affich&eacute;es sont identiques pour chaque mois, ce qui permet une &eacute;valuation plus structur&eacute;e.</p>
+            <table class="data-table" id="obj-table">
+                <thead><tr><th>Scope</th><th>Site</th><th>Rubrique</th><th style="text-align:right">Valeur</th></tr></thead>
+                <tbody id="obj-body"></tbody>
+            </table>
+            {% endif %}
+
+        </main>
+    </div>
+
+    <script>
+    // --- Date sidebar ---
+    (function() {
+        var now = new Date();
+        var jours = ['Dimanche','Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi'];
+        var moisNoms = ['Janvier','F\u00e9vrier','Mars','Avril','Mai','Juin','Juillet','Ao\u00fbt','Septembre','Octobre','Novembre','D\u00e9cembre'];
+        var el = document.getElementById('sidebar-date');
+        if (el) el.textContent = jours[now.getDay()] + ' ' + now.getDate() + ' ' + moisNoms[now.getMonth()] + ' ' + now.getFullYear();
+    })();
+
+    function fmt(n) {
+        if (!n && n !== 0) return '-';
+        return Math.round(n).toLocaleString('fr-FR');
+    }
+
+    var FENETRE = '{{ fenetre }}';
+
+    // ═══════ OBJECTIFS ═══════
+
+    function uploadObjectifs() {
+        var file = document.getElementById('obj-file').files[0];
+        if (!file) { document.getElementById('upload-status').textContent = 'S\u00e9lectionnez un fichier.'; return; }
+        var fd = new FormData();
+        fd.append('file', file);
+        fd.append('exercice', document.getElementById('obj-exercice').value);
+        fetch('/api/objectifs/upload', { method: 'POST', body: fd })
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                if (data.error) {
+                    document.getElementById('upload-status').textContent = 'Erreur: ' + data.error;
+                } else {
+                    document.getElementById('upload-status').textContent =
+                        data.lignes_importees + ' lignes import\u00e9es depuis ' + data.fichier;
+                    loadObjectifs();
+                }
+            });
+    }
+
+    function loadObjectifs() {
+        var exEl = document.getElementById('obj-exercice');
+        if (!exEl) return;
+        fetch('/api/objectifs?exercice=' + exEl.value)
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                var fb = document.getElementById('fichiers-body');
+                if (fb) {
+                    fb.innerHTML = '';
+                    (data.fichiers || []).forEach(function(f) {
+                        fb.innerHTML += '<tr><td>' + f.nom_fichier + '</td><td>' + f.date_upload + '</td><td>' + f.exercice + '</td><td>' + f.nb_lignes_importees + '</td><td>' + (f.operateur_nom || '-') + '</td></tr>';
+                    });
+                }
+                var ob = document.getElementById('obj-body');
+                if (ob) {
+                    ob.innerHTML = '';
+                    var seen = {};
+                    var lastScope = '';
+                    (data.objectifs || []).forEach(function(o) {
+                        var key = o.scope_type + '|' + (o.site_label || '') + '|' + o.rubrique;
+                        if (seen[key]) return;
+                        seen[key] = true;
+                        // Si le site contient "camwater" (case insensitive), forcer en national
+                        var siteLabel = o.site_label || '-';
+                        var isNational = o.scope_type === 'national' || siteLabel.toLowerCase().indexOf('camwater') !== -1;
+                        var scopeLabel = isNational ? 'National' : (o.scope_type === 'dr' ? 'DR' : o.scope_type);
+                        if (scopeLabel !== lastScope) {
+                            ob.innerHTML += '<tr class="section-header"><td colspan="4">' + (isNational ? 'OBJECTIFS NATIONAUX' : 'OBJECTIFS PAR DR') + '</td></tr>';
+                            lastScope = scopeLabel;
+                        }
+                        ob.innerHTML += '<tr><td>' + scopeLabel + '</td><td><strong>' + siteLabel + '</strong></td><td>' + o.rubrique + '</td><td style="text-align:right">' + fmt(o.valeur) + '</td></tr>';
+                    });
+                    if (Object.keys(seen).length === 0) {
+                        ob.innerHTML = '<tr><td colspan="4" style="text-align:center;color:#888;">Aucun objectif enregistr\u00e9</td></tr>';
+                    }
+                }
+            });
+    }
+
+    function deleteObjectifs() {
+        if (!confirm('ATTENTION : Cette action supprimera d\u00e9finitivement TOUS les objectifs et fichiers charg\u00e9s pour l\'exercice s\u00e9lectionn\u00e9.\n\nConfirmer la suppression ?')) return;
+        var exercice = document.getElementById('obj-exercice') ? document.getElementById('obj-exercice').value : 2026;
+        fetch('/api/objectifs/delete?exercice=' + exercice, { method: 'DELETE' })
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                if (data.error) {
+                    document.getElementById('upload-status').textContent = 'Erreur: ' + data.error;
+                } else {
+                    document.getElementById('upload-status').textContent = data.message || 'Objectifs supprim\u00e9s';
+                    loadObjectifs();
+                }
+            });
+    }
+
+    // ═══════ RÉALISATIONS ANTÉRIEURES ═══════
+
+    function uploadRealisations() {
+        var file = document.getElementById('real-file').files[0];
+        if (!file) { document.getElementById('real-upload-status').textContent = 'S\u00e9lectionnez un fichier.'; return; }
+        var fd = new FormData();
+        fd.append('file', file);
+        fd.append('exercice', document.getElementById('real-exercice').value);
+        fetch('/api/realisations/upload', { method: 'POST', body: fd })
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                if (data.error) {
+                    document.getElementById('real-upload-status').textContent = 'Erreur: ' + data.error;
+                } else {
+                    document.getElementById('real-upload-status').textContent = data.lignes + ' lignes import\u00e9es';
+                    loadRealisations();
+                }
+            });
+    }
+
+    var MOIS_NOMS = ['Janvier','F\u00e9vrier','Mars','Avril','Mai','Juin','Juillet','Ao\u00fbt','Septembre','Octobre','Novembre','D\u00e9cembre'];
+
+    function loadRealisations() {
+        var exEl = document.getElementById('real-exercice');
+        if (!exEl) return;
+        fetch('/api/realisations?exercice=' + exEl.value)
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                var tb = document.getElementById('real-body');
+                if (!tb) return;
+                tb.innerHTML = '';
+                if (!data.lignes || data.lignes.length === 0) {
+                    tb.innerHTML = '<tr><td colspan="5" style="text-align:center;color:#888;">Aucune donn\u00e9e</td></tr>';
+                } else {
+                    data.lignes.forEach(function(l) {
+                        var periodeLabel = '-';
+                        if (l.mois && l.mois >= 1 && l.mois <= 12) {
+                            periodeLabel = MOIS_NOMS[l.mois - 1];
+                        } else if (l.mois === 0 || l.mois === null) {
+                            periodeLabel = 'Annuel';
+                        }
+                        tb.innerHTML += '<tr><td>' + (l.dr_code || '-') + '</td><td>' + (l.agence || '-') + '</td><td>' + l.rubrique + '</td><td>' + periodeLabel + '</td><td style="text-align:right">' + fmt(l.valeur) + '</td></tr>';
+                    });
+                }
+            });
+    }
+
+    function deleteRealisations() {
+        if (!confirm('ATTENTION : Cette action supprimera d\u00e9finitivement TOUTES les r\u00e9alisations ant\u00e9rieures pour l\'exercice s\u00e9lectionn\u00e9.\n\nConfirmer la suppression ?')) return;
+        var exercice = document.getElementById('real-exercice') ? document.getElementById('real-exercice').value : 2025;
+        fetch('/api/realisations/delete?exercice=' + exercice, { method: 'DELETE' })
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                if (data.error) {
+                    document.getElementById('real-upload-status').textContent = 'Erreur: ' + data.error;
+                } else {
+                    document.getElementById('real-upload-status').textContent = data.message || 'R\u00e9alisations supprim\u00e9es';
+                    loadRealisations();
+                }
+            });
+    }
+
+    // Auto-load
+    if (FENETRE === 'realisations') {
+        loadRealisations();
+    } else {
+        loadObjectifs();
+    }
+    </script>
+</body>
+</html>

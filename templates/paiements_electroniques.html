@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CAMWATER - Paiements &Eacute;lectroniques</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <div class="app-layout">
+        <nav class="sidebar">
+            <div class="sidebar-header">
+                <h2>CAMWATER</h2>
+                <span class="sidebar-date" id="sidebar-date"></span>
+                <span class="exercice">Exercice 2026</span>
+            </div>
+            <a href="/" class="nav-btn accueil-btn">&#127968; Accueil</a>
+
+            <div class="nav-section">PAIEMENTS &Eacute;LECTRONIQUES</div>
+            <a href="/paiements-electroniques" class="nav-link active">Charger &amp; Analyser</a>
+
+            <a href="/dashboard" class="nav-btn dashboard-btn" style="margin-top:auto;">&#9889; Tableau de bord Commercial</a>
+        </nav>
+
+        <main class="main-content" style="max-width:1200px;">
+            <h1>Paiements &Eacute;lectroniques</h1>
+            <p class="form-desc">Chargez le fichier CSV HIST des paiements &eacute;lectroniques (13 colonnes, point-virgule, sans en-t&ecirc;te).<br>
+                Colonnes utiles : <strong>Col C</strong>=Code op&eacute;rateur (UTOM/UTMM/UTEU/UTEE/UTYM/CAMO) | <strong>Col E</strong>=PL | <strong>Col G</strong>=Nom client | <strong>Col H</strong>=Vente Eau | <strong>Col I</strong>=P&eacute;nalit&eacute;<br>
+                <span style="color:#888;">Le PL permet de d&eacute;duire la DR (2 premiers chiffres) et le Centre (4 premiers chiffres).</span></p>
+
+            <!-- Zone Upload -->
+            <div class="upload-zone">
+                <form id="upload-form" enctype="multipart/form-data">
+                    <div style="display:flex;gap:1rem;align-items:flex-end;flex-wrap:wrap;">
+                        <div class="upload-field" style="flex:2;min-width:200px;">
+                            <label>Fichier CSV (.csv)</label>
+                            <input type="file" id="csv-file" accept=".csv,.CSV,.txt">
+                        </div>
+                        <div class="upload-field" style="min-width:100px;">
+                            <label>Exercice</label>
+                            <select id="pe-exercice">
+                                <option value="2026" selected>2026</option>
+                                <option value="2025">2025</option>
+                            </select>
+                        </div>
+                        <div class="upload-field" style="min-width:100px;">
+                            <label>S&eacute;parateur</label>
+                            <select id="csv-sep">
+                                <option value="auto">Auto-d&eacute;tection</option>
+                                <option value=";">Point-virgule (;)</option>
+                                <option value=",">Virgule (,)</option>
+                                <option value="\t">Tabulation</option>
+                            </select>
+                        </div>
+                        <button type="button" class="btn-save" onclick="uploadCSV()">&#128228; Charger le fichier</button>
+                    </div>
+                    <div class="save-status" id="upload-status"></div>
+                </form>
+            </div>
+
+            <!-- Filtres p&eacute;riode -->
+            <div class="consult-filters" style="margin:1.5rem 0;display:flex;gap:1rem;align-items:center;flex-wrap:wrap;" id="pe-filters" style="display:none;">
+                <label>P&eacute;riode du :</label>
+                <select id="pe-mois-debut" onchange="loadResultats()">
+                    {% for i in range(1, 13) %}
+                    <option value="{{ i }}" {% if i == 1 %}selected{% endif %}>{{ mois[i-1] }}</option>
+                    {% endfor %}
+                </select>
+                <label>au :</label>
+                <select id="pe-mois-fin" onchange="loadResultats()">
+                    {% for i in range(1, 13) %}
+                    <option value="{{ i }}" {% if i == 3 %}selected{% endif %}>{{ mois[i-1] }}</option>
+                    {% endfor %}
+                </select>
+                <label>DR :</label>
+                <select id="pe-dr" onchange="loadResultats()">
+                    <option value="">Toutes les DR</option>
+                    {% for dr in drs %}
+                    <option value="{{ dr }}">{{ dr }}</option>
+                    {% endfor %}
+                </select>
+                <button type="button" class="btn-save" onclick="exportExcel()" title="T&eacute;l&eacute;charger en Excel">&#128190; Export Excel</button>
+            </div>
+
+            <!-- KPI rapides -->
+            <div class="kpi-row" id="pe-kpi-row" style="margin-bottom:1.5rem;">
+                <div class="kpi-mini">
+                    <span class="kpi-mini-label">Transactions</span>
+                    <span class="kpi-mini-val" id="pe-nb-trans">--</span>
+                </div>
+                <div class="kpi-mini">
+                    <span class="kpi-mini-label">Vente Eau</span>
+                    <span class="kpi-mini-val" id="pe-total-ve" style="color:#0056b3">--</span>
+                </div>
+                <div class="kpi-mini">
+                    <span class="kpi-mini-label">P&eacute;nalit&eacute;s</span>
+                    <span class="kpi-mini-val" id="pe-total-pen" style="color:#e67e22">--</span>
+                </div>
+                <div class="kpi-mini">
+                    <span class="kpi-mini-label">Montant total</span>
+                    <span class="kpi-mini-val" id="pe-montant-total" style="color:#27ae60">--</span>
+                </div>
+                <div class="kpi-mini">
+                    <span class="kpi-mini-label">Op&eacute;rateurs</span>
+                    <span class="kpi-mini-val" id="pe-nb-ops">--</span>
+                </div>
+                <div class="kpi-mini">
+                    <span class="kpi-mini-label">Centres</span>
+                    <span class="kpi-mini-val" id="pe-nb-centres">--</span>
+                </div>
+            </div>
+
+            <!-- Tableau Enc centres -->
+            <h2>R&eacute;partition par Centre et Op&eacute;rateur</h2>
+            <p style="color:#888;font-size:0.82rem;margin-bottom:0.8rem;">Format Enc centres &mdash; Montants comptabilis&eacute;s (FCFA)</p>
+            <div style="overflow-x:auto;">
+                <table class="data-table" id="enc-centres-table">
+                    <thead id="enc-centres-thead"><tr><th>DR</th><th>Centre</th><th style="text-align:right">Total</th></tr></thead>
+                    <tbody id="enc-centres-body">
+                        <tr><td colspan="3" style="text-align:center;color:#888;">Chargez un fichier CSV pour afficher les r&eacute;sultats</td></tr>
+                    </tbody>
+                    <tfoot id="enc-centres-tfoot"></tfoot>
+                </table>
+            </div>
+
+            <!-- Synth&egrave;se par op&eacute;rateur (bulles) -->
+            <h2 style="margin-top:2rem;">Synth&egrave;se par Op&eacute;rateur</h2>
+            <div class="pe-operator-bubbles" id="pe-operator-bubbles">
+                <p style="color:#888;font-size:0.85rem;">Aucune donn&eacute;e</p>
+            </div>
+
+            <!-- Enregistrement d&eacute;finitif -->
+            <div class="save-actions" id="pe-save-actions" style="margin-top:2rem;">
+                <div id="pe-definitif-status"></div>
+                <div class="save-btns" style="margin-top:10px;">
+                    <button type="button" class="btn-definitif" onclick="enregistrementDefinitif()" id="btn-definitif" disabled>
+                        &#128274; Enregistrement d&eacute;finitif
+                    </button>
+                    <button type="button" class="btn-danger-sm" onclick="deleteData()" style="padding:10px 20px;">
+                        &#128465; Effacer les donn&eacute;es
+                    </button>
+                </div>
+                <div class="save-status" id="definitif-status"></div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+    // --- Date sidebar ---
+    (function() {
+        var now = new Date();
+        var jours = ['Dimanche','Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi'];
+        var moisNoms = ['Janvier','F\u00e9vrier','Mars','Avril','Mai','Juin','Juillet','Ao\u00fbt','Septembre','Octobre','Novembre','D\u00e9cembre'];
+        var el = document.getElementById('sidebar-date');
+        if (el) el.textContent = jours[now.getDay()] + ' ' + now.getDate() + ' ' + moisNoms[now.getMonth()] + ' ' + now.getFullYear();
+    })();
+
+    var MOIS_NOMS = {{ mois | tojson }};
+
+    function fmt(n) {
+        if (!n && n !== 0) return '-';
+        return Math.round(n).toLocaleString('fr-FR');
+    }
+
+    function fmtPct(n) {
+        return (n * 100).toFixed(1) + '%';
+    }
+
+    // === Upload CSV ===
+    function uploadCSV() {
+        var file = document.getElementById('csv-file').files[0];
+        if (!file) { document.getElementById('upload-status').textContent = 'S\u00e9lectionnez un fichier CSV.'; return; }
+        var fd = new FormData();
+        fd.append('file', file);
+        fd.append('exercice', document.getElementById('pe-exercice').value);
+        fd.append('separator', document.getElementById('csv-sep').value);
+        document.getElementById('upload-status').textContent = 'Chargement en cours...';
+        document.getElementById('upload-status').style.color = '#0056b3';
+        fetch('/api/paiements-elec/upload-csv', { method: 'POST', body: fd })
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                if (data.error) {
+                    document.getElementById('upload-status').textContent = 'Erreur: ' + data.error;
+                    document.getElementById('upload-status').style.color = '#e74c3c';
+                } else {
+                    var opsLabel = Array.isArray(data.operateurs_detectes) ? data.operateurs_detectes.join(', ') : data.nb_operateurs;
+                    document.getElementById('upload-status').textContent =
+                        data.lignes_importees + ' transactions import\u00e9es \u2014 Op\u00e9rateurs : ' + opsLabel;
+                    document.getElementById('upload-status').style.color = '#27ae60';
+                    document.getElementById('btn-definitif').disabled = false;
+                    loadResultats();
+                }
+            })
+            .catch(function(err) {
+                document.getElementById('upload-status').textContent = 'Erreur r\u00e9seau: ' + err;
+                document.getElementById('upload-status').style.color = '#e74c3c';
+            });
+    }
+
+    // === Charger les r&eacute;sultats agr&eacute;g&eacute;s ===
+    function loadResultats() {
+        var exercice = document.getElementById('pe-exercice').value;
+        var moisDebut = document.getElementById('pe-mois-debut').value;
+        var moisFin = document.getElementById('pe-mois-fin').value;
+        var dr = document.getElementById('pe-dr').value;
+        var qs = 'exercice=' + exercice + '&mois_debut=' + moisDebut + '&mois_fin=' + moisFin;
+        if (dr) qs += '&dr=' + encodeURIComponent(dr);
+
+        fetch('/api/paiements-elec/resultats?' + qs)
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                renderKPIs(data);
+                renderEncCentres(data);
+                renderOperatorBubbles(data);
+                checkDefinitifStatus(data);
+            });
+    }
+
+    function renderKPIs(data) {
+        document.getElementById('pe-nb-trans').textContent = fmt(data.nb_transactions || 0);
+        document.getElementById('pe-total-ve').textContent = fmt(data.total_ve || 0);
+        document.getElementById('pe-total-pen').textContent = fmt(data.total_pen || 0);
+        document.getElementById('pe-montant-total').textContent = fmt(data.montant_total || 0);
+        document.getElementById('pe-nb-ops').textContent = (data.operateurs || []).length;
+        document.getElementById('pe-nb-centres').textContent = data.nb_centres || 0;
+    }
+
+    function renderEncCentres(data) {
+        var ops = data.operateurs || [];
+        var lignes = data.lignes || [];
+
+        // V\u00e9rifier si on a des donn\u00e9es VE/P\u00e9nalit\u00e9 (nouveau format)
+        var hasVePen = false;
+        if (lignes.length > 0) {
+            for (var i = 0; i < lignes.length; i++) {
+                var po = lignes[i].par_operateur || {};
+                var firstOp = Object.keys(po)[0];
+                if (firstOp && typeof po[firstOp] === 'object' && po[firstOp].ve !== undefined) {
+                    hasVePen = true;
+                    break;
+                }
+            }
+        }
+
+        // Build header
+        var thead = document.getElementById('enc-centres-thead');
+        var headerHtml = '<tr><th rowspan="2">DR</th><th rowspan="2">Centre</th>';
+        if (hasVePen) {
+            ops.forEach(function(op) {
+                headerHtml += '<th colspan="3" style="text-align:center;border-bottom:none;">' + op + '</th>';
+            });
+            headerHtml += '<th rowspan="2" style="text-align:right;background:#002b5c;">TOTAL</th></tr>';
+            headerHtml += '<tr>';
+            ops.forEach(function() {
+                headerHtml += '<th style="text-align:right;font-size:0.75rem;">VE</th>';
+                headerHtml += '<th style="text-align:right;font-size:0.75rem;">P\u00e9n.</th>';
+                headerHtml += '<th style="text-align:right;font-size:0.75rem;">Total</th>';
+            });
+            headerHtml += '</tr>';
+        } else {
+            ops.forEach(function(op) { headerHtml += '<th style="text-align:right">' + op + '</th>'; });
+            headerHtml += '<th style="text-align:right;background:#002b5c;">TOTAL</th></tr>';
+        }
+        thead.innerHTML = headerHtml;
+
+        // Build body
+        var tbody = document.getElementById('enc-centres-body');
+        tbody.innerHTML = '';
+        var ncols = hasVePen ? (ops.length * 3 + 3) : (ops.length + 3);
+        if (lignes.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="' + ncols + '" style="text-align:center;color:#888;">Aucune donn\u00e9e</td></tr>';
+            return;
+        }
+
+        var lastDr = '';
+        var grandTotal = {};
+        ops.forEach(function(op) { grandTotal[op] = {ve:0, pen:0, total:0}; });
+        var grandTotalAll = 0;
+
+        lignes.forEach(function(l) {
+            var po = l.par_operateur || {};
+            if (l.is_subtotal) {
+                var html = '<tr class="subtotal-row"><td><strong>' + l.dr_code + '</strong></td><td><strong>Sous-total ' + l.dr_code + '</strong></td>';
+                ops.forEach(function(op) {
+                    var v = po[op] || {};
+                    if (hasVePen && typeof v === 'object') {
+                        html += '<td style="text-align:right;font-weight:700;">' + fmt(v.ve || 0) + '</td>';
+                        html += '<td style="text-align:right;font-weight:700;color:#e67e22;">' + fmt(v.pen || 0) + '</td>';
+                        html += '<td style="text-align:right;font-weight:700;">' + fmt(v.total || 0) + '</td>';
+                    } else {
+                        html += '<td style="text-align:right;font-weight:700;">' + fmt(typeof v === 'number' ? v : (v.total || 0)) + '</td>';
+                    }
+                });
+                html += '<td style="text-align:right;font-weight:700;background:#e8f0fe;">' + fmt(l.total || 0) + '</td></tr>';
+                tbody.innerHTML += html;
+            } else {
+                var drCell = l.dr_code !== lastDr ? l.dr_code : '';
+                lastDr = l.dr_code;
+                var html = '<tr><td>' + drCell + '</td><td>' + (l.centre || '-') + '</td>';
+                var lineTotal = 0;
+                ops.forEach(function(op) {
+                    var v = po[op] || {};
+                    if (hasVePen && typeof v === 'object') {
+                        html += '<td style="text-align:right">' + fmt(v.ve || 0) + '</td>';
+                        html += '<td style="text-align:right;color:#e67e22;">' + fmt(v.pen || 0) + '</td>';
+                        html += '<td style="text-align:right;font-weight:600;">' + fmt(v.total || 0) + '</td>';
+                        lineTotal += (v.total || 0);
+                        grandTotal[op].ve += (v.ve || 0);
+                        grandTotal[op].pen += (v.pen || 0);
+                        grandTotal[op].total += (v.total || 0);
+                    } else {
+                        var val = typeof v === 'number' ? v : (v.total || 0);
+                        html += '<td style="text-align:right">' + fmt(val) + '</td>';
+                        lineTotal += val;
+                        grandTotal[op].total += val;
+                    }
+                });
+                grandTotalAll += lineTotal;
+                html += '<td style="text-align:right;font-weight:600;">' + fmt(lineTotal) + '</td></tr>';
+                tbody.innerHTML += html;
+            }
+        });
+
+        // Grand total footer
+        var tfoot = document.getElementById('enc-centres-tfoot');
+        var fhtml = '<tr class="total-row"><td colspan="2"><strong>ENSEMBLE CAMWATER</strong></td>';
+        ops.forEach(function(op) {
+            var g = grandTotal[op];
+            if (hasVePen) {
+                fhtml += '<td class="total-val">' + fmt(g.ve || 0) + '</td>';
+                fhtml += '<td class="total-val" style="color:#e67e22;">' + fmt(g.pen || 0) + '</td>';
+                fhtml += '<td class="total-val">' + fmt(g.total || 0) + '</td>';
+            } else {
+                fhtml += '<td class="total-val">' + fmt(g.total || 0) + '</td>';
+            }
+        });
+        fhtml += '<td class="total-val" style="font-size:1.05rem;">' + fmt(grandTotalAll || data.montant_total || 0) + '</td></tr>';
+        tfoot.innerHTML = fhtml;
+    }
+
+    function renderOperatorBubbles(data) {
+        var container = document.getElementById('pe-operator-bubbles');
+        var ops = data.par_operateur || {};
+        var total = data.montant_total || 0;
+        var keys = Object.keys(ops).sort(function(a, b) {
+            var va = typeof ops[b] === 'object' ? (ops[b].total || 0) : (ops[b] || 0);
+            var vb = typeof ops[a] === 'object' ? (ops[a].total || 0) : (ops[a] || 0);
+            return va - vb;
+        });
+
+        if (keys.length === 0) {
+            container.innerHTML = '<p style="color:#888;font-size:0.85rem;">Aucune donn\u00e9e</p>';
+            return;
+        }
+
+        var colors = ['#0056b3', '#27ae60', '#e67e22', '#8e44ad', '#e74c3c', '#1abc9c', '#f39c12', '#3498db', '#2c3e50', '#d35400'];
+        var html = '';
+        keys.forEach(function(op, idx) {
+            var opData = ops[op] || {};
+            var montant = typeof opData === 'object' ? (opData.total || 0) : opData;
+            var ve = typeof opData === 'object' ? (opData.ve || 0) : 0;
+            var pen = typeof opData === 'object' ? (opData.pen || 0) : 0;
+            var pct = total > 0 ? (montant / total) : 0;
+            var color = colors[idx % colors.length];
+            html += '<div class="pe-bubble" style="border-left-color:' + color + ';">';
+            html += '<div class="pe-bubble-name">' + op + '</div>';
+            html += '<div class="pe-bubble-amount">' + fmt(montant) + ' FCFA</div>';
+            if (ve > 0 || pen > 0) {
+                html += '<div style="font-size:0.78rem;color:#666;margin-top:2px;">VE: ' + fmt(ve) + ' | P\u00e9n: ' + fmt(pen) + '</div>';
+            }
+            html += '<div class="pe-bubble-pct" style="color:' + color + ';">' + fmtPct(pct) + '</div>';
+            html += '<div class="pe-bubble-bar"><div style="width:' + (pct * 100).toFixed(1) + '%;background:' + color + ';"></div></div>';
+            html += '</div>';
+        });
+        container.innerHTML = html;
+    }
+
+    function checkDefinitifStatus(data) {
+        var el = document.getElementById('pe-definitif-status');
+        if (data.est_valide) {
+            el.innerHTML = '<div class="statut-badge statut-definitif">&#128274; Donn\u00e9es valid\u00e9es d\u00e9finitivement le ' + (data.date_validation || '') + '</div>';
+            document.getElementById('btn-definitif').disabled = true;
+        } else if (data.nb_transactions > 0) {
+            el.innerHTML = '<div class="statut-badge statut-brouillon">&#9888; Donn\u00e9es en attente de validation</div>';
+            document.getElementById('btn-definitif').disabled = false;
+        } else {
+            el.innerHTML = '<div class="statut-badge statut-vide">Aucune donn\u00e9e charg\u00e9e</div>';
+            document.getElementById('btn-definitif').disabled = true;
+        }
+    }
+
+    // === Enregistrement d&eacute;finitif ===
+    function enregistrementDefinitif() {
+        if (!confirm('ATTENTION : L\'enregistrement d\u00e9finitif validera les donn\u00e9es de paiements \u00e9lectroniques pour la p\u00e9riode s\u00e9lectionn\u00e9e.\n\nCes donn\u00e9es seront int\u00e9gr\u00e9es au tableau de bord.\n\nConfirmer ?')) return;
+        var exercice = document.getElementById('pe-exercice').value;
+        var moisDebut = document.getElementById('pe-mois-debut').value;
+        var moisFin = document.getElementById('pe-mois-fin').value;
+        fetch('/api/paiements-elec/valider', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({exercice: parseInt(exercice), mois_debut: parseInt(moisDebut), mois_fin: parseInt(moisFin)})
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            if (data.error) {
+                document.getElementById('definitif-status').textContent = 'Erreur: ' + data.error;
+                document.getElementById('definitif-status').style.color = '#e74c3c';
+            } else {
+                document.getElementById('definitif-status').textContent = data.message || 'Donn\u00e9es valid\u00e9es';
+                document.getElementById('definitif-status').style.color = '#27ae60';
+                document.getElementById('btn-definitif').disabled = true;
+                loadResultats();
+            }
+        });
+    }
+
+    // === Effacer les donn&eacute;es ===
+    function deleteData() {
+        if (!confirm('Supprimer toutes les donn\u00e9es de paiements \u00e9lectroniques pour cet exercice ?\n\nCela inclut les donn\u00e9es brutes et les validations.')) return;
+        var exercice = document.getElementById('pe-exercice').value;
+        fetch('/api/paiements-elec/delete-csv?exercice=' + exercice, { method: 'DELETE' })
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                document.getElementById('definitif-status').textContent = data.message || 'Donn\u00e9es supprim\u00e9es';
+                document.getElementById('btn-definitif').disabled = true;
+                loadResultats();
+            });
+    }
+
+    // === Export Excel ===
+    function exportExcel() {
+        var exercice = document.getElementById('pe-exercice').value;
+        var moisDebut = document.getElementById('pe-mois-debut').value;
+        var moisFin = document.getElementById('pe-mois-fin').value;
+        var dr = document.getElementById('pe-dr').value;
+        var qs = 'exercice=' + exercice + '&mois_debut=' + moisDebut + '&mois_fin=' + moisFin;
+        if (dr) qs += '&dr=' + encodeURIComponent(dr);
+        window.open('/api/paiements-elec/export-excel?' + qs, '_blank');
+    }
+
+    // Auto-load
+    loadResultats();
+    </script>
+</body>
+</html>

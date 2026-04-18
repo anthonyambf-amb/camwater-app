@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CAMWATER - Suivi Branchements Quotidiens</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <div class="rj-suivi-container">
+        <header class="rj-suivi-header">
+            <div>
+                <h1>Suivi des Branchements Quotidiens</h1>
+                <p>CAMWATER - Exercice 2026</p>
+            </div>
+            <div class="rj-suivi-actions">
+                <a href="/" class="btn-home">Accueil</a>
+                <a href="/branchements-jour" class="btn-saisie">Saisie</a>
+            </div>
+        </header>
+
+        <!-- Filtres -->
+        <div class="rj-filters">
+            <div class="rj-filter-group">
+                <label>Date d&eacute;but</label>
+                <input type="date" id="suivi-date-debut">
+            </div>
+            <div class="rj-filter-group">
+                <label>Date fin</label>
+                <input type="date" id="suivi-date-fin">
+            </div>
+            <div class="rj-filter-group">
+                <label>Site</label>
+                <select id="suivi-site">
+                    <option value="national">Ensemble CAMWATER</option>
+                    {% for code in drs %}
+                    <option value="{{ code }}">{{ code }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <button class="btn-export" onclick="loadSuivi()" style="align-self:flex-end;">Actualiser</button>
+        </div>
+
+        <!-- Cartes r&eacute;sum&eacute; -->
+        <div class="rj-summary-cards">
+            <div class="rj-summary-card rj-card-count">
+                <span class="rj-sc-label">Centres ayant renseign&eacute;</span>
+                <span class="rj-sc-value" id="suivi-count">0 / 0</span>
+                <span class="rj-sc-pct" id="suivi-pct" style="font-size:0.85rem;color:#0056b3;"></span>
+            </div>
+            <div class="rj-summary-card rj-card-total">
+                <span class="rj-sc-label">Total Branchements (vendus)</span>
+                <span class="rj-sc-value" id="suivi-total">0</span>
+            </div>
+        </div>
+
+        <!-- Totaux par cat&eacute;gorie -->
+        <div class="rj-categories">
+            <h2>Totaux par cat&eacute;gorie</h2>
+            <div class="rj-cat-grid">
+                <div class="rj-cat-item"><span>Vendus</span><span id="suivi-vendus">0</span></div>
+                <div class="rj-cat-item"><span>Ex&eacute;cut&eacute;s</span><span id="suivi-executes">0</span></div>
+                <div class="rj-cat-item"><span>PEC Machine</span><span id="suivi-pec">0</span></div>
+                <div class="rj-cat-item"><span>Moratoire</span><span id="suivi-moratoire">0</span></div>
+            </div>
+        </div>
+
+        <!-- Tableau d&eacute;tail -->
+        <div class="rj-detail-section">
+            <h2>D&eacute;tail des branchements enregistr&eacute;s</h2>
+            <div class="rj-table-wrap">
+                <table class="rj-detail-table" id="suivi-detail-table">
+                    <thead>
+                        <tr>
+                            <th>DR</th>
+                            <th>Agence / Centre</th>
+                            <th>Date</th>
+                            <th>Vendus</th>
+                            <th>Ex&eacute;cut&eacute;s</th>
+                            <th>PEC</th>
+                            <th>Moratoire</th>
+                            <th>Total</th>
+                            <th>Observations</th>
+                        </tr>
+                    </thead>
+                    <tbody id="suivi-detail-body"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Agences manquantes group&eacute;es par DR -->
+        <div class="rj-missing-section">
+            <h2 id="missing-title">Agences / Centres n'ayant pas renseign&eacute;</h2>
+            <div id="suivi-missing" class="rj-missing-by-dr"></div>
+        </div>
+
+        <footer class="rj-suivi-footer">
+            <span>CAMWATER - Suivi Quotidien des Branchements</span>
+            <span id="suivi-updated"></span>
+        </footer>
+    </div>
+
+    <script>
+        function fmt(n) {
+            if (!n && n !== 0) return '0';
+            return Math.round(n).toLocaleString('fr-FR');
+        }
+
+        function fmtDate(d) {
+            if (!d) return '';
+            const parts = d.split('-');
+            if (parts.length === 3) return parts[2] + '/' + parts[1] + '/' + parts[0];
+            return d;
+        }
+
+        // Dates par d&eacute;faut : aujourd'hui
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('suivi-date-debut').value = today;
+        document.getElementById('suivi-date-fin').value = today;
+
+        function loadSuivi() {
+            const dateDebut = document.getElementById('suivi-date-debut').value;
+            const dateFin = document.getElementById('suivi-date-fin').value;
+            const siteVal = document.getElementById('suivi-site').value;
+            const siteType = siteVal === 'national' ? 'national' : 'dr';
+            const siteId = siteVal === 'national' ? '' : siteVal;
+
+            const params = new URLSearchParams({
+                date_debut: dateDebut, date_fin: dateFin,
+                site_type: siteType, site_id: siteId
+            });
+
+            fetch('/api/branchements-jour/synthese?' + params)
+                .then(r => r.json())
+                .then(data => {
+                    // Cartes r&eacute;sum&eacute;
+                    const pct = data.total_agences > 0
+                        ? Math.round(data.agences_renseignees / data.total_agences * 100) : 0;
+                    document.getElementById('suivi-count').textContent =
+                        data.agences_renseignees + ' / ' + data.total_agences;
+                    document.getElementById('suivi-pct').textContent = '(' + pct + '%)';
+                    document.getElementById('suivi-total').textContent = fmt(data.totaux.vendus);
+
+                    // Cat&eacute;gories
+                    document.getElementById('suivi-vendus').textContent = fmt(data.totaux.vendus);
+                    document.getElementById('suivi-executes').textContent = fmt(data.totaux.executes);
+                    document.getElementById('suivi-pec').textContent = fmt(data.totaux.pec_machine);
+                    document.getElementById('suivi-moratoire').textContent = fmt(data.totaux.moratoire);
+
+                    // Tableau d&eacute;tail
+                    const tbody = document.getElementById('suivi-detail-body');
+                    tbody.innerHTML = '';
+                    if (data.details.length === 0) {
+                        tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;color:#888;padding:20px;">Aucun branchement enregistr\u00e9 pour cette p\u00e9riode</td></tr>';
+                    } else {
+                        data.details.forEach(d => {
+                            const tr = document.createElement('tr');
+                            tr.innerHTML =
+                                '<td><strong>' + d.dr_code + '</strong></td>' +
+                                '<td>' + d.agence_nom + '</td>' +
+                                '<td>' + fmtDate(d.date_saisie) + '</td>' +
+                                '<td style="text-align:right">' + fmt(d.vendus) + '</td>' +
+                                '<td style="text-align:right">' + fmt(d.executes) + '</td>' +
+                                '<td style="text-align:right">' + fmt(d.pec_machine) + '</td>' +
+                                '<td style="text-align:right">' + fmt(d.moratoire) + '</td>' +
+                                '<td style="text-align:right;font-weight:700">' + fmt(d.total) + '</td>' +
+                                '<td>' + (d.observations || '') + '</td>';
+                            tbody.appendChild(tr);
+                        });
+                    }
+
+                    // Agences manquantes group&eacute;es par DR
+                    const missingDiv = document.getElementById('suivi-missing');
+                    document.getElementById('missing-title').textContent =
+                        'Agences / Centres n\'ayant pas renseign\u00e9 (' + data.manquants.length + ')';
+                    if (data.manquants.length === 0) {
+                        missingDiv.innerHTML = '<p style="color:#27ae60;padding:10px;font-weight:600;">Toutes les agences ont renseign\u00e9 leurs branchements.</p>';
+                    } else {
+                        // Regrouper par DR
+                        var grouped = {};
+                        data.manquants.forEach(function(m) {
+                            if (!grouped[m.dr_code]) grouped[m.dr_code] = [];
+                            grouped[m.dr_code].push(m.nom);
+                        });
+                        var html = '';
+                        Object.keys(grouped).sort().forEach(function(dr) {
+                            html += '<div class="rj-missing-dr-group">';
+                            html += '<div class="rj-missing-dr-header"><span class="rj-missing-dr-badge">' + dr + '</span>';
+                            html += '<span class="rj-missing-dr-count">' + grouped[dr].length + ' agence(s)</span></div>';
+                            html += '<div class="rj-missing-dr-list">';
+                            grouped[dr].forEach(function(nom) {
+                                html += '<span class="rj-missing-tag">' + nom + '</span>';
+                            });
+                            html += '</div></div>';
+                        });
+                        missingDiv.innerHTML = html;
+                    }
+
+                    document.getElementById('suivi-updated').textContent =
+                        'Mis \u00e0 jour : ' + new Date().toLocaleTimeString('fr-FR');
+                });
+        }
+
+        // Chargement automatique + rafra&icirc;chissement toutes les 30s
+        loadSuivi();
+        setInterval(loadSuivi, 30000);
+    </script>
+</body>
+</html>

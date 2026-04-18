@@ -1,0 +1,19 @@
+# Données locales (la prod utilise un disque persistant Render)
+data/*.db
+data/*.db-journal
+data/objectifs/*.xlsx
+data/objectifs/*.xls
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+.env
+
+# OS / IDE
+.DS_Store
+.idea/
+.vscode/
+*.log

@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CAMWATER - Saisie des données</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <div class="app-layout">
+        <!-- Sidebar -->
+        <nav class="sidebar">
+            <div class="sidebar-header">
+                <h2>CAMWATER</h2>
+                <span class="sidebar-date" id="sidebar-date"></span>
+                <span class="exercice">Exercice 2026</span>
+            </div>
+            <a href="/" class="nav-btn accueil-btn">&#127968; Accueil</a>
+
+            <div class="nav-section">S&Eacute;LECTION</div>
+            <div class="selector-group">
+                <label>Direction R&eacute;gionale</label>
+                <select id="sel-dr" onchange="onDrChange()">
+                    <option value="">-- Choisir une DR --</option>
+                    {% for dr_code in structure_keys %}
+                    <option value="{{ dr_code }}">{{ dr_code }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="selector-group">
+                <label>Agence / Centre</label>
+                <select id="sel-agence" disabled onchange="onAgenceChange()">
+                    <option value="">-- Choisir d'abord une DR --</option>
+                </select>
+            </div>
+            <div class="selector-group">
+                <label>Mois</label>
+                <select id="sel-mois" onchange="onMoisChange()">
+                    {% for m in mois %}
+                    <option value="{{ loop.index }}">{{ m }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="nav-section">1. VOLUMES (m3)</div>
+            <a href="/saisie/volumes" class="nav-link {% if fenetre=='volumes' %}active{% endif %}">Saisie Volumes</a>
+
+            <div class="nav-section">2. CHIFFRE D'AFFAIRES (FCFA)</div>
+            <a href="/saisie/ca_ve" class="nav-link {% if fenetre=='ca_ve' %}active{% endif %}">CA Vente Eau</a>
+            <a href="/saisie/ca_travaux" class="nav-link {% if fenetre=='ca_travaux' %}active{% endif %}">CA Travaux</a>
+
+            <div class="nav-section">3. ENCAISSEMENTS (FCFA)</div>
+            <a href="/saisie/encaissements" class="nav-link {% if fenetre=='encaissements' %}active{% endif %}">Saisie Encaissements</a>
+
+            <div class="nav-section">4. IMPAY&Eacute;S</div>
+            <a href="/saisie/impayes" class="nav-link {% if fenetre=='impayes' %}active{% endif %}">Impay&eacute;s</a>
+
+            <a href="#" id="btn-dashboard" onclick="goToDashboard(); return false;" class="nav-btn dashboard-btn" style="margin-top:auto;">&#9889; Tableau de bord Commercial</a>
+        </nav>
+
+        <!-- Main content -->
+        <main class="main-content" style="position:relative;">
+            <div id="saisie-overlay" class="saisie-overlay">
+                <div class="saisie-overlay-msg">
+                    <div class="saisie-overlay-icon">&#9664;</div>
+                    <h2>S&eacute;lectionnez une DR puis une Agence</h2>
+                    <p>Choisissez d'abord la Direction R&eacute;gionale, puis l'Agence dans le volet de gauche pour acc&eacute;der au formulaire de saisie.</p>
+                </div>
+            </div>
+
+            <!-- CA Total Banner (visible sur les pages CA) -->
+            {% if fenetre in ['ca_ve', 'ca_travaux'] %}
+            <div class="ca-total-banner" id="ca-total-banner">
+                <div class="ca-total-item"><span>CA Vente Eau (A)</span><span id="banner-ca-ve">--</span></div>
+                <div class="ca-total-item"><span>Travaux Remb. (B)</span><span id="banner-ca-trvx">--</span></div>
+                <div class="ca-total-item ca-total-final"><span>CA TOTAL (A)+(B)</span><span id="banner-ca-total">--</span></div>
+            </div>
+            {% endif %}
+
+            {% if fenetre == 'volumes' %}
+            <!-- ════════ VOLUMES ════════ -->
+            <h1>Saisie des Volumes (m3)</h1>
+            <p class="form-desc">Volumes factur&eacute;s par cat&eacute;gorie de consommation - par agence et par mois</p>
+            <div class="cumul-banner" id="cumul-banner-vol">
+                <div class="cumul-title">Cumul annuel de l'agence</div>
+                <div class="cumul-row">
+                    <div class="cumul-item"><span class="cumul-label">Total Volumes (m3)</span><span class="cumul-val" id="cumul-vol-total">--</span></div>
+                    <div class="cumul-item"><span class="cumul-label">CA Auto (FCFA)</span><span class="cumul-val" id="cumul-vol-ca">--</span></div>
+                </div>
+            </div>
+            <div class="form-grid" id="form-volumes">
+                <table class="data-table">
+                    <thead><tr><th>Catégorie</th><th>PU (FCFA/m3)</th><th>Volume (m3)</th><th>CA auto (FCFA)</th></tr></thead>
+                    <tbody id="volumes-body"></tbody>
+                    <tfoot>
+                        <tr class="total-row"><td colspan="2"><strong>TOTAL</strong></td><td id="vol-total" class="total-val">0</td><td id="ca-auto-total" class="total-val">0</td></tr>
+                    </tfoot>
+                </table>
+                <div class="save-actions">
+                    <div class="statut-badge statut-vide" id="statut-badge">Aucune sauvegarde</div>
+                    <div class="save-btns" id="save-btns">
+                        <button type="button" class="btn-brouillon" onclick="doSaveBrouillon()">Sauvegarde temporaire</button>
+                        <button type="button" class="btn-definitif" onclick="doSaveDefinitif()">Enregistrement d&eacute;finitif</button>
+                    </div>
+                    <div class="save-status" id="save-status"></div>
+                    <button type="button" class="btn-danger-sm" onclick="doResetAgence()" title="R&eacute;initialiser toutes les donn&eacute;es de ce mois pour cette agence" style="margin-top:0.7rem;">&#128465; R&eacute;initialiser ce mois</button>
+                </div>
+            </div>
+
+            {% elif fenetre == 'ca_ve' %}
+            <!-- ════════ CA VENTE EAU ════════ -->
+            <h1>CA Vente Eau - Saisies manuelles (FCFA)</h1>
+            <p class="form-desc">Montants CA non d&eacute;riv&eacute;s de Vol x PU : ENEO 871/873, GCO, Locations compteurs</p>
+            <div class="cumul-banner" id="cumul-banner-cave">
+                <div class="cumul-title">Cumul annuel de l'agence</div>
+                <div class="cumul-row">
+                    <div class="cumul-item"><span class="cumul-label">CA Vente Eau (FCFA)</span><span class="cumul-val" id="cumul-cave-total">--</span></div>
+                    <div class="cumul-item"><span class="cumul-label">CA Travaux (FCFA)</span><span class="cumul-val" id="cumul-cave-trvx">--</span></div>
+                    <div class="cumul-item"><span class="cumul-label">CA Global (FCFA)</span><span class="cumul-val" id="cumul-cave-global">--</span></div>
+                </div>
+            </div>
+            <div class="form-grid" id="form-ca-spec">
+                <table class="data-table">
+                    <thead><tr><th>Rubrique</th><th>Montant (FCFA)</th></tr></thead>
+                    <tbody>
+                        <tr class="section-header"><td colspan="2">Consommations ENEO (montants CA directs)</td></tr>
+                        <tr><td>ENEO 871</td><td><input type="number" data-key="ENEO 871" class="ca-spec-input" step="1"></td></tr>
+                        <tr><td>ENEO 873</td><td><input type="number" data-key="ENEO 873" class="ca-spec-input" step="1"></td></tr>
+                        <tr class="section-header"><td colspan="2">CA Gros Consommateurs</td></tr>
+                        <tr><td>GCO</td><td><input type="number" data-key="GCO" class="ca-spec-input" step="1"></td></tr>
+                        <tr class="section-header"><td colspan="2">Locations Compteurs</td></tr>
+                        <tr><td>Particuliers</td><td><input type="number" data-key="Location compteur Particuliers" class="ca-spec-input" step="1"></td></tr>
+                        <tr><td>GCO</td><td><input type="number" data-key="Location compteur GCO" class="ca-spec-input" step="1"></td></tr>
+                        <tr><td>ADM</td><td><input type="number" data-key="Location compteur ADM" class="ca-spec-input" step="1"></td></tr>
+                        <tr><td>Bât. communaux</td><td><input type="number" data-key="Location compteur BC" class="ca-spec-input" step="1"></td></tr>
+                        <tr><td>BFC</td><td><input type="number" data-key="Location compteur BFC" class="ca-spec-input" step="1"></td></tr>
+                        <tr class="section-header"><td colspan="2">Saisies Travaux (directes)</td></tr>
+                        <tr><td>Dévis ext. part.</td><td><input type="number" data-key="Dévis ext. part." class="ca-spec-input" step="1"></td></tr>
+                        <tr><td>Fraudes travaux</td><td><input type="number" data-key="Fraudes travaux" class="ca-spec-input" step="1"></td></tr>
+                    </tbody>
+                    <tfoot>
+                        <tr class="total-row"><td><strong>Total CA Spécifiques</strong></td><td id="ca-spec-total" class="total-val">0</td></tr>
+                    </tfoot>
+                </table>
+                <div class="save-actions">
+                    <div class="statut-badge statut-vide" id="statut-badge">Aucune sauvegarde</div>
+                    <div class="save-btns" id="save-btns">
+                        <button type="button" class="btn-brouillon" onclick="doSaveBrouillon()">Sauvegarde temporaire</button>
+                        <button type="button" class="btn-definitif" onclick="doSaveDefinitif()">Enregistrement d&eacute;finitif</button>
+                    </div>
+                    <div class="save-status" id="save-status"></div>
+                    <button type="button" class="btn-danger-sm" onclick="doResetAgence()" title="R&eacute;initialiser toutes les donn&eacute;es de ce mois pour cette agence" style="margin-top:0.7rem;">&#128465; R&eacute;initialiser ce mois</button>
+                </div>
+            </div>
+
+            {% elif fenetre == 'ca_travaux' %}
+            <!-- ════════ CA TRAVAUX ════════ -->
+            <h1>CA Travaux Remboursables (FCFA)</h1>
+            <p class="form-desc">Compl&eacute;ments manuels s'ajoutant aux encaissements pour le poste "Autres travaux"</p>
+            <div class="cumul-banner" id="cumul-banner-trvx">
+                <div class="cumul-title">Cumul annuel de l'agence</div>
+                <div class="cumul-row">
+                    <div class="cumul-item"><span class="cumul-label">CA Travaux (FCFA)</span><span class="cumul-val" id="cumul-trvx-total">--</span></div>
+                    <div class="cumul-item"><span class="cumul-label">CA Global (FCFA)</span><span class="cumul-val" id="cumul-trvx-global">--</span></div>
+                </div>
+            </div>
+            <div class="form-grid" id="form-comp">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Mois</th>
+                            <th>Frais pose (FCFA)</th>
+                            <th>Frais vérif (FCFA)</th>
+                            <th>Mutation (FCFA)</th>
+                            <th>Enc. auto (FCFA)</th>
+                            <th class="highlight-col">Complément (FCFA)</th>
+                            <th>Total Autres Trvx (FCFA)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="comp-body"></tbody>
+                    <tfoot>
+                        <tr class="total-row">
+                            <td><strong>TOTAL</strong></td>
+                            <td id="comp-pose-total">0</td>
+                            <td id="comp-verif-total">0</td>
+                            <td id="comp-mut-total">0</td>
+                            <td id="comp-auto-total">0</td>
+                            <td id="comp-manual-total" class="highlight-col">0</td>
+                            <td id="comp-grand-total"><strong>0</strong></td>
+                        </tr>
+                    </tfoot>
+                </table>
+                <div class="save-actions">
+                    <div class="statut-badge statut-vide" id="statut-badge">Aucune sauvegarde</div>
+                    <div class="save-btns" id="save-btns">
+                        <button type="button" class="btn-brouillon" onclick="doSaveBrouillon()">Sauvegarde temporaire</button>
+                        <button type="button" class="btn-definitif" onclick="doSaveDefinitif()">Enregistrement d&eacute;finitif</button>
+                    </div>
+                    <div class="save-status" id="save-status"></div>
+                    <button type="button" class="btn-danger-sm" onclick="doResetAgence()" title="R&eacute;initialiser toutes les donn&eacute;es de ce mois pour cette agence" style="margin-top:0.7rem;">&#128465; R&eacute;initialiser ce mois</button>
+                </div>
+            </div>
+
+            {% elif fenetre == 'encaissements' %}
+            <!-- ════════ ENCAISSEMENTS ════════ -->
+            <h1>Encaissements (FCFA)</h1>
+            <p class="form-desc">Saisie mensuelle par section : Caisse Commerciale, Caisse ADM, Banques, Travaux, ASC</p>
+            <div class="cumul-banner" id="cumul-banner-enc">
+                <div class="cumul-title">Cumul annuel de l'agence</div>
+                <div class="cumul-row">
+                    <div class="cumul-item cumul-item-wide"><span class="cumul-label">Total Encaissements (FCFA)</span><span class="cumul-val" id="cumul-enc-total">--</span></div>
+                </div>
+            </div>
+            <div class="form-grid" id="form-enc">
+                <table class="data-table">
+                    <thead><tr><th>Rubrique</th><th>Montant (FCFA)</th></tr></thead>
+                    <tbody>
+                        <tr class="section-header"><td colspan="2">Caisse Commerciale</td></tr>
+                        {% for r in rubriques_cciale %}
+                        <tr><td>{{ r }}</td><td><input type="number" data-key="cciale|{{ r }}" class="enc-input" step="1"></td></tr>
+                        {% endfor %}
+                        <tr class="subtotal-row"><td><strong>Sous-total Caisse Cciale</strong></td><td class="subtotal" data-section="cciale">0</td></tr>
+
+                        <tr class="section-header"><td colspan="2">Caisse ADM</td></tr>
+                        {% for r in rubriques_adm %}
+                        <tr><td>{{ r }}</td><td><input type="number" data-key="adm|{{ r }}" class="enc-input" step="1"></td></tr>
+                        {% endfor %}
+                        <tr class="subtotal-row"><td><strong>Sous-total Caisse ADM</strong></td><td class="subtotal" data-section="adm">0</td></tr>
+
+                        <tr class="section-header"><td colspan="2">Banques</td></tr>
+                        {% for r in rubriques_banques %}
+                        <tr><td>{{ r }}</td><td><input type="number" data-key="banques|{{ r }}" class="enc-input" step="1"></td></tr>
+                        {% endfor %}
+                        <tr class="subtotal-row"><td><strong>Sous-total Banques</strong></td><td class="subtotal" data-section="banques">0</td></tr>
+
+                        <tr class="section-header"><td colspan="2">Travaux - Caisse Commerciale</td></tr>
+                        {% for r in rubriques_trvx_cciale %}
+                        <tr><td>{{ r }}</td><td><input type="number" data-key="trvx_cciale|{{ r }}" class="enc-input" step="1"></td></tr>
+                        {% endfor %}
+                        <tr class="subtotal-row"><td><strong>Sous-total Trvx Cciale</strong></td><td class="subtotal" data-section="trvx_cciale">0</td></tr>
+
+                        <tr class="section-header"><td colspan="2">Travaux - Caisse ADM</td></tr>
+                        {% for r in rubriques_trvx_adm %}
+                        <tr><td>{{ r }}</td><td><input type="number" data-key="trvx_adm|{{ r }}" class="enc-input" step="1"></td></tr>
+                        {% endfor %}
+                        <tr class="subtotal-row"><td><strong>Sous-total Trvx ADM</strong></td><td class="subtotal" data-section="trvx_adm">0</td></tr>
+
+                        <tr class="section-header"><td colspan="2">ASC</td></tr>
+                        <tr><td>ASC</td><td><input type="number" data-key="asc|ASC" class="enc-input" step="1"></td></tr>
+                    </tbody>
+                    <tfoot>
+                        <tr class="total-row"><td><strong>TOTAL ENCAISSEMENTS</strong></td><td id="enc-total" class="total-val">0</td></tr>
+                    </tfoot>
+                </table>
+                <div class="save-actions">
+                    <div class="statut-badge statut-vide" id="statut-badge">Aucune sauvegarde</div>
+                    <div class="save-btns" id="save-btns">
+                        <button type="button" class="btn-brouillon" onclick="doSaveBrouillon()">Sauvegarde temporaire</button>
+                        <button type="button" class="btn-definitif" onclick="doSaveDefinitif()">Enregistrement d&eacute;finitif</button>
+                    </div>
+                    <div class="save-status" id="save-status"></div>
+                    <button type="button" class="btn-danger-sm" onclick="doResetAgence()" title="R&eacute;initialiser toutes les donn&eacute;es de ce mois pour cette agence" style="margin-top:0.7rem;">&#128465; R&eacute;initialiser ce mois</button>
+                </div>
+            </div>
+
+            {% elif fenetre == 'impayes' %}
+            <!-- ════════ IMPAYÉS ════════ -->
+            <h1>Portefeuille des Impay&eacute;s</h1>
+            <p class="form-desc">Saisie mensuelle du portefeuille des impay&eacute;s par cat&eacute;gorie de client &mdash; par agence et par mois</p>
+            <div class="cumul-banner" id="cumul-banner-imp">
+                <div class="cumul-title">Dernier solde enregistr&eacute; pour cette agence</div>
+                <div class="cumul-row">
+                    <div class="cumul-item"><span class="cumul-label">Actifs</span><span class="cumul-val" id="cumul-imp-actifs">--</span></div>
+                    <div class="cumul-item"><span class="cumul-label">R&eacute;sili&eacute;s</span><span class="cumul-val" id="cumul-imp-resilies">--</span></div>
+                    <div class="cumul-item"><span class="cumul-label">Total Impay&eacute;s</span><span class="cumul-val" id="cumul-imp-total">--</span></div>
+                </div>
+            </div>
+            <div class="form-grid" id="form-impayes">
+                <table class="data-table">
+                    <thead><tr><th>Rubrique</th><th>Montant (FCFA)</th></tr></thead>
+                    <tbody>
+                        <tr class="section-header"><td colspan="2">Abonn&eacute;s Actifs</td></tr>
+                        <tr><td>Particuliers</td><td><input type="number" class="imp-input" data-key="particuliers_actifs" step="1"></td></tr>
+                        <tr><td>GCO</td><td><input type="number" class="imp-input" data-key="gco_actifs" step="1"></td></tr>
+                        <tr class="subtotal-row"><td><strong>Total Abonn&eacute;s Actifs</strong></td><td class="imp-computed" id="imp-total-actifs">0</td></tr>
+
+                        <tr class="section-header"><td colspan="2">R&eacute;sili&eacute;s D&eacute;biteurs</td></tr>
+                        <tr><td>Particuliers</td><td><input type="number" class="imp-input" data-key="particuliers_resilies" step="1"></td></tr>
+                        <tr><td>GCO</td><td><input type="number" class="imp-input" data-key="gco_resilies" step="1"></td></tr>
+                        <tr class="subtotal-row"><td><strong>Total R&eacute;sili&eacute;s D&eacute;biteurs</strong></td><td class="imp-computed" id="imp-total-resilies">0</td></tr>
+
+                        <tr class="section-header"><td colspan="2">Communes &mdash; Actifs</td></tr>
+                        <tr><td>B&acirc;timents Communaux</td><td><input type="number" class="imp-input" data-key="bf_actifs" step="1"></td></tr>
+                        <tr><td>Bornes Fontaines Communales</td><td><input type="number" class="imp-input" data-key="bfc_actifs" step="1"></td></tr>
+                        <tr class="subtotal-row"><td><strong>Total Communes Actifs</strong></td><td class="imp-computed" id="imp-total-com-actifs">0</td></tr>
+
+                        <tr class="section-header"><td colspan="2">Communes &mdash; R&eacute;sili&eacute;s</td></tr>
+                        <tr><td>B&acirc;timents Communaux</td><td><input type="number" class="imp-input" data-key="bf_resilies" step="1"></td></tr>
+                        <tr><td>Bornes Fontaines Communales</td><td><input type="number" class="imp-input" data-key="bfc_resilies" step="1"></td></tr>
+                        <tr><td>Gestion Manuelle</td><td><input type="number" class="imp-input" data-key="gestion_manuelle" step="1"></td></tr>
+                        <tr class="subtotal-row"><td><strong>Total Communes R&eacute;sili&eacute;s</strong></td><td class="imp-computed" id="imp-total-com-resilies">0</td></tr>
+                    </tbody>
+                    <tfoot>
+                        <tr class="total-row"><td><strong>TOTAL IMPAY&Eacute;S</strong></td><td id="imp-total-impayes" class="total-val">0</td></tr>
+                    </tfoot>
+                </table>
+
+                <div class="save-actions">
+                    <div class="statut-badge statut-vide" id="statut-badge">Aucune sauvegarde</div>
+                    <div class="save-btns" id="save-btns">
+                        <button type="button" class="btn-brouillon" onclick="doSaveBrouillon()">Sauvegarde temporaire</button>
+                        <button type="button" class="btn-definitif" onclick="doSaveDefinitif()">Enregistrement d&eacute;finitif</button>
+                    </div>
+                    <div class="save-status" id="save-status"></div>
+                    <button type="button" class="btn-danger-sm" onclick="doResetAgence()" title="R&eacute;initialiser toutes les donn&eacute;es de ce mois pour cette agence" style="margin-top:0.7rem;">&#128465; R&eacute;initialiser ce mois</button>
+                </div>
+            </div>
+
+            {% endif %}
+        </main>
+    </div>
+
+    <script src="/static/js/app.js"></script>
+    <script>
+        // --- Date du jour dans la sidebar ---
+        (function() {
+            var now = new Date();
+            var jours = ['Dimanche','Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi'];
+            var moisNoms = ['Janvier','F\u00e9vrier','Mars','Avril','Mai','Juin','Juillet','Ao\u00fbt','Septembre','Octobre','Novembre','D\u00e9cembre'];
+            var el = document.getElementById('sidebar-date');
+            if (el) el.textContent = jours[now.getDay()] + ' ' + now.getDate() + ' ' + moisNoms[now.getMonth()] + ' ' + now.getFullYear();
+        })();
+
+        // --- Toutes les agences (source de v\u00e9rit\u00e9) ---
+        var ALL_AGENCES_OPTIONS = [
+            {% for ag in agences %}
+            { value: "{{ ag.id }}", dr: "{{ ag.dr_code }}", text: "{{ ag.nom }}" },
+            {% endfor %}
+        ];
+
+        // --- S\u00e9lection s\u00e9quentielle : DR \u2192 Agence \u2192 Formulaire ---
+        var selectionReady = false;
+
+        function onDrChange() {
+            var drVal = document.getElementById('sel-dr').value;
+            var agSel = document.getElementById('sel-agence');
+            agSel.innerHTML = '';
+
+            if (!drVal) {
+                // Pas de DR : agence d\u00e9sactiv\u00e9e, formulaire bloqu\u00e9
+                var ph = document.createElement('option');
+                ph.value = '';
+                ph.textContent = '-- Choisir d\'abord une DR --';
+                agSel.appendChild(ph);
+                agSel.disabled = true;
+                selectionReady = false;
+                showOverlay();
+                return;
+            }
+
+            // DR choisie : peupler les agences de cette DR
+            var placeholder = document.createElement('option');
+            placeholder.value = '';
+            placeholder.textContent = '-- Choisir une agence --';
+            agSel.appendChild(placeholder);
+
+            ALL_AGENCES_OPTIONS.filter(function(a) { return a.dr === drVal; }).forEach(function(a) {
+                var opt = document.createElement('option');
+                opt.value = a.value;
+                opt.setAttribute('data-dr', a.dr);
+                opt.textContent = a.text;
+                agSel.appendChild(opt);
+            });
+            agSel.disabled = false;
+            agSel.value = '';
+            selectionReady = false;
+            showOverlay();
+        }
+
+        function onAgenceChange() {
+            var agVal = document.getElementById('sel-agence').value;
+            if (!agVal) {
+                selectionReady = false;
+                showOverlay();
+                return;
+            }
+            // Agence choisie : d\u00e9bloquer le formulaire
+            selectionReady = true;
+            hideOverlay();
+            loadData();
+        }
+
+        function onMoisChange() {
+            if (selectionReady) loadData();
+        }
+
+        function showOverlay() {
+            var ov = document.getElementById('saisie-overlay');
+            if (ov) ov.style.display = 'flex';
+        }
+
+        function hideOverlay() {
+            var ov = document.getElementById('saisie-overlay');
+            if (ov) ov.style.display = 'none';
+        }
+
+        // --- Reset apr\u00e8s sauvegarde ---
+        function resetSelection() {
+            document.getElementById('sel-dr').value = '';
+            var agSel = document.getElementById('sel-agence');
+            agSel.innerHTML = '';
+            var ph = document.createElement('option');
+            ph.value = '';
+            ph.textContent = '-- Choisir d\'abord une DR --';
+            agSel.appendChild(ph);
+            agSel.disabled = true;
+            selectionReady = false;
+            showOverlay();
+        }
+
+        // --- Navigation vers le tableau de bord avec DR pr\u00e9-s\u00e9lectionn\u00e9e ---
+        function goToDashboard() {
+            var drVal = document.getElementById('sel-dr').value;
+            if (drVal) {
+                sessionStorage.setItem('camwater_dash_site', 'dr:' + drVal);
+            } else {
+                sessionStorage.removeItem('camwater_dash_site');
+            }
+            window.location.href = '/dashboard';
+        }
+
+        const FENETRE = '{{ fenetre }}';
+        const MOIS_NAMES = {{ mois | tojson }};
+        const CATEGORIES_VOL = [
+            ["Particuliers <= 10m3", 293], ["Particuliers > 10m3 T2", 364], ["Particuliers > 10m3 T3", 364],
+            ["Sonel 870", 50], ["Sonel 871", 314], ["Sonel 872", 364], ["Sonel 873", 243],
+            ["Cadre Eneo 890", 293], ["Cadre Eneo 891", 364], ["Cadre Eneo 892", 364],
+            ["Cadre Eneo 880", 293], ["Cadre Eneo 881", 364],
+            ["B.F. Payantes", 293], ["Dépasst agts CDE", 293], ["Dépasst Adm. CDE", 293],
+            ["Ventes Directes", 0], ["Rappel T1", 293], ["Rappel T2", 364],
+            ["Sinistres", 364], ["Partants <= 10m3", 293], ["Partants > 10m3", 364], ["Fraudes", 364],
+            ["GCO", 0], ["Administrations", 382], ["Bâtiments communaux", 382], ["B.F.C", 382],
+            ["Val Part Agent CDE", 293], ["Val Services CDE", 293], ["Val Part Adm CDE", 293], ["Val Part agts Camwater", 293]
+        ];
+
+        // Au chargement : overlay
+        showOverlay();
+
+        // ═══════ RESET données agence/mois ═══════
+        function doResetAgence() {
+            var agenceId = document.getElementById('sel-agence').value;
+            var mois = document.getElementById('sel-mois').value;
+            if (!agenceId || !mois) {
+                alert('Veuillez d\'abord s\u00e9lectionner une agence et un mois.');
+                return;
+            }
+            var agenceNom = document.getElementById('sel-agence').selectedOptions[0].textContent;
+            var moisNom = MOIS_NAMES[parseInt(mois) - 1];
+            if (!confirm('ATTENTION : Cette action supprimera D\u00c9FINITIVEMENT toutes les donn\u00e9es saisies pour :\n\n'
+                + '  Agence : ' + agenceNom + '\n'
+                + '  Mois : ' + moisNom + '\n'
+                + '  Fen\u00eatre : ' + FENETRE + '\n\n'
+                + 'Y compris les enregistrements d\u00e9finitifs (verrouill\u00e9s).\n\n'
+                + 'Confirmer la r\u00e9initialisation ?')) return;
+            // Double confirmation
+            if (!confirm('\u26a0\ufe0f SECONDE CONFIRMATION REQUISE \u26a0\ufe0f\n\n'
+                + 'Les donn\u00e9es d\u00e9finitivement enregistr\u00e9es seront \u00e9galement supprim\u00e9es.\n'
+                + '\u00cates-vous absolument s\u00fbr(e) ?')) return;
+            fetch('/api/reset-agence?agence_id=' + agenceId + '&mois=' + mois + '&exercice=2026&fenetre=' + FENETRE, { method: 'DELETE' })
+                .then(function(r) { return r.json(); })
+                .then(function(data) {
+                    if (data.error) {
+                        document.getElementById('save-status').textContent = 'Erreur: ' + data.error;
+                    } else {
+                        document.getElementById('save-status').textContent = data.message || 'Donn\u00e9es r\u00e9initialis\u00e9es';
+                        document.getElementById('save-status').style.color = '#e74c3c';
+                        // Recharger les donn\u00e9es
+                        loadData();
+                    }
+                })
+                .catch(function(err) {
+                    document.getElementById('save-status').textContent = 'Erreur r\u00e9seau';
+                });
+        }
+
+    </script>
+</body>
+</html>
