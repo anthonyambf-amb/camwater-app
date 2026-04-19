@@ -24,6 +24,27 @@
             background:#229954 !important;
             border-color:#1e8449 !important;
         }
+        /* Bouton "Suivi des recettes" exclusif à l'espace Direction
+           (fond rouge vif, écritures bordeaux) */
+        .btn-suivi-recettes {
+            display:inline-flex;align-items:center;gap:6px;
+            background:#ff1744 !important;
+            color:#6d071a !important;
+            border:1px solid #c4001d !important;
+            font-weight:700;
+            padding:7px 16px;
+            border-radius:6px;
+            text-decoration:none;
+            font-size:0.88rem;
+            letter-spacing:0.2px;
+            transition:all 0.15s ease;
+        }
+        .btn-suivi-recettes:hover {
+            background:#d50032 !important;
+            color:#3d0010 !important;
+            border-color:#a3001a !important;
+            transform:translateY(-1px);
+        }
         /* Mode mobile : dashboard compact et lisible sur smartphone/tablette */
         @media (max-width: 900px) {
             .dash-header { flex-direction:column;align-items:stretch;gap:10px; }
@@ -88,8 +109,9 @@
                 gap:6px;
             }
             body.direction-mode .dash-controls select { width:100% !important;min-width:0 !important; }
-            body.direction-mode .dash-btn-group { width:100%;justify-content:center; }
-            body.direction-mode .btn-pdf-direction { width:100%;justify-content:center; }
+            body.direction-mode .dash-btn-group { width:100%;justify-content:center;flex-direction:column;gap:6px; }
+            body.direction-mode .btn-pdf-direction,
+            body.direction-mode .btn-suivi-recettes { width:100%;justify-content:center;text-align:center; }
 
             body.direction-mode .kpi-cards {
                 grid-template-columns:1fr !important;
@@ -236,6 +258,7 @@
                     </div>
                     <button class="btn-export btn-print" onclick="printDashboardPDF()" title="Imprimer en PDF">&#128424; PDF</button>
                     {% else %}
+                    <a href="/recettes-jour/suivi" class="btn-suivi-recettes" title="Acc&eacute;der au suivi des recettes quotidiennes">&#128202; Suivi des recettes</a>
                     <button class="btn-export btn-print btn-pdf-direction" onclick="printDashboardPDF()" title="Téléchargez le tableau de bord en PDF">&#128229; T&eacute;l&eacute;chargez en PDF</button>
                     {% endif %}
                 </div>

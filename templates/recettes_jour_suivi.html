@@ -15,7 +15,9 @@
             </div>
             <div class="rj-suivi-actions">
                 <a href="/" class="btn-home">Accueil</a>
+                {% if not read_only %}
                 <a href="/recettes-jour" class="btn-saisie">Saisie</a>
+                {% endif %}
             </div>
         </header>
 

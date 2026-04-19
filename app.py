@@ -85,6 +85,11 @@ def _is_direction_allowed(path, method='GET'):
         return True
     if path == '/consultations' or path.startswith('/consultations/'):
         return True
+    # Suivi des recettes quotidiennes (lecture seule pour la Direction)
+    if path == '/recettes-jour/suivi':
+        return True
+    if path == '/api/recettes-jour/synthese':
+        return True
     if path in ('/api/operator', '/api/logout'):
         return True
     if path == '/api/dashboard' or path.startswith('/api/consultation/'):
@@ -1792,8 +1797,11 @@ def recettes_jour_saisie_page():
 
 @app.route('/recettes-jour/suivi')
 def recettes_jour_suivi_page():
+    role = session.get('role')
     return render_template('recettes_jour_suivi.html',
-                           drs=list(STRUCTURE_CW.keys()))
+                           drs=list(STRUCTURE_CW.keys()),
+                           role=role,
+                           read_only=(role == 'direction'))
 
 
 @app.route('/api/recettes-jour/login', methods=['POST'])
