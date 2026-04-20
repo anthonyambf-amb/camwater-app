@@ -1,0 +1,49 @@
+# Koyeb — Configuration déclarative du service CAMWATER
+#
+# Cette configuration peut être appliquée via la CLI Koyeb :
+#     koyeb service apply -f koyeb.yaml
+# (ou via le dashboard — les mêmes valeurs sont à saisir).
+#
+# ⚠️ Plan Free : stockage éphémère → les données sont écrites dans /tmp.
+# Les saisies SONT EFFACÉES à chaque redéploiement (push GitHub ou restart).
+# Pour la persistance en production : passer en plan "eco" + volume attaché,
+# OU migrer la base SQLite vers Postgres (Neon gratuit 0,5 Go).
+
+name: camwater
+type: web
+regions:
+  - par            # Paris — la région la plus proche du Cameroun (~80 ms)
+instance_types:
+  - free
+ports:
+  - port: 8000
+    protocol: http
+routes:
+  - path: /
+    port: 8000
+scalings:
+  - min: 1
+    max: 1
+health_checks:
+  - grace_period: 30s
+    interval: 30s
+    restart_limit: 3
+    timeout: 15s
+    tcp:
+      port: 8000
+git:
+  repository: github.com/anthonyambf-amb/camwater-app
+  branch: main
+  buildpack:
+    build_command: pip install -r requirements.txt
+    run_command: gunicorn app:app --bind 0.0.0.0:$PORT --workers 2 --timeout 120
+  workdir: ""
+env:
+  - key: CAMWATER_DEBUG
+    value: "0"
+  - key: CAMWATER_DATA_DIR
+    value: /tmp/camwater
+  - key: PYTHON_VERSION
+    value: "3.11.9"
+  # CAMWATER_SECRET_KEY : à générer manuellement dans le dashboard Koyeb
+  # (env var secret) pour une clé aléatoire forte en production.
