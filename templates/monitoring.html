@@ -6,10 +6,12 @@
     <title>CAMWATER — Surveillance &amp; Alertes</title>
     <link rel="stylesheet" href="/static/css/style.css">
     <style>
+        /* Hérite DM Sans de style.css — surcharges spécifiques monitoring */
+        * { font-family:'DM Sans','Segoe UI',sans-serif; }
         /* ── Layout ── */
         .mon-layout { display:flex; min-height:100vh; }
         .mon-sidebar {
-            width:260px; min-width:220px; background:#1a1a2e; color:#fff;
+            width:260px; min-width:220px; background:#00204a; color:#fff;
             display:flex; flex-direction:column; padding:0; flex-shrink:0;
         }
         .mon-sidebar-header {
@@ -39,7 +41,7 @@
         /* ── Main ── */
         .mon-main { flex:1; background:#f0f2f5; overflow-y:auto; padding:0; }
         .mon-topbar {
-            background:#1a1a2e; color:#fff; padding:14px 24px;
+            background:#00204a; color:#fff; padding:14px 24px;
             display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px;
         }
         .mon-topbar h1 { margin:0; font-size:1.15rem; }
@@ -112,7 +114,7 @@
             width:100%; border-collapse:collapse; font-size:.82rem;
         }
         .alertes-table th {
-            background:#1a1a2e; color:#fff; padding:9px 12px;
+            background:#003b75; color:#fff; padding:9px 12px;
             text-align:left; font-size:.78rem; font-weight:600;
             position:sticky; top:0;
         }

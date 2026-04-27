@@ -3,46 +3,148 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CAMWATER - Portail Agences</title>
+    <title>CAMWATER — Portail Agents Terrain</title>
     <link rel="stylesheet" href="/static/css/style.css">
     <style>
-        .back-home { color:rgba(255,255,255,0.7);font-size:0.85rem;text-decoration:none;display:inline-block;margin-top:20px; }
-        .back-home:hover { color:#fff; }
-        @media (max-width: 700px) {
-            .cards-row { flex-direction:column; }
-            .index-card { width:100% !important; margin-bottom:12px; }
+        body { margin:0; }
+        .ap-page {
+            min-height:100vh;
+            background: linear-gradient(160deg, #00204a 0%, #003b82 50%, #16a085 100%);
+            display:flex; flex-direction:column;
+            font-family:'DM Sans','Segoe UI',sans-serif;
+            position:relative; overflow:hidden;
+        }
+        .ap-page::before {
+            content:''; position:absolute;
+            width:500px; height:500px; border-radius:50%;
+            background:radial-gradient(circle, rgba(22,160,133,.18) 0%, transparent 70%);
+            top:-100px; right:-80px; pointer-events:none;
+        }
+        .ap-nav {
+            position:relative; z-index:10;
+            display:flex; align-items:center; justify-content:space-between;
+            padding:20px 52px;
+        }
+        .ap-nav-brand { display:flex; align-items:center; gap:12px; }
+        .ap-nav-logo {
+            width:40px; height:40px; border-radius:50%;
+            background:rgba(255,255,255,.12); border:2px solid rgba(22,160,133,.4);
+            display:flex; align-items:center; justify-content:center; font-size:1.1rem;
+        }
+        .ap-nav-name {
+            font-family:'Playfair Display',serif;
+            font-size:1.35rem; font-weight:700; color:#fff; letter-spacing:.06em;
+        }
+        .ap-nav-name span { color:#1abc9c; }
+        .ap-nav-back {
+            color:rgba(255,255,255,.65); font-size:.82rem; font-weight:500;
+            padding:7px 16px; border-radius:20px; border:1px solid rgba(255,255,255,.22);
+            transition:all .2s;
+        }
+        .ap-nav-back:hover { background:rgba(255,255,255,.1); color:#fff; }
+
+        .ap-body {
+            position:relative; z-index:5; flex:1;
+            display:flex; flex-direction:column;
+            align-items:center; justify-content:center;
+            padding:20px 24px 80px;
+            text-align:center;
+        }
+        .ap-badge {
+            display:inline-flex; align-items:center; gap:7px;
+            background:rgba(26,188,156,.15); border:1px solid rgba(26,188,156,.35);
+            color:#a7f3d0; font-size:.7rem; font-weight:700;
+            letter-spacing:.14em; text-transform:uppercase;
+            padding:5px 16px; border-radius:20px; margin-bottom:22px;
+        }
+        .ap-badge::before { content:''; display:block; width:5px; height:5px; background:#1abc9c; border-radius:50%; }
+
+        .ap-title {
+            font-family:'Playfair Display',serif;
+            font-size:clamp(1.8rem,4vw,2.6rem); font-weight:700;
+            color:#fff; line-height:1.2; margin-bottom:8px;
+        }
+        .ap-title .accent { color:#4ecdc4; }
+        .ap-sub { color:rgba(255,255,255,.62); font-size:.92rem; margin-bottom:40px; }
+
+        .ap-cards { display:flex; gap:18px; justify-content:center; flex-wrap:wrap; }
+        .ap-card {
+            display:block; background:#fff; border-radius:16px;
+            padding:32px 26px; width:260px; text-align:left;
+            box-shadow:0 10px 36px rgba(0,0,0,.16);
+            border-bottom:3px solid transparent;
+            transition:transform .22s, box-shadow .22s;
+        }
+        .ap-card:hover { transform:translateY(-5px); box-shadow:0 16px 48px rgba(0,0,0,.22); }
+        .ap-card.c-recettes  { border-bottom-color:#2980b9; }
+        .ap-card.c-branch    { border-bottom-color:#16a085; }
+        .ap-card .ac-icon { font-size:2rem; margin-bottom:12px; }
+        .ap-card h2 { font-size:1rem; color:#00204a; margin-bottom:6px; }
+        .ap-card p { font-size:.8rem; color:#64748b; line-height:1.55; margin-bottom:14px; }
+        .ap-card .ac-cta {
+            font-size:.78rem; font-weight:700;
+            color:var(--accent, #2980b9); display:flex; align-items:center; gap:5px;
+            transition:gap .2s;
+        }
+        .ap-card:hover .ac-cta { gap:9px; }
+        .ap-card.c-recettes { --accent:#2980b9; }
+        .ap-card.c-branch   { --accent:#16a085; }
+
+        .ap-wave {
+            position:absolute; bottom:0; left:0; right:0; line-height:0; z-index:4;
+        }
+        .ap-wave svg { display:block; width:100%; }
+
+        @media (max-width:600px) {
+            .ap-nav { padding:16px 20px; }
+            .ap-cards { flex-direction:column; align-items:center; }
+            .ap-card { width:100%; max-width:320px; }
         }
     </style>
 </head>
-<body class="index-body">
-    <div class="index-container">
-        <div class="index-header">
-            <h1>CAMWATER</h1>
-            <p class="index-subtitle">Portail Agents Terrain</p>
-            <span class="index-exercice">Saisie quotidienne &agrave; distance</span>
+<body>
+<div class="ap-page">
+    <nav class="ap-nav">
+        <div class="ap-nav-brand">
+            <div class="ap-nav-logo">🏘️</div>
+            <div class="ap-nav-name">CAM<span>WATER</span></div>
         </div>
+        <a href="/" class="ap-nav-back">← Accueil</a>
+    </nav>
 
-        <p style="color:rgba(255,255,255,0.75);text-align:center;margin:0 0 18px;font-size:0.95rem;">
-            S&eacute;lectionnez le type de saisie &agrave; effectuer.
-        </p>
+    <div class="ap-body">
+        <div class="ap-badge">Espace 02 — Agents Terrain</div>
 
-        <div class="cards-row">
-            <a href="/recettes-jour" class="index-card card-recettes">
-                <div class="card-icon">&#128176;</div>
+        <h1 class="ap-title">Saisie quotidienne<br><span class="accent">à distance</span></h1>
+        <p class="ap-sub">Sélectionnez l'opération de saisie à effectuer depuis votre agence.</p>
+
+        <div class="ap-cards">
+            <a href="/recettes-jour" class="ap-card c-recettes">
+                <div class="ac-icon">💰</div>
                 <h2>Recettes du Jour</h2>
-                <p>Saisie quotidienne des recettes pour votre agence / centre.</p>
+                <p>Saisie quotidienne des recettes encaissées à votre agence ou centre.</p>
+                <span class="ac-cta">Accéder à la saisie →</span>
             </a>
 
-            <a href="/branchements-jour" class="index-card card-branchements">
-                <div class="card-icon">&#128736;</div>
+            <a href="/branchements-jour" class="ap-card c-branch">
+                <div class="ac-icon">🔧</div>
                 <h2>Branchements du Jour</h2>
-                <p>Saisie quotidienne des branchements pour votre agence / centre.</p>
+                <p>Saisie quotidienne des branchements réalisés à votre agence ou centre.</p>
+                <span class="ac-cta">Accéder à la saisie →</span>
             </a>
         </div>
 
-        <div style="text-align:center;">
-            <a href="/" class="back-home">&larr; Retour &agrave; l'accueil</a>
-        </div>
+        <p style="margin-top:32px; color:rgba(255,255,255,.45); font-size:.78rem; max-width:440px; line-height:1.6;">
+            Vos saisies sont transmises en temps réel au niveau central CAMWATER.<br>
+            En cas de problème, contactez votre superviseur à la Direction Régionale.
+        </p>
     </div>
+
+    <div class="ap-wave">
+        <svg viewBox="0 0 1440 60" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M0,20 C480,60 960,0 1440,30 L1440,60 L0,60 Z" fill="#f4f7fb"/>
+        </svg>
+    </div>
+</div>
 </body>
 </html>

@@ -3,73 +3,179 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CAMWATER - Espace Agent Terrain</title>
+    <title>CAMWATER — Espace Agent Terrain</title>
     <link rel="stylesheet" href="/static/css/style.css">
     <style>
-        .terrain-badge {
-            display:inline-block;background:#e8f0fa;color:#0056b3;
-            padding:4px 12px;border-radius:14px;font-size:0.8rem;margin-top:6px;
+        body { margin:0; }
+        .tp-page {
+            min-height:100vh;
+            background: linear-gradient(160deg, #00204a 0%, #003b82 50%, #16a085 100%);
+            display:flex; flex-direction:column;
+            font-family:'DM Sans','Segoe UI',sans-serif;
+            position:relative; overflow:hidden;
         }
-        .terrain-op-info {
-            background:rgba(255,255,255,0.08);padding:10px 14px;border-radius:8px;
-            font-size:0.85rem;color:#fff;margin-bottom:10px;
+        .tp-page::before {
+            content:''; position:absolute;
+            width:500px; height:500px; border-radius:50%;
+            background:radial-gradient(circle, rgba(22,160,133,.18) 0%, transparent 70%);
+            top:-100px; right:-80px; pointer-events:none;
         }
-        .terrain-logout {
-            display:inline-block;margin-top:22px;color:#fff;
-            background:rgba(231,76,60,0.8);padding:8px 18px;border-radius:8px;
-            text-decoration:none;font-size:0.85rem;
+
+        .tp-nav {
+            position:relative; z-index:10;
+            display:flex; align-items:center; justify-content:space-between;
+            padding:20px 52px;
         }
-        .terrain-logout:hover { background:#c0392b; }
+        .tp-nav-brand { display:flex; align-items:center; gap:12px; }
+        .tp-nav-logo {
+            width:40px; height:40px; border-radius:50%;
+            background:rgba(255,255,255,.12); border:2px solid rgba(22,160,133,.4);
+            display:flex; align-items:center; justify-content:center; font-size:1.1rem;
+        }
+        .tp-nav-name {
+            font-family:'Playfair Display',serif;
+            font-size:1.35rem; font-weight:700; color:#fff; letter-spacing:.06em;
+        }
+        .tp-nav-name span { color:#1abc9c; }
+        .tp-logout-btn {
+            color:rgba(255,255,255,.7); font-size:.8rem; font-weight:600;
+            padding:7px 16px; border-radius:20px;
+            background:rgba(231,76,60,.25); border:1px solid rgba(231,76,60,.4);
+            transition:all .2s;
+        }
+        .tp-logout-btn:hover { background:rgba(231,76,60,.45); color:#fff; }
+
+        .tp-body {
+            position:relative; z-index:5; flex:1;
+            display:flex; flex-direction:column;
+            align-items:center; justify-content:center;
+            padding:20px 24px 80px;
+            text-align:center;
+        }
+        .tp-badge {
+            display:inline-flex; align-items:center; gap:7px;
+            background:rgba(26,188,156,.15); border:1px solid rgba(26,188,156,.35);
+            color:#a7f3d0; font-size:.7rem; font-weight:700;
+            letter-spacing:.14em; text-transform:uppercase;
+            padding:5px 16px; border-radius:20px; margin-bottom:16px;
+        }
+        .tp-badge::before { content:''; display:block; width:5px; height:5px; background:#1abc9c; border-radius:50%; }
+
+        /* Info opérateur connecté */
+        .tp-op-info {
+            background:rgba(255,255,255,.1); border:1px solid rgba(255,255,255,.16);
+            border-radius:12px; padding:12px 22px;
+            color:#fff; font-size:.84rem; margin-bottom:22px;
+            max-width:600px; line-height:1.7;
+        }
+        .tp-op-info strong { color:#4ecdc4; }
+        .tp-op-row { display:flex; align-items:center; gap:8px; flex-wrap:wrap; justify-content:center; }
+
+        .tp-title {
+            font-family:'Playfair Display',serif;
+            font-size:clamp(1.6rem,3.5vw,2.4rem); font-weight:700;
+            color:#fff; line-height:1.2; margin-bottom:8px;
+        }
+        .tp-title .accent { color:#4ecdc4; }
+        .tp-sub { color:rgba(255,255,255,.6); font-size:.9rem; margin-bottom:36px; }
+
+        .tp-cards { display:flex; gap:18px; justify-content:center; flex-wrap:wrap; }
+        .tp-card {
+            display:block; background:#fff; border-radius:16px;
+            padding:30px 24px; width:250px; text-align:left;
+            box-shadow:0 10px 36px rgba(0,0,0,.16);
+            border-bottom:3px solid transparent;
+            transition:transform .22s, box-shadow .22s;
+        }
+        .tp-card:hover { transform:translateY(-5px); box-shadow:0 16px 48px rgba(0,0,0,.22); }
+        .tp-card.c-recettes  { border-bottom-color:#2980b9; }
+        .tp-card.c-branch    { border-bottom-color:#16a085; }
+        .tp-card .tc-icon { font-size:1.8rem; margin-bottom:10px; }
+        .tp-card h2 { font-size:.96rem; color:#00204a; margin-bottom:5px; }
+        .tp-card p { font-size:.78rem; color:#64748b; line-height:1.55; margin-bottom:12px; }
+        .tp-card .tc-cta {
+            font-size:.76rem; font-weight:700; display:flex; align-items:center; gap:5px;
+            transition:gap .2s;
+        }
+        .tp-card:hover .tc-cta { gap:9px; }
+        .tp-card.c-recettes .tc-cta { color:#2980b9; }
+        .tp-card.c-branch   .tc-cta { color:#16a085; }
+
+        .tp-wave {
+            position:absolute; bottom:0; left:0; right:0; line-height:0; z-index:4;
+        }
+        .tp-wave svg { display:block; width:100%; }
+
+        @media (max-width:600px) {
+            .tp-nav { padding:16px 20px; }
+            .tp-cards { flex-direction:column; align-items:center; }
+            .tp-card { width:100%; max-width:320px; }
+        }
     </style>
 </head>
-<body class="index-body">
-    <div class="index-container">
-        <div class="index-header">
-            <h1>CAMWATER</h1>
-            <p class="index-subtitle">Espace Agent Terrain &mdash; Saisie &agrave; distance</p>
-            <span class="terrain-badge">&#128205; Acc&egrave;s limit&eacute; &agrave; votre agence</span>
+<body>
+<div class="tp-page">
+    <nav class="tp-nav">
+        <div class="tp-nav-brand">
+            <div class="tp-nav-logo">📍</div>
+            <div class="tp-nav-name">CAM<span>WATER</span></div>
         </div>
+        <a href="/terrain/logout" class="tp-logout-btn">⏏ Déconnexion</a>
+    </nav>
+
+    <div class="tp-body">
+        <div class="tp-badge">Espace Agent Terrain — Accès limité</div>
 
         {% if op_recettes.matricule or op_branchements.matricule %}
-        <div class="terrain-op-info">
+        <div class="tp-op-info">
             {% if op_recettes.matricule %}
-            <div>&#128176; Recettes &mdash; Agence <strong>{{ op_recettes.agence_nom }}</strong>
-                ({{ op_recettes.dr_code }}) &mdash; Mat. <strong>{{ op_recettes.matricule }}</strong>
-                &mdash; Date : {{ op_recettes.date_saisie }}</div>
+            <div class="tp-op-row">
+                💰 Recettes — Agence <strong>{{ op_recettes.agence_nom }}</strong>
+                &nbsp;({{ op_recettes.dr_code }})&nbsp;·&nbsp;
+                Mat. <strong>{{ op_recettes.matricule }}</strong>
+                &nbsp;·&nbsp; {{ op_recettes.date_saisie }}
+            </div>
             {% endif %}
             {% if op_branchements.matricule %}
-            <div>&#128736; Branchements &mdash; Agence <strong>{{ op_branchements.agence_nom }}</strong>
-                ({{ op_branchements.dr_code }}) &mdash; Mat. <strong>{{ op_branchements.matricule }}</strong>
-                &mdash; Date : {{ op_branchements.date_saisie }}</div>
+            <div class="tp-op-row">
+                🔧 Branchements — Agence <strong>{{ op_branchements.agence_nom }}</strong>
+                &nbsp;({{ op_branchements.dr_code }})&nbsp;·&nbsp;
+                Mat. <strong>{{ op_branchements.matricule }}</strong>
+                &nbsp;·&nbsp; {{ op_branchements.date_saisie }}
+            </div>
             {% endif %}
         </div>
         {% endif %}
 
-        <p style="color:rgba(255,255,255,0.75);text-align:center;margin-bottom:18px;font-size:0.9rem;">
-            S&eacute;lectionnez l'op&eacute;ration &agrave; saisir
-        </p>
+        <h1 class="tp-title">Saisie quotidienne<br><span class="accent">à distance</span></h1>
+        <p class="tp-sub">Sélectionnez l'opération à saisir pour votre agence.</p>
 
-        <div class="cards-row">
-            <a href="/recettes-jour" class="index-card card-recettes">
-                <div class="card-icon">&#128176;</div>
+        <div class="tp-cards">
+            <a href="/recettes-jour" class="tp-card c-recettes">
+                <div class="tc-icon">💰</div>
                 <h2>Recettes du Jour</h2>
-                <p>Saisie quotidienne des recettes encaiss&eacute;es &agrave; votre agence</p>
+                <p>Saisie quotidienne des recettes encaissées à votre agence ou centre.</p>
+                <span class="tc-cta">Accéder à la saisie →</span>
             </a>
-            <a href="/branchements-jour" class="index-card card-branchements">
-                <div class="card-icon">&#128736;</div>
+            <a href="/branchements-jour" class="tp-card c-branch">
+                <div class="tc-icon">🔧</div>
                 <h2>Branchements du Jour</h2>
-                <p>Saisie quotidienne des branchements r&eacute;alis&eacute;s &agrave; votre agence</p>
+                <p>Saisie quotidienne des branchements réalisés à votre agence ou centre.</p>
+                <span class="tc-cta">Accéder à la saisie →</span>
             </a>
         </div>
 
-        <div style="text-align:center;margin-top:18px;">
-            <a href="/terrain/logout" class="terrain-logout">&#128682; Se d&eacute;connecter</a>
-        </div>
-
-        <p style="color:rgba(255,255,255,0.55);text-align:center;margin-top:22px;font-size:0.78rem;">
-            Vos saisies sont transmises en temps r&eacute;el au niveau central.<br>
-            En cas de probl&egrave;me, contactez votre superviseur &agrave; la DR.
+        <p style="margin-top:30px; color:rgba(255,255,255,.42); font-size:.76rem; max-width:400px; line-height:1.6;">
+            Vos saisies sont transmises en temps réel au niveau central.<br>
+            En cas de problème, contactez votre superviseur à la DR.
         </p>
     </div>
+
+    <div class="tp-wave">
+        <svg viewBox="0 0 1440 60" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M0,20 C480,60 960,0 1440,30 L1440,60 L0,60 Z" fill="#f4f7fb"/>
+        </svg>
+    </div>
+</div>
 </body>
 </html>
