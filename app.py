@@ -175,6 +175,54 @@ def get_all_drs():
     return [dict(r) for r in rows]
 
 
+# ─── API Vitrine (publique, sans auth) ──────────────────────────────
+
+@app.route('/api/vitrine-kpi')
+def api_vitrine_kpi():
+    """KPIs cumulatifs nationaux pour la page d'accueil vitrine — sans authentification."""
+    import datetime
+    exercice = request.args.get('exercice', 2026, type=int)
+    mois_fin = min(datetime.date.today().month, 12)
+
+    try:
+        from calculs import calcul_cumul_national, get_branchements_national
+        cumul = calcul_cumul_national(1, mois_fin, exercice)
+        brch  = get_branchements_national(1, mois_fin, exercice)
+
+        # Objectif encaissements national
+        db = get_db()
+        obj_row = db.execute("""
+            SELECT COALESCE(SUM(montant), 0) as total FROM objectifs
+            WHERE exercice=? AND scope_type='national' AND rubrique IN ('Encaissements','Encaissements facturation fraîche')
+        """, (exercice,)).fetchone()
+        objectif_enc = obj_row['total'] if obj_row else 0
+
+        # Mois le plus récent avec données CA (pour indiquer la fraîcheur)
+        last_row = db.execute("""
+            SELECT MAX(mois) as m FROM volumes WHERE exercice=?
+        """, (exercice,)).fetchone()
+        dernier_mois = last_row['m'] if last_row and last_row['m'] else 0
+        db.close()
+
+        total_enc  = cumul.get('total_encaissements', 0) or 0
+        objectif_p = objectif_enc * mois_fin / 12 if objectif_enc else 0
+        taux_obj   = total_enc / objectif_p if objectif_p else 0
+
+        return jsonify({
+            'ca_global':           cumul.get('ca_global', 0) or 0,
+            'total_encaissements': total_enc,
+            'branchements_vendus': brch.get('vendus', 0) or 0,
+            'taux_objectif':       taux_obj,
+            'objectif_enc':        objectif_enc,
+            'mois_fin':            mois_fin,
+            'dernier_mois':        dernier_mois,
+            'exercice':            exercice,
+        })
+    except Exception as e:
+        return jsonify({'error': str(e), 'ca_global': 0, 'total_encaissements': 0,
+                        'branchements_vendus': 0, 'taux_objectif': 0})
+
+
 # ─── Pages ──────────────────────────────────────────────────────────
 
 @app.route('/')
