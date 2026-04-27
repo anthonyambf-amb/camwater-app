@@ -9,9 +9,9 @@
         body { margin:0; }
         .tp-page {
             min-height:100vh;
-            background: linear-gradient(160deg, #00204a 0%, #003b82 50%, #16a085 100%);
+            background: linear-gradient(160deg, #0D2B5E 0%, #133672 50%, #219653 100%);
             display:flex; flex-direction:column;
-            font-family:'DM Sans','Segoe UI',sans-serif;
+            font-family:'Raleway','Segoe UI',sans-serif;
             position:relative; overflow:hidden;
         }
         .tp-page::before {
@@ -33,10 +33,10 @@
             display:flex; align-items:center; justify-content:center; font-size:1.1rem;
         }
         .tp-nav-name {
-            font-family:'Playfair Display',serif;
+            font-family:'Raleway',sans-serif;font-weight:800;
             font-size:1.35rem; font-weight:700; color:#fff; letter-spacing:.06em;
         }
-        .tp-nav-name span { color:#1abc9c; }
+        .tp-nav-name span { color:#5BACD8; }
         .tp-logout-btn {
             color:rgba(255,255,255,.7); font-size:.8rem; font-weight:600;
             padding:7px 16px; border-radius:20px;
@@ -59,7 +59,7 @@
             letter-spacing:.14em; text-transform:uppercase;
             padding:5px 16px; border-radius:20px; margin-bottom:16px;
         }
-        .tp-badge::before { content:''; display:block; width:5px; height:5px; background:#1abc9c; border-radius:50%; }
+        .tp-badge::before { content:''; display:block; width:5px; height:5px; background:#5BACD8; border-radius:50%; }
 
         /* Info opérateur connecté */
         .tp-op-info {
@@ -68,15 +68,15 @@
             color:#fff; font-size:.84rem; margin-bottom:22px;
             max-width:600px; line-height:1.7;
         }
-        .tp-op-info strong { color:#4ecdc4; }
+        .tp-op-info strong { color:#5BACD8; }
         .tp-op-row { display:flex; align-items:center; gap:8px; flex-wrap:wrap; justify-content:center; }
 
         .tp-title {
-            font-family:'Playfair Display',serif;
+            font-family:'Raleway',sans-serif;font-weight:800;
             font-size:clamp(1.6rem,3.5vw,2.4rem); font-weight:700;
             color:#fff; line-height:1.2; margin-bottom:8px;
         }
-        .tp-title .accent { color:#4ecdc4; }
+        .tp-title .accent { color:#5BACD8; }
         .tp-sub { color:rgba(255,255,255,.6); font-size:.9rem; margin-bottom:36px; }
 
         .tp-cards { display:flex; gap:18px; justify-content:center; flex-wrap:wrap; }
@@ -89,9 +89,9 @@
         }
         .tp-card:hover { transform:translateY(-5px); box-shadow:0 16px 48px rgba(0,0,0,.22); }
         .tp-card.c-recettes  { border-bottom-color:#2980b9; }
-        .tp-card.c-branch    { border-bottom-color:#16a085; }
+        .tp-card.c-branch    { border-bottom-color:#219653; }
         .tp-card .tc-icon { font-size:1.8rem; margin-bottom:10px; }
-        .tp-card h2 { font-size:.96rem; color:#00204a; margin-bottom:5px; }
+        .tp-card h2 { font-size:.96rem; color:#0D2B5E; margin-bottom:5px; }
         .tp-card p { font-size:.78rem; color:#64748b; line-height:1.55; margin-bottom:12px; }
         .tp-card .tc-cta {
             font-size:.76rem; font-weight:700; display:flex; align-items:center; gap:5px;
@@ -99,7 +99,7 @@
         }
         .tp-card:hover .tc-cta { gap:9px; }
         .tp-card.c-recettes .tc-cta { color:#2980b9; }
-        .tp-card.c-branch   .tc-cta { color:#16a085; }
+        .tp-card.c-branch   .tc-cta { color:#219653; }
 
         .tp-wave {
             position:absolute; bottom:0; left:0; right:0; line-height:0; z-index:4;
@@ -173,7 +173,7 @@
 
     <div class="tp-wave">
         <svg viewBox="0 0 1440 60" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M0,20 C480,60 960,0 1440,30 L1440,60 L0,60 Z" fill="#f4f7fb"/>
+            <path d="M0,20 C480,60 960,0 1440,30 L1440,60 L0,60 Z" fill="#F4F8FC"/>
         </svg>
     </div>
 </div>

@@ -2,853 +2,547 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#0D2B5E">
     <title>CAMWATER — Système d'Information Commercial</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:ital,wght@0,300;0,400;0,500;0,600;1,300&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Raleway:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,400&display=swap" rel="stylesheet">
     <style>
-        /* ══ Reset ══════════════════════════════════════════════════════════════ */
-        *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+        /* ══ Tokens CAMWATER (logo-accurate) ═══════════════════════════════════
+           Palette extraite du logo officiel :
+           Navy profond : #0D2B5E · Logo bleu : #133672 · Primaire : #1B53AB
+           Bleu moyen : #2E6CBF · Ciel : #5BACD8 · Pâle : #A8D8F2
+        ═══════════════════════════════════════════════════════════════════════ */
+        :root {
+            --n:  #0D2B5E; /* navy  */
+            --l:  #133672; /* logo  */
+            --p:  #1B53AB; /* primary */
+            --b:  #2E6CBF; /* blue  */
+            --s:  #5BACD8; /* sky   */
+            --pl: #A8D8F2; /* pale  */
+            --bg: #F4F8FC; /* bg    */
+            --g:  #219653; /* green */
+            --r:  #C0392B; /* red   */
+            --a:  #D68910; /* amber */
+            --t:  .22s cubic-bezier(.4,0,.2,1);
+        }
+
+        *,*::before,*::after { margin:0; padding:0; box-sizing:border-box; }
         html { scroll-behavior:smooth; }
         body {
-            font-family:'Inter', sans-serif;
-            background:#f4f7fb;
-            color:#0d1b2a;
+            font-family:'Raleway',sans-serif;
+            background:var(--bg); color:var(--l);
+            -webkit-font-smoothing:antialiased;
             overflow-x:hidden;
         }
         a { text-decoration:none; color:inherit; }
 
-        /* ══ Palette ════════════════════════════════════════════════════════════
-           Bleu marine CAMWATER   #00204a
-           Bleu primaire          #0057b8
-           Aqua eau vive          #00b4d8
-           Teal accent            #0096c7
-           Vert nature            #2ecc71
-           Fond clair             #f4f7fb
-        ══════════════════════════════════════════════════════════════════════ */
-
-        /* ══ HERO ═══════════════════════════════════════════════════════════════ */
+        /* ══ HERO ═══════════════════════════════════════════════════════════ */
         .hero {
-            position:relative;
-            min-height:100vh;
-            background: linear-gradient(160deg, #00204a 0%, #003b82 45%, #0057b8 75%, #0096c7 100%);
-            display:flex; flex-direction:column;
-            overflow:hidden;
+            position:relative; min-height:100svh;
+            background:linear-gradient(155deg,
+                #060E1E 0%, #091E3E 15%, var(--n) 38%,
+                var(--l) 60%, var(--p) 82%, var(--s) 100%);
+            display:flex; flex-direction:column; overflow:hidden;
         }
 
-        /* Bulle lumineuse aqua en arrière-plan */
-        .hero::before {
-            content:'';
-            position:absolute;
-            width:700px; height:700px;
-            background:radial-gradient(circle, rgba(0,180,216,.18) 0%, transparent 70%);
-            top:-100px; right:-150px;
-            border-radius:50%;
-            pointer-events:none;
-        }
-        .hero::after {
-            content:'';
-            position:absolute;
-            width:500px; height:500px;
-            background:radial-gradient(circle, rgba(46,204,113,.10) 0%, transparent 70%);
-            bottom:-80px; left:-80px;
-            border-radius:50%;
-            pointer-events:none;
+        /* Lumière aqua en fond */
+        .hero-glow {
+            position:absolute; inset:0; pointer-events:none;
+            background:
+                radial-gradient(ellipse 55% 50% at 80% -10%, rgba(91,172,216,.18) 0%, transparent 60%),
+                radial-gradient(ellipse 40% 40% at -5% 80%, rgba(27,83,171,.14) 0%, transparent 55%);
         }
 
         /* ── Navbar ── */
-        .navbar {
-            position:relative; z-index:10;
+        .nav {
+            position:relative; z-index:20;
             display:flex; align-items:center; justify-content:space-between;
-            padding:22px 60px;
+            padding:20px 56px;
         }
-        .navbar-brand {
-            display:flex; align-items:center; gap:14px;
-        }
-        .navbar-logo {
-            width:44px; height:44px;
-            background:rgba(255,255,255,.15);
-            border:2px solid rgba(0,180,216,.5);
-            border-radius:50%;
-            display:flex; align-items:center; justify-content:center;
-            font-size:1.3rem;
-        }
-        .navbar-name {
-            font-family:'Playfair Display', serif;
-            font-size:1.5rem; font-weight:700;
-            color:#fff; letter-spacing:.06em;
-        }
-        .navbar-name span { color:#00b4d8; }
-        .navbar-exercice {
-            font-size:.72rem; font-weight:400; color:rgba(255,255,255,.55);
-            display:block; letter-spacing:.12em; text-transform:uppercase;
-        }
-        .navbar-links {
-            display:flex; gap:6px; align-items:center;
-        }
-        .navbar-links a {
-            color:rgba(255,255,255,.75); font-size:.82rem; font-weight:500;
-            padding:7px 16px; border-radius:20px;
-            transition:all .2s;
-        }
-        .navbar-links a:hover { color:#fff; background:rgba(255,255,255,.1); }
-        .navbar-links .btn-nav-cta {
-            background:rgba(0,180,216,.25);
-            border:1px solid rgba(0,180,216,.5);
-            color:#7ee8ff;
-        }
-        .navbar-links .btn-nav-cta:hover {
-            background:rgba(0,180,216,.4); color:#fff;
+        .nav-brand { display:flex; align-items:center; gap:14px; }
+
+        /* SVG Emblem CAMWATER */
+        .cw-emblem {
+            width:46px; height:46px; flex-shrink:0;
         }
 
-        /* ── Hero Content ── */
-        .hero-content {
-            position:relative; z-index:5;
-            flex:1;
-            display:flex; flex-direction:column; align-items:center; justify-content:center;
-            text-align:center;
-            padding:60px 40px 40px;
+        .nav-wordmark {
+            display:flex; flex-direction:column;
+        }
+        .nav-wordmark-name {
+            font-weight:800; font-size:1.45rem;
+            letter-spacing:.04em; color:#fff; line-height:1;
+        }
+        .nav-wordmark-name span { color:var(--pl); }
+        .nav-wordmark-sub {
+            font-size:.55rem; font-weight:600; letter-spacing:.18em;
+            text-transform:uppercase; color:rgba(255,255,255,.38); margin-top:2px;
+        }
+
+        .nav-links { display:flex; gap:4px; align-items:center; }
+        .nav-links a {
+            color:rgba(255,255,255,.7); font-size:.8rem; font-weight:600;
+            padding:7px 15px; border-radius:20px; transition:all var(--t);
+        }
+        .nav-links a:hover { color:#fff; background:rgba(255,255,255,.09); }
+        .nav-cta {
+            background:rgba(91,172,216,.2) !important;
+            border:1px solid rgba(91,172,216,.4) !important;
+            color:rgba(168,216,242,.9) !important;
+        }
+        .nav-cta:hover {
+            background:rgba(91,172,216,.35) !important; color:#fff !important;
+        }
+
+        /* ── Hero Body ── */
+        .hero-body {
+            position:relative; z-index:10; flex:1;
+            display:flex; flex-direction:column;
+            align-items:center; justify-content:center;
+            text-align:center; padding:40px 24px 60px;
         }
         .hero-eyebrow {
             display:inline-flex; align-items:center; gap:8px;
-            background:rgba(0,180,216,.15);
-            border:1px solid rgba(0,180,216,.35);
-            color:#7ee8ff;
-            font-size:.72rem; font-weight:600; letter-spacing:.14em; text-transform:uppercase;
-            padding:6px 18px; border-radius:20px;
-            margin-bottom:28px;
+            background:rgba(168,216,242,.12);
+            border:1px solid rgba(168,216,242,.28);
+            color:rgba(168,216,242,.9);
+            font-size:.66rem; font-weight:700; letter-spacing:.18em; text-transform:uppercase;
+            padding:5px 18px; border-radius:20px; margin-bottom:26px;
         }
-        .hero-eyebrow::before { content:''; display:block; width:6px; height:6px; background:#00b4d8; border-radius:50%; }
+        .hero-eyebrow i { display:block; width:5px; height:5px; background:var(--s); border-radius:50%; }
 
         .hero-title {
-            font-family:'Playfair Display', serif;
-            font-size:clamp(2.4rem, 6vw, 4.2rem);
-            font-weight:700;
-            color:#fff;
-            line-height:1.15;
-            max-width:820px;
-            margin-bottom:10px;
-            letter-spacing:-.01em;
+            font-weight:800;
+            font-size:clamp(2.2rem,5.5vw,4rem);
+            color:#fff; line-height:1.13; max-width:820px;
+            margin-bottom:10px; letter-spacing:-.01em;
         }
-        .hero-title .accent { color:#48cae4; }
+        .hero-title .hl { color:var(--pl); }
 
-        .hero-data-line {
-            font-family:'Playfair Display', serif;
-            font-size:clamp(1rem, 2.5vw, 1.45rem);
-            font-weight:400;
-            font-style:italic;
-            color:rgba(255,255,255,.65);
-            margin-bottom:30px;
-            max-width:640px;
+        .hero-italic {
+            font-size:clamp(.88rem,2vw,1.2rem); font-weight:400; font-style:italic;
+            color:rgba(255,255,255,.55); margin-bottom:26px; max-width:560px;
         }
 
         .hero-desc {
-            font-size:clamp(.9rem, 1.8vw, 1.05rem);
-            font-weight:300;
-            color:rgba(255,255,255,.72);
-            line-height:1.7;
-            max-width:620px;
-            margin-bottom:44px;
+            font-size:clamp(.88rem,1.7vw,.98rem); font-weight:400;
+            color:rgba(255,255,255,.65); line-height:1.75; max-width:580px; margin-bottom:40px;
         }
 
-        .hero-actions {
-            display:flex; gap:14px; flex-wrap:wrap; justify-content:center;
+        .hero-ctas { display:flex; gap:12px; flex-wrap:wrap; justify-content:center; }
+        .btn-hero-p {
+            padding:13px 32px; background:var(--s); color:var(--n);
+            font-weight:800; font-size:.88rem; letter-spacing:.03em;
+            border-radius:28px; border:none; cursor:pointer;
+            transition:all var(--t);
+            box-shadow:0 6px 24px rgba(91,172,216,.35);
         }
-        .btn-primary {
-            padding:14px 34px;
-            background:#00b4d8;
-            color:#00204a;
-            font-weight:700; font-size:.92rem; letter-spacing:.02em;
-            border-radius:30px;
-            border:none; cursor:pointer;
-            transition:all .25s;
-            box-shadow:0 6px 24px rgba(0,180,216,.35);
+        .btn-hero-p:hover { background:#79C4E6; transform:translateY(-2px); box-shadow:0 10px 32px rgba(91,172,216,.5); }
+        .btn-hero-g {
+            padding:13px 30px; background:transparent; color:rgba(255,255,255,.82);
+            font-weight:600; font-size:.88rem;
+            border-radius:28px; border:1.5px solid rgba(255,255,255,.28); cursor:pointer;
+            transition:all var(--t);
         }
-        .btn-primary:hover {
-            background:#00c5ef; transform:translateY(-2px);
-            box-shadow:0 10px 32px rgba(0,180,216,.5);
-        }
-        .btn-ghost {
-            padding:14px 34px;
-            background:transparent;
-            color:rgba(255,255,255,.85);
-            font-weight:500; font-size:.92rem;
-            border-radius:30px;
-            border:1px solid rgba(255,255,255,.3);
-            cursor:pointer;
-            transition:all .25s;
-        }
-        .btn-ghost:hover {
-            background:rgba(255,255,255,.1); color:#fff;
-            border-color:rgba(255,255,255,.55);
-        }
+        .btn-hero-g:hover { background:rgba(255,255,255,.09); color:#fff; border-color:rgba(255,255,255,.5); }
 
-        /* ── Vague SVG ── */
-        .hero-wave {
-            position:absolute; bottom:0; left:0; right:0;
-            line-height:0; z-index:4;
-        }
+        /* Wave */
+        .hero-wave { position:absolute; bottom:-1px; left:0; right:0; line-height:0; z-index:5; }
         .hero-wave svg { display:block; width:100%; }
 
-        /* ══ KPI SECTION ═══════════════════════════════════════════════════════ */
-        .kpi-section {
-            position:relative;
-            background:#f4f7fb;
-            padding:70px 60px 60px;
+        /* ══ KPI ════════════════════════════════════════════════════════════ */
+        .kpi-sec { background:var(--bg); padding:72px 56px 60px; }
+        .sec-eyebrow {
+            text-align:center; font-size:.62rem; font-weight:800;
+            letter-spacing:.2em; text-transform:uppercase; color:var(--s); margin-bottom:8px;
         }
-        .section-label {
-            text-align:center;
-            font-size:.72rem; font-weight:600; letter-spacing:.18em; text-transform:uppercase;
-            color:#0096c7; margin-bottom:10px;
+        .sec-title {
+            text-align:center; font-weight:800;
+            font-size:clamp(1.4rem,3vw,2rem); color:var(--n); margin-bottom:8px;
         }
-        .section-title {
-            text-align:center;
-            font-family:'Playfair Display', serif;
-            font-size:clamp(1.5rem, 3.5vw, 2.2rem);
-            font-weight:700;
-            color:#00204a;
-            margin-bottom:8px;
-        }
-        .section-sub {
-            text-align:center;
-            font-size:.9rem; color:#6b7a8d; font-weight:300;
-            margin-bottom:48px; max-width:520px; margin-left:auto; margin-right:auto;
-            line-height:1.6;
+        .sec-sub {
+            text-align:center; font-size:.88rem; color:#5B7399; font-weight:400;
+            max-width:500px; margin:0 auto 48px; line-height:1.7;
         }
 
         .kpi-grid {
-            display:grid;
-            grid-template-columns:repeat(4, 1fr);
-            gap:18px;
-            max-width:1100px; margin:0 auto;
+            display:grid; grid-template-columns:repeat(4,1fr);
+            gap:16px; max-width:1100px; margin:0 auto;
         }
         .kpi-card {
-            background:#fff;
-            border-radius:16px;
-            padding:28px 24px;
-            box-shadow:0 2px 16px rgba(0,32,74,.07);
+            background:#fff; border-radius:14px; padding:24px 20px;
+            box-shadow:0 2px 16px rgba(13,43,94,.08);
             border-bottom:3px solid transparent;
-            transition:transform .25s, box-shadow .25s;
             position:relative; overflow:hidden;
+            transition:transform var(--t), box-shadow var(--t);
         }
         .kpi-card::before {
-            content:'';
-            position:absolute;
-            width:120px; height:120px;
-            border-radius:50%;
-            top:-30px; right:-30px;
-            opacity:.07;
+            content:''; position:absolute; width:100px; height:100px;
+            border-radius:50%; top:-30px; right:-20px; opacity:.06;
         }
-        .kpi-card:hover { transform:translateY(-4px); box-shadow:0 8px 32px rgba(0,32,74,.12); }
-
-        .kpi-card.c-ca    { border-bottom-color:#0057b8; }
-        .kpi-card.c-ca::before    { background:#0057b8; }
-        .kpi-card.c-enc   { border-bottom-color:#00b4d8; }
-        .kpi-card.c-enc::before   { background:#00b4d8; }
-        .kpi-card.c-brch  { border-bottom-color:#2ecc71; }
-        .kpi-card.c-brch::before  { background:#2ecc71; }
-        .kpi-card.c-obj   { border-bottom-color:#f39c12; }
-        .kpi-card.c-obj::before   { background:#f39c12; }
-
-        .kpi-icon {
-            width:42px; height:42px; border-radius:10px;
+        .kpi-card:hover { transform:translateY(-4px); box-shadow:0 8px 32px rgba(13,43,94,.13); }
+        .kpi-card.c1 { border-bottom-color:var(--p); } .kpi-card.c1::before { background:var(--p); }
+        .kpi-card.c2 { border-bottom-color:var(--s); } .kpi-card.c2::before { background:var(--s); }
+        .kpi-card.c3 { border-bottom-color:var(--g); } .kpi-card.c3::before { background:var(--g); }
+        .kpi-card.c4 { border-bottom-color:var(--a); } .kpi-card.c4::before { background:var(--a); }
+        .kpi-ico {
+            width:40px; height:40px; border-radius:9px;
             display:flex; align-items:center; justify-content:center;
-            font-size:1.25rem; margin-bottom:16px;
+            font-size:1.2rem; margin-bottom:14px;
         }
-        .c-ca  .kpi-icon { background:#e8f0fb; }
-        .c-enc .kpi-icon { background:#e0f7fd; }
-        .c-brch .kpi-icon { background:#e8faf0; }
-        .c-obj .kpi-icon { background:#fef9e7; }
+        .c1 .kpi-ico { background:#E8F0F9; }
+        .c2 .kpi-ico { background:#E5F4FB; }
+        .c3 .kpi-ico { background:#E8F7EF; }
+        .c4 .kpi-ico { background:#FEF8E8; }
+        .kpi-lbl { font-size:.62rem; font-weight:800; letter-spacing:.1em; text-transform:uppercase; color:#5B7399; margin-bottom:6px; }
+        .kpi-val {
+            font-size:clamp(1.35rem,2.5vw,1.8rem); font-weight:800; color:var(--n); line-height:1;
+        }
+        .kpi-val .unit { font-size:.6em; font-weight:600; color:#5B7399; margin-left:2px; }
+        .kpi-meta { font-size:.72rem; color:#5B7399; margin-top:5px; font-weight:500; }
+        .kpi-meta .ok   { color:var(--g); font-weight:700; }
+        .kpi-meta .warn { color:var(--a); font-weight:700; }
+        .kpi-prog { margin-top:10px; height:3px; background:#E8EFF8; border-radius:2px; overflow:hidden; }
+        .kpi-prog-fill { height:100%; border-radius:2px; background:linear-gradient(90deg,var(--a),#E67E22); transition:width .8s cubic-bezier(.4,0,.2,1); }
+        .kpi-prog-fill.good { background:linear-gradient(90deg,var(--g),#27AE60); }
+        .kpi-skel { background:linear-gradient(90deg,#E8EFF8 25%,#D6E4F0 50%,#E8EFF8 75%); background-size:200% 100%; animation:sk 1.4s infinite; border-radius:6px; height:1.8rem; width:75%; }
+        @keyframes sk { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
 
-        .kpi-label {
-            font-size:.7rem; font-weight:600; letter-spacing:.1em;
-            text-transform:uppercase; color:#8a99aa; margin-bottom:6px;
-        }
-        .kpi-value {
-            font-family:'Playfair Display', serif;
-            font-size:clamp(1.4rem, 2.5vw, 1.9rem);
-            font-weight:700; color:#00204a;
-            line-height:1.1; margin-bottom:4px;
-        }
-        .kpi-value .unit { font-size:.7em; font-weight:400; color:#8a99aa; margin-left:3px; }
-        .kpi-meta { font-size:.75rem; color:#8a99aa; }
-        .kpi-meta .up   { color:#2ecc71; font-weight:600; }
-        .kpi-meta .warn { color:#f39c12; font-weight:600; }
-        .kpi-meta .ok   { color:#0096c7; font-weight:600; }
-
-        /* Barre de progression pour taux objectif */
-        .kpi-progress { margin-top:10px; }
-        .kpi-progress-bar {
-            height:4px; background:#eee; border-radius:2px; overflow:hidden;
-        }
-        .kpi-progress-fill {
-            height:100%; border-radius:2px;
-            background:linear-gradient(90deg, #f39c12, #e67e22);
-            transition:width .8s ease;
-        }
-        .kpi-progress-fill.good { background:linear-gradient(90deg, #2ecc71, #27ae60); }
-
-        /* ══ ESPACES ════════════════════════════════════════════════════════════ */
-        .spaces-section {
-            background:#fff;
-            padding:70px 60px;
-        }
+        /* ══ ESPACES ════════════════════════════════════════════════════════ */
+        .spaces-sec { background:#fff; padding:72px 56px; }
         .spaces-grid {
-            display:grid;
-            grid-template-columns:repeat(3, 1fr);
-            gap:20px;
-            max-width:1100px; margin:0 auto;
+            display:grid; grid-template-columns:repeat(3,1fr);
+            gap:18px; max-width:1100px; margin:0 auto;
         }
-        .space-card {
-            display:block;
-            border-radius:16px;
-            padding:34px 28px;
-            background:#f8fafd;
-            border:1.5px solid #e8edf5;
-            transition:all .25s;
+        .sp-card {
+            display:block; border-radius:14px; padding:30px 24px;
+            background:var(--bg); border:1.5px solid #D6E4F0;
             position:relative; overflow:hidden;
+            transition:all var(--t);
         }
-        .space-card::after {
-            content:'';
-            position:absolute;
-            bottom:0; left:0; right:0; height:3px;
-            background:var(--accent);
-            transform:scaleX(0); transform-origin:left;
-            transition:transform .3s ease;
+        .sp-card::after {
+            content:''; position:absolute; bottom:0; left:0; right:0; height:3px;
+            background:var(--acc); transform:scaleX(0); transform-origin:left;
+            transition:transform var(--t);
         }
-        .space-card:hover {
-            border-color:var(--accent);
-            background:#fff;
-            box-shadow:0 8px 32px rgba(0,32,74,.1);
-            transform:translateY(-3px);
-        }
-        .space-card:hover::after { transform:scaleX(1); }
+        .sp-card:hover { border-color:var(--acc); background:#fff; box-shadow:0 8px 32px rgba(13,43,94,.10); transform:translateY(-3px); }
+        .sp-card:hover::after { transform:scaleX(1); }
 
-        .space-card.s-central { --accent:#0057b8; }
-        .space-card.s-terrain { --accent:#2ecc71; }
-        .space-card.s-direction { --accent:#9b59b6; }
-        .space-card.s-monitoring { --accent:#e74c3c; }
-        .space-card.s-about { --accent:#00b4d8; }
-        .space-card.s-collab { --accent:#f39c12; }
+        .sp-num { font-size:.58rem; font-weight:800; letter-spacing:.2em; text-transform:uppercase; color:#8FA6C2; margin-bottom:12px; }
+        .sp-ico { width:46px; height:46px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:1.4rem; margin-bottom:16px; }
+        .sp-title { font-size:1.05rem; font-weight:800; color:var(--n); margin-bottom:7px; }
+        .sp-desc { font-size:.78rem; color:#5B7399; line-height:1.65; margin-bottom:16px; font-weight:400; }
+        .sp-cta { display:inline-flex; align-items:center; gap:5px; font-size:.76rem; font-weight:800; color:var(--acc); transition:gap var(--t); letter-spacing:.02em; }
+        .sp-card:hover .sp-cta { gap:9px; }
 
-        .space-num {
-            font-size:.65rem; font-weight:700; letter-spacing:.18em;
-            text-transform:uppercase; color:#b0bec5; margin-bottom:12px;
-        }
-        .space-icon-wrap {
-            width:50px; height:50px; border-radius:12px;
-            background:rgba(0,0,0,.05);
-            display:flex; align-items:center; justify-content:center;
-            font-size:1.5rem; margin-bottom:18px;
-        }
-        .space-card.s-central   .space-icon-wrap { background:#e8f0fb; }
-        .space-card.s-terrain   .space-icon-wrap { background:#e8faf0; }
-        .space-card.s-direction .space-icon-wrap { background:#f3e8fc; }
-        .space-card.s-monitoring .space-icon-wrap { background:#fdecea; }
-        .space-card.s-about     .space-icon-wrap { background:#e0f7fd; }
-        .space-card.s-collab    .space-icon-wrap { background:#fef9e7; }
+        .sp-card.s1 { --acc:#1B53AB; } .sp-card.s1 .sp-ico { background:#E8F0F9; }
+        .sp-card.s2 { --acc:#148F77; } .sp-card.s2 .sp-ico { background:#E8F7EF; }
+        .sp-card.s3 { --acc:#6B35C7; } .sp-card.s3 .sp-ico { background:#F3EBF9; }
+        .sp-card.s4 { --acc:#C0392B; } .sp-card.s4 .sp-ico { background:#FDECEA; }
+        .sp-card.s5 { --acc:#5BACD8; } .sp-card.s5 .sp-ico { background:#E5F4FB; }
+        .sp-card.s6 { --acc:#D68910; } .sp-card.s6 .sp-ico { background:#FEF8E8; }
 
-        .space-title {
-            font-family:'Playfair Display', serif;
-            font-size:1.15rem; font-weight:700;
-            color:#00204a; margin-bottom:8px;
+        /* ══ QUALITÉ ════════════════════════════════════════════════════════ */
+        .quality-sec {
+            background:linear-gradient(150deg,#060E1E 0%,#091E3E 20%,var(--n) 50%,#0F3475 80%,var(--p) 100%);
+            padding:80px 56px; position:relative; overflow:hidden;
         }
-        .space-desc {
-            font-size:.83rem; color:#6b7a8d; line-height:1.6; margin-bottom:18px;
+        .quality-sec::before {
+            content:''; position:absolute; inset:0; pointer-events:none;
+            background:radial-gradient(ellipse 50% 60% at 90% 50%, rgba(91,172,216,.14) 0%, transparent 60%);
         }
-        .space-link {
-            display:inline-flex; align-items:center; gap:6px;
-            font-size:.8rem; font-weight:600; color:var(--accent);
-            transition:gap .2s;
-        }
-        .space-card:hover .space-link { gap:10px; }
-        .space-link-arrow { font-size:1rem; transition:transform .2s; }
-        .space-card:hover .space-link-arrow { transform:translateX(3px); }
+        .q-inner { max-width:1100px; margin:0 auto; display:grid; grid-template-columns:1fr 1fr; gap:64px; align-items:center; position:relative; z-index:2; }
+        .q-ey { font-size:.62rem; font-weight:800; letter-spacing:.2em; text-transform:uppercase; color:var(--s); margin-bottom:14px; }
+        .q-h { font-weight:800; font-size:clamp(1.5rem,3vw,2.1rem); color:#fff; line-height:1.2; margin-bottom:18px; }
+        .q-h em { color:var(--pl); font-style:normal; }
+        .q-p { font-size:.88rem; color:rgba(255,255,255,.65); line-height:1.78; margin-bottom:13px; font-weight:400; }
+        .q-list { list-style:none; margin-top:18px; }
+        .q-list li { display:flex; align-items:flex-start; gap:11px; font-size:.84rem; color:rgba(255,255,255,.7); margin-bottom:12px; line-height:1.55; font-weight:400; }
+        .q-list li::before { content:'◆'; color:var(--s); font-size:.56rem; margin-top:5px; flex-shrink:0; }
+        .q-stats { display:grid; grid-template-columns:1fr 1fr; gap:13px; }
+        .q-stat { background:rgba(255,255,255,.07); border:1px solid rgba(255,255,255,.1); border-radius:13px; padding:22px 18px; text-align:center; }
+        .q-stat .n { font-family:'Raleway',sans-serif; font-weight:800; font-size:2.1rem; color:var(--pl); display:block; }
+        .q-stat .l { font-size:.7rem; color:rgba(255,255,255,.48); margin-top:4px; line-height:1.45; font-weight:500; display:block; }
 
-        /* ══ QUALITÉ DES DONNÉES ════════════════════════════════════════════════ */
-        .quality-section {
-            background:linear-gradient(135deg, #00204a 0%, #003b82 60%, #005fa3 100%);
-            padding:80px 60px;
-            position:relative; overflow:hidden;
-        }
-        .quality-section::before {
-            content:'';
-            position:absolute;
-            width:600px; height:600px;
-            background:radial-gradient(circle, rgba(0,180,216,.12) 0%, transparent 65%);
-            top:-200px; right:-100px;
-            border-radius:50%;
-        }
-        .quality-inner {
-            max-width:1100px; margin:0 auto;
-            display:grid; grid-template-columns:1fr 1fr; gap:60px; align-items:center;
-            position:relative; z-index:2;
-        }
-        .quality-text .eyebrow {
-            font-size:.7rem; font-weight:700; letter-spacing:.2em; text-transform:uppercase;
-            color:#48cae4; margin-bottom:16px;
-        }
-        .quality-text h2 {
-            font-family:'Playfair Display', serif;
-            font-size:clamp(1.6rem, 3.5vw, 2.4rem);
-            font-weight:700; color:#fff;
-            line-height:1.2; margin-bottom:20px;
-        }
-        .quality-text h2 em { color:#48cae4; font-style:normal; }
-        .quality-text p {
-            font-size:.95rem; color:rgba(255,255,255,.7);
-            line-height:1.75; margin-bottom:14px;
-        }
-        .quality-list {
-            list-style:none; margin-top:20px;
-        }
-        .quality-list li {
-            display:flex; align-items:flex-start; gap:12px;
-            font-size:.88rem; color:rgba(255,255,255,.75);
-            margin-bottom:12px; line-height:1.5;
-        }
-        .quality-list li::before {
-            content:'◆';
-            color:#00b4d8; font-size:.6rem; margin-top:5px; flex-shrink:0;
-        }
-
-        .quality-visual {
-            display:grid; grid-template-columns:1fr 1fr; gap:14px;
-        }
-        .quality-stat {
-            background:rgba(255,255,255,.07);
-            border:1px solid rgba(255,255,255,.1);
-            border-radius:14px;
-            padding:24px 20px; text-align:center;
-        }
-        .quality-stat .num {
-            font-family:'Playfair Display', serif;
-            font-size:2rem; font-weight:700;
-            color:#48cae4; display:block;
-        }
-        .quality-stat .lbl {
-            font-size:.72rem; color:rgba(255,255,255,.55);
-            margin-top:4px; line-height:1.4;
-        }
-
-        /* ══ ABOUT MODAL ════════════════════════════════════════════════════════ */
-        .modal-overlay {
-            display:none;
-            position:fixed; inset:0; z-index:1000;
-            background:rgba(0,10,25,.65);
-            backdrop-filter:blur(4px);
-            align-items:center; justify-content:center;
-        }
-        .modal-overlay.open { display:flex; }
+        /* ══ MODAL À PROPOS ═════════════════════════════════════════════════ */
+        .modal-bg { display:none; position:fixed; inset:0; z-index:1000; background:rgba(9,30,62,.65); backdrop-filter:blur(5px); align-items:center; justify-content:center; }
+        .modal-bg.open { display:flex; }
         .modal-box {
-            background:#fff;
-            border-radius:20px;
-            padding:44px 48px;
-            max-width:680px; width:90%;
-            max-height:85vh; overflow-y:auto;
-            position:relative;
-            box-shadow:0 30px 80px rgba(0,0,0,.25);
-            animation:modalIn .3s ease;
+            background:#fff; border-radius:20px; padding:40px 44px;
+            max-width:660px; width:92%; max-height:88vh; overflow-y:auto;
+            position:relative; box-shadow:0 30px 80px rgba(0,0,0,.28);
+            animation:mIn .28s cubic-bezier(.4,0,.2,1);
+            border-top:4px solid var(--p);
         }
-        @keyframes modalIn {
-            from { opacity:0; transform:scale(.95) translateY(20px); }
-            to   { opacity:1; transform:scale(1) translateY(0); }
-        }
-        .modal-close {
-            position:absolute; top:18px; right:22px;
-            width:34px; height:34px; border-radius:50%;
-            background:#f0f2f5; border:none; cursor:pointer;
-            display:flex; align-items:center; justify-content:center;
-            font-size:1.1rem; color:#555; transition:background .2s;
-        }
-        .modal-close:hover { background:#e8edf5; }
-        .modal-box h2 {
-            font-family:'Playfair Display', serif;
-            font-size:1.6rem; color:#00204a; margin-bottom:6px;
-        }
-        .modal-box .modal-sub { color:#6b7a8d; font-size:.88rem; margin-bottom:28px; }
-        .modal-section { margin-bottom:28px; }
-        .modal-section h3 {
-            font-size:.95rem; font-weight:600; color:#00204a;
-            margin-bottom:10px; padding-bottom:6px;
-            border-bottom:2px solid #e8edf5;
-            display:flex; align-items:center; gap:8px;
-        }
-        .modal-section p, .modal-section ul {
-            font-size:.86rem; color:#4a5568; line-height:1.7;
-        }
-        .modal-section ul { padding-left:16px; }
-        .modal-section ul li { margin-bottom:5px; }
-        .modal-role-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:10px; }
-        .modal-role {
-            background:#f8fafd; border-radius:10px; padding:14px;
-            border-left:3px solid #00b4d8;
-        }
-        .modal-role strong { display:block; font-size:.85rem; color:#00204a; margin-bottom:4px; }
-        .modal-role span { font-size:.78rem; color:#6b7a8d; }
+        @keyframes mIn { from{opacity:0;transform:scale(.94) translateY(20px)} to{opacity:1;transform:none} }
+        .modal-close { position:absolute; top:16px; right:18px; width:32px; height:32px; border-radius:50%; background:#F0F4FA; border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:1rem; color:var(--n); transition:background var(--t); }
+        .modal-close:hover { background:#D6E4F0; }
+        .modal-box h2 { font-weight:800; font-size:1.5rem; color:var(--n); margin-bottom:5px; }
+        .modal-sub { color:#5B7399; font-size:.84rem; margin-bottom:26px; font-weight:400; }
+        .m-sec { margin-bottom:26px; }
+        .m-sec h3 { font-size:.9rem; font-weight:800; color:var(--n); margin-bottom:9px; padding-bottom:6px; border-bottom:2px solid #E2EBF5; display:flex; align-items:center; gap:7px; }
+        .m-sec p,.m-sec ul { font-size:.83rem; color:#3A5275; line-height:1.72; font-weight:400; }
+        .m-sec ul { padding-left:16px; }
+        .m-sec ul li { margin-bottom:5px; }
+        .m-roles { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:10px; }
+        .m-role { background:var(--bg); border-radius:9px; padding:13px; border-left:3px solid var(--s); }
+        .m-role strong { display:block; font-size:.83rem; color:var(--n); margin-bottom:3px; font-weight:800; }
+        .m-role span { font-size:.76rem; color:#5B7399; font-weight:400; }
 
-        /* ══ FOOTER ══════════════════════════════════════════════════════════════ */
-        .footer {
-            background:#00204a;
-            color:rgba(255,255,255,.55);
-            padding:48px 60px 30px;
-            position:relative; overflow:hidden;
-        }
-        .footer::before {
-            content:'';
-            position:absolute; top:0; left:0; right:0; height:1px;
-            background:linear-gradient(90deg, transparent, rgba(0,180,216,.4), transparent);
-        }
-        .footer-inner {
-            max-width:1100px; margin:0 auto;
-            display:grid; grid-template-columns:2fr 1fr 1fr; gap:40px;
-            margin-bottom:36px;
-        }
-        .footer-brand .brand-name {
-            font-family:'Playfair Display', serif;
-            font-size:1.3rem; font-weight:700;
-            color:#fff; margin-bottom:6px;
-        }
-        .footer-brand .brand-name span { color:#00b4d8; }
-        .footer-brand p {
-            font-size:.8rem; line-height:1.65; max-width:300px; margin-top:8px;
-        }
-        .footer-brand .water-quote {
-            margin-top:18px;
-            font-style:italic; font-size:.78rem;
-            color:rgba(255,255,255,.35);
-            border-left:2px solid rgba(0,180,216,.3);
-            padding-left:12px;
-        }
+        /* ══ FOOTER ═════════════════════════════════════════════════════════ */
+        .footer { background:#060E1E; color:rgba(255,255,255,.48); padding:48px 56px 28px; position:relative; }
+        .footer::before { content:''; position:absolute; top:0; left:0; right:0; height:1px; background:linear-gradient(90deg,transparent,rgba(91,172,216,.3),transparent); }
+        .f-inner { max-width:1100px; margin:0 auto; display:grid; grid-template-columns:2fr 1fr 1fr; gap:40px; margin-bottom:34px; }
+        .f-brand .fn { font-weight:800; font-size:1.25rem; color:#fff; margin-bottom:5px; letter-spacing:.04em; }
+        .f-brand .fn span { color:var(--pl); }
+        .f-brand .sub { font-size:.58rem; font-weight:600; letter-spacing:.18em; text-transform:uppercase; color:rgba(255,255,255,.28); margin-bottom:12px; display:block; }
+        .f-brand p { font-size:.78rem; line-height:1.7; max-width:300px; font-weight:400; }
+        .f-brand .quote { margin-top:16px; font-style:italic; font-size:.74rem; color:rgba(255,255,255,.3); border-left:2px solid rgba(91,172,216,.25); padding-left:12px; }
+        .f-col h4 { font-size:.6rem; font-weight:800; letter-spacing:.18em; text-transform:uppercase; color:rgba(255,255,255,.3); margin-bottom:13px; }
+        .f-col a { display:block; font-size:.8rem; color:rgba(255,255,255,.48); margin-bottom:8px; transition:color var(--t); font-weight:400; }
+        .f-col a:hover { color:var(--s); }
+        .f-bottom { max-width:1100px; margin:0 auto; display:flex; align-items:center; justify-content:space-between; padding-top:18px; border-top:1px solid rgba(255,255,255,.06); font-size:.72rem; flex-wrap:wrap; gap:7px; }
+        .f-drops { color:var(--s); letter-spacing:4px; font-size:.9rem; }
 
-        .footer-col h4 {
-            font-size:.72rem; font-weight:700; letter-spacing:.14em;
-            text-transform:uppercase; color:rgba(255,255,255,.4);
-            margin-bottom:14px;
-        }
-        .footer-col a {
-            display:block; font-size:.82rem; color:rgba(255,255,255,.55);
-            margin-bottom:8px; transition:color .2s;
-        }
-        .footer-col a:hover { color:#00b4d8; }
+        /* ══ Scroll Reveal ══════════════════════════════════════════════════ */
+        .r { opacity:0; transform:translateY(24px); transition:opacity .55s ease, transform .55s ease; }
+        .r.v { opacity:1; transform:none; }
 
-        .footer-bottom {
-            max-width:1100px; margin:0 auto;
-            display:flex; align-items:center; justify-content:space-between;
-            padding-top:20px;
-            border-top:1px solid rgba(255,255,255,.07);
-            font-size:.74rem; flex-wrap:wrap; gap:8px;
-        }
-        .footer-bottom .water-drops { color:#00b4d8; letter-spacing:3px; font-size:.9rem; }
-
-        /* ══ Loader KPI ═══════════════════════════════════════════════════════ */
-        .kpi-skeleton {
-            background:linear-gradient(90deg, #eef1f5 25%, #e4e8ef 50%, #eef1f5 75%);
-            background-size:200% 100%;
-            animation:shimmer 1.4s infinite;
-            border-radius:8px; height:1.9rem;
-            width:80%;
-        }
-        @keyframes shimmer { 0% { background-position:200% 0; } 100% { background-position:-200% 0; } }
-
-        /* ══ Scroll reveal ════════════════════════════════════════════════════ */
-        .reveal {
-            opacity:0; transform:translateY(28px);
-            transition:opacity .6s ease, transform .6s ease;
-        }
-        .reveal.visible { opacity:1; transform:translateY(0); }
-
-        /* ══ Responsive ═══════════════════════════════════════════════════════ */
+        /* ══ Responsive ═════════════════════════════════════════════════════ */
         @media (max-width:1024px) {
-            .navbar { padding:18px 30px; }
-            .kpi-section, .spaces-section, .quality-section { padding:50px 30px; }
+            .nav { padding:18px 30px; }
+            .kpi-sec,.spaces-sec,.quality-sec { padding:56px 30px; }
+            .footer { padding:40px 30px 22px; }
             .kpi-grid { grid-template-columns:repeat(2,1fr); }
             .spaces-grid { grid-template-columns:repeat(2,1fr); }
-            .quality-inner { grid-template-columns:1fr; gap:36px; }
-            .footer-inner { grid-template-columns:1fr 1fr; }
+            .q-inner { grid-template-columns:1fr; gap:38px; }
+            .f-inner { grid-template-columns:1fr 1fr; }
         }
         @media (max-width:680px) {
-            .navbar { padding:16px 20px; }
-            .navbar-links { display:none; }
-            .hero-content { padding:40px 20px 30px; }
-            .kpi-grid, .spaces-grid { grid-template-columns:1fr; }
-            .footer-inner { grid-template-columns:1fr; }
-            .footer { padding:40px 24px 24px; }
-            .quality-visual { grid-template-columns:1fr 1fr; }
-            .modal-box { padding:28px 24px; }
-            .modal-role-grid { grid-template-columns:1fr; }
+            .nav { padding:14px 18px; }
+            .nav-links { display:none; }
+            .hero-body { padding:30px 18px 50px; }
+            .kpi-sec,.spaces-sec,.quality-sec { padding:44px 18px; }
+            .footer { padding:36px 18px 20px; }
+            .kpi-grid,.spaces-grid { grid-template-columns:1fr; }
+            .f-inner { grid-template-columns:1fr; gap:24px; }
+            .q-stats { grid-template-columns:1fr 1fr; }
+            .m-roles { grid-template-columns:1fr; }
+            .modal-box { padding:26px 20px; }
         }
     </style>
 </head>
 <body>
 
-<!-- ══════════════════════════════════════════════════════════════════ HERO -->
-<section class="hero">
-    <nav class="navbar">
-        <div class="navbar-brand">
-            <div class="navbar-logo">💧</div>
-            <div>
-                <div class="navbar-name">CAM<span>WATER</span></div>
-                <span class="navbar-exercice">Exercice 2026</span>
+<!-- ══ HERO ════════════════════════════════════════════════════════════════ -->
+<section class="hero" id="hero">
+    <div class="hero-glow"></div>
+
+    <nav class="nav">
+        <div class="nav-brand">
+            <!-- Emblem SVG CAMWATER (fidèle au logo) -->
+            <svg class="cw-emblem" viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                    <linearGradient id="gOut" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stop-color="#0D2B5E"/>
+                        <stop offset="100%" stop-color="#2E6CBF"/>
+                    </linearGradient>
+                    <linearGradient id="gMid" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stop-color="#1B53AB"/>
+                        <stop offset="100%" stop-color="#5BACD8"/>
+                    </linearGradient>
+                    <linearGradient id="gIn" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stop-color="#5BACD8"/>
+                        <stop offset="100%" stop-color="#A8D8F2"/>
+                    </linearGradient>
+                </defs>
+                <!-- Cercle extérieur -->
+                <circle cx="40" cy="40" r="37" fill="none" stroke="url(#gOut)" stroke-width="2.5"/>
+                <!-- Arc extérieur (eau) -->
+                <path d="M11,46 C13,22 28,11 44,11 C60,11 71,22 71,38" fill="none" stroke="#0D2B5E" stroke-width="8" stroke-linecap="round"/>
+                <!-- Arc moyen -->
+                <path d="M17,53 C20,33 33,20 48,20 C62,20 70,32 68,47" fill="none" stroke="url(#gMid)" stroke-width="6" stroke-linecap="round"/>
+                <!-- Arc intérieur -->
+                <path d="M24,59 C28,44 39,33 51,33 C61,33 67,42 63,54" fill="none" stroke="url(#gIn)" stroke-width="4.5" stroke-linecap="round"/>
+                <!-- Centre lumineux -->
+                <ellipse cx="43" cy="52" rx="7" ry="6" fill="#A8D8F2" opacity=".8"/>
+                <ellipse cx="42" cy="50" rx="3.5" ry="3" fill="#D6EDF8" opacity=".95"/>
+            </svg>
+            <div class="nav-wordmark">
+                <div class="nav-wordmark-name">cam<span>water</span></div>
+                <div class="nav-wordmark-sub">Cameroon Water Utilities Corporation</div>
             </div>
         </div>
-        <div class="navbar-links">
+        <div class="nav-links">
             <a href="#espaces">Espaces</a>
             <a href="#kpi">Indicateurs</a>
             <a href="#qualite">Qualité</a>
-            <a href="javascript:void(0)" onclick="openAbout()" class="btn-nav-cta">À propos</a>
+            <a href="javascript:void(0)" onclick="openAbout()" class="nav-cta">À propos</a>
         </div>
     </nav>
 
-    <div class="hero-content">
-        <div class="hero-eyebrow">Système d'Information Commercial · 2026</div>
+    <div class="hero-body">
+        <div class="hero-eyebrow"><i></i> Système d'Information Commercial · 2026</div>
 
         <h1 class="hero-title">
-            L'eau, c'est la vie.<br>
-            <span class="accent">Les données, c'est la maîtrise.</span>
+            L'eau, ressource vitale.<br>
+            <span class="hl">Les données, garantie de performance.</span>
         </h1>
 
-        <p class="hero-data-line">
+        <p class="hero-italic">
             « Ce qui ne se mesure pas ne peut pas être amélioré. »
         </p>
 
         <p class="hero-desc">
             Plateforme centralisée de pilotage des performances commerciales de la CAMWATER —
-            saisie, consolidation, analyse et surveillance des indicateurs clés à l'échelle nationale,
-            pour une gestion de l'eau potable irréprochable.
+            saisie, consolidation, analyse et surveillance des indicateurs clés,
+            à l'échelle nationale.
         </p>
 
-        <div class="hero-actions">
-            <a href="/central" class="btn-primary">Accéder à la centralisation</a>
-            <a href="#espaces" class="btn-ghost">Découvrir les espaces ↓</a>
+        <div class="hero-ctas">
+            <a href="/central" class="btn-hero-p">Accéder à la centralisation</a>
+            <a href="#espaces" class="btn-hero-g">Découvrir les espaces ↓</a>
         </div>
     </div>
 
-    <!-- Vague de séparation -->
     <div class="hero-wave">
-        <svg viewBox="0 0 1440 80" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M0,40 C240,80 480,0 720,40 C960,80 1200,0 1440,40 L1440,80 L0,80 Z" fill="#f4f7fb"/>
+        <svg viewBox="0 0 1440 72" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M0,36 C200,72 400,8 600,36 C800,64 1000,4 1200,36 C1320,56 1400,18 1440,36 L1440,72 L0,72 Z" fill="#F4F8FC"/>
         </svg>
     </div>
 </section>
 
-
-<!-- ══════════════════════════════════════════════════════════════════ KPI -->
-<section class="kpi-section" id="kpi">
-    <p class="section-label reveal">Données en temps réel</p>
-    <h2 class="section-title reveal">Performances cumulées de l'exercice</h2>
-    <p class="section-sub reveal">
-        Indicateurs agrégés nationaux, actualisés à chaque saisie validée par les agences.
-    </p>
+<!-- ══ KPI ══════════════════════════════════════════════════════════════════ -->
+<section class="kpi-sec" id="kpi">
+    <p class="sec-eyebrow r">Données en temps réel</p>
+    <h2 class="sec-title r">Performances cumulées de l'exercice</h2>
+    <p class="sec-sub r">Indicateurs nationaux agrégés, actualisés à chaque saisie validée.</p>
 
     <div class="kpi-grid">
-
-        <div class="kpi-card c-ca reveal">
-            <div class="kpi-icon">📊</div>
-            <p class="kpi-label">Chiffre d'Affaires Global</p>
-            <div class="kpi-value" id="kpi-ca"><div class="kpi-skeleton"></div></div>
-            <p class="kpi-meta" id="kpi-ca-meta">Vente eau + travaux remboursables</p>
+        <div class="kpi-card c1 r">
+            <div class="kpi-ico">📊</div>
+            <p class="kpi-lbl">Chiffre d'Affaires Global</p>
+            <div class="kpi-val" id="kv-ca"><div class="kpi-skel"></div></div>
+            <p class="kpi-meta" id="km-ca">Vente eau + travaux remboursables</p>
         </div>
-
-        <div class="kpi-card c-enc reveal">
-            <div class="kpi-icon">💰</div>
-            <p class="kpi-label">Encaissements Totaux</p>
-            <div class="kpi-value" id="kpi-enc"><div class="kpi-skeleton"></div></div>
-            <p class="kpi-meta" id="kpi-enc-meta">Caisse + banques + travaux</p>
+        <div class="kpi-card c2 r">
+            <div class="kpi-ico">💰</div>
+            <p class="kpi-lbl">Encaissements Totaux</p>
+            <div class="kpi-val" id="kv-enc"><div class="kpi-skel"></div></div>
+            <p class="kpi-meta" id="km-enc">Caisse + banques + travaux</p>
         </div>
-
-        <div class="kpi-card c-brch reveal">
-            <div class="kpi-icon">🔧</div>
-            <p class="kpi-label">Branchements Vendus</p>
-            <div class="kpi-value" id="kpi-brch"><div class="kpi-skeleton"></div></div>
-            <p class="kpi-meta" id="kpi-brch-meta">Nouveaux raccordements au réseau</p>
+        <div class="kpi-card c3 r">
+            <div class="kpi-ico">🔧</div>
+            <p class="kpi-lbl">Branchements Vendus</p>
+            <div class="kpi-val" id="kv-brch"><div class="kpi-skel"></div></div>
+            <p class="kpi-meta" id="km-brch">Nouveaux raccordements au réseau</p>
         </div>
-
-        <div class="kpi-card c-obj reveal">
-            <div class="kpi-icon">🎯</div>
-            <p class="kpi-label">Taux de Réalisation Objectif</p>
-            <div class="kpi-value" id="kpi-obj"><div class="kpi-skeleton"></div></div>
-            <div class="kpi-progress">
-                <div class="kpi-progress-bar">
-                    <div class="kpi-progress-fill" id="kpi-obj-bar" style="width:0%"></div>
-                </div>
-            </div>
-            <p class="kpi-meta" id="kpi-obj-meta" style="margin-top:6px;">Encaissements vs objectif proratisé</p>
+        <div class="kpi-card c4 r">
+            <div class="kpi-ico">🎯</div>
+            <p class="kpi-lbl">Taux de Réalisation Objectif</p>
+            <div class="kpi-val" id="kv-obj"><div class="kpi-skel"></div></div>
+            <div class="kpi-prog"><div class="kpi-prog-fill" id="kpb" style="width:0%"></div></div>
+            <p class="kpi-meta" id="km-obj" style="margin-top:5px;">Encaissements vs objectif proratisé</p>
         </div>
-
     </div>
 </section>
 
-
-<!-- ══════════════════════════════════════════════════════════════════ ESPACES -->
-<section class="spaces-section" id="espaces">
-    <p class="section-label reveal">Accès par profil</p>
-    <h2 class="section-title reveal" style="color:#00204a;">Vos espaces de travail</h2>
-    <p class="section-sub reveal">
-        Chaque espace est conçu pour un rôle précis.<br>Partagez le lien correspondant à chaque profil utilisateur.
-    </p>
+<!-- ══ ESPACES ══════════════════════════════════════════════════════════════ -->
+<section class="spaces-sec" id="espaces">
+    <p class="sec-eyebrow r">Accès par profil</p>
+    <h2 class="sec-title r" style="color:var(--n)">Vos espaces de travail</h2>
+    <p class="sec-sub r">Chaque espace est conçu pour un rôle précis. Partagez le lien correspondant à chaque profil.</p>
 
     <div class="spaces-grid">
-
-        <a href="/central" class="space-card s-central reveal">
-            <div class="space-num">Espace 01</div>
-            <div class="space-icon-wrap">📋</div>
-            <div class="space-title">Centralisation</div>
-            <p class="space-desc">
-                Saisie complète des données commerciales — volumes, CA, encaissements, impayés, objectifs.
-                Accès aux exports Excel et au tableau de bord consolidé.
-                <strong>Identification requise</strong> (matricule).
-            </p>
-            <span class="space-link">
-                Accéder à la saisie <span class="space-link-arrow">→</span>
-            </span>
+        <a href="/central" class="sp-card s1 r">
+            <div class="sp-num">Espace 01</div>
+            <div class="sp-ico">📋</div>
+            <div class="sp-title">Centralisation</div>
+            <p class="sp-desc">Saisie complète des données commerciales — volumes, CA, encaissements, impayés, objectifs. Exports Excel. <strong>Identification requise.</strong></p>
+            <span class="sp-cta">Accéder à la saisie →</span>
         </a>
-
-        <a href="/agences" class="space-card s-terrain reveal">
-            <div class="space-num">Espace 02</div>
-            <div class="space-icon-wrap">🏘️</div>
-            <div class="space-title">Agents Terrain</div>
-            <p class="space-desc">
-                Saisie quotidienne à distance des recettes journalières et des branchements par agence.
-                Interface simplifiée, accessible depuis tout appareil connecté.
-                <strong>Accès restreint</strong> à ces deux opérations.
-            </p>
-            <span class="space-link">
-                Accéder à la saisie terrain <span class="space-link-arrow">→</span>
-            </span>
+        <a href="/agences" class="sp-card s2 r">
+            <div class="sp-num">Espace 02</div>
+            <div class="sp-ico">🏘️</div>
+            <div class="sp-title">Agents Terrain</div>
+            <p class="sp-desc">Saisie quotidienne à distance des recettes et branchements par agence. Interface simplifiée, mobile-first. <strong>Accès restreint.</strong></p>
+            <span class="sp-cta">Accéder au portail terrain →</span>
         </a>
-
-        <a href="/direction" class="space-card s-direction reveal">
-            <div class="space-num">Espace 03</div>
-            <div class="space-icon-wrap">📈</div>
-            <div class="space-title">Direction &amp; Responsables</div>
-            <p class="space-desc">
-                Tableau de bord décisionnel en lecture seule — synthèses nationales, comparaisons N/N-1,
-                classement des DR, répartition clients. <strong>Sans identification</strong> requise.
-            </p>
-            <span class="space-link">
-                Consulter le tableau de bord <span class="space-link-arrow">→</span>
-            </span>
+        <a href="/direction" class="sp-card s3 r">
+            <div class="sp-num">Espace 03</div>
+            <div class="sp-ico">📈</div>
+            <div class="sp-title">Direction &amp; Responsables</div>
+            <p class="sp-desc">Tableau de bord décisionnel — synthèses nationales, comparaisons N/N-1, classement des DR. <strong>Lecture seule, sans login.</strong></p>
+            <span class="sp-cta">Consulter le tableau de bord →</span>
         </a>
-
-        <a href="/monitoring" class="space-card s-monitoring reveal">
-            <div class="space-num">Espace 04</div>
-            <div class="space-icon-wrap">🔴</div>
-            <div class="space-title">Surveillance &amp; Alertes</div>
-            <p class="space-desc">
-                Monitoring automatisé des 6 ratios prudentiels — taux de facturation, recouvrement,
-                délais branchements, réémissions. Détection des tendances anormales avant franchissement des seuils.
-            </p>
-            <span class="space-link">
-                Accéder au monitoring <span class="space-link-arrow">→</span>
-            </span>
+        <a href="/monitoring" class="sp-card s4 r">
+            <div class="sp-num">Espace 04</div>
+            <div class="sp-ico">🔴</div>
+            <div class="sp-title">Surveillance &amp; Alertes</div>
+            <p class="sp-desc">Monitoring automatisé des 6 ratios prudentiels — taux de facturation, recouvrement, délais branchements, réémissions. Détection de tendances.</p>
+            <span class="sp-cta">Accéder au monitoring →</span>
         </a>
-
-        <a href="javascript:void(0)" onclick="openAbout()" class="space-card s-about reveal">
-            <div class="space-num">Espace 05</div>
-            <div class="space-icon-wrap">💡</div>
-            <div class="space-title">À propos &amp; Guide</div>
-            <p class="space-desc">
-                Comprendre l'architecture de la plateforme, les rôles, les flux de données et
-                les bonnes pratiques pour une saisie fiable et une exploitation optimale des indicateurs.
-            </p>
-            <span class="space-link">
-                Lire le guide d'utilisation <span class="space-link-arrow">→</span>
-            </span>
+        <a href="javascript:void(0)" onclick="openAbout()" class="sp-card s5 r">
+            <div class="sp-num">Espace 05</div>
+            <div class="sp-ico">💡</div>
+            <div class="sp-title">À propos &amp; Guide</div>
+            <p class="sp-desc">Architecture de la plateforme, rôles, flux de données et bonnes pratiques pour une saisie fiable et une exploitation optimale des indicateurs.</p>
+            <span class="sp-cta">Lire le guide →</span>
         </a>
-
-        <a href="/dashboard" class="space-card s-collab reveal">
-            <div class="space-num">Espace 06</div>
-            <div class="space-icon-wrap">⚡</div>
-            <div class="space-title">Tableau de Bord Commercial</div>
-            <p class="space-desc">
-                Vue consolidée instantanée — KPIs, graphiques d'évolution mensuelle, comparaison
-                inter-DRs, paiements électroniques et performances par agence.
-            </p>
-            <span class="space-link">
-                Ouvrir le tableau de bord <span class="space-link-arrow">→</span>
-            </span>
+        <a href="/dashboard" class="sp-card s6 r">
+            <div class="sp-num">Espace 06</div>
+            <div class="sp-ico">⚡</div>
+            <div class="sp-title">Tableau de Bord Commercial</div>
+            <p class="sp-desc">Vue consolidée — KPIs, graphiques mensuels, comparaisons inter-DRs, paiements électroniques, exports Excel &amp; PDF.</p>
+            <span class="sp-cta">Ouvrir le tableau de bord →</span>
         </a>
-
     </div>
 </section>
 
-
-<!-- ══════════════════════════════════════════════════════════════════ QUALITÉ -->
-<section class="quality-section" id="qualite">
-    <div class="quality-inner">
-        <div class="quality-text reveal">
-            <p class="eyebrow">Qualité &amp; Fiabilité des données</p>
-            <h2>
-                Une donnée fausse, c'est une <em>décision compromise</em>.
-            </h2>
-            <p>
-                Dans la gestion de l'eau potable, chaque chiffre engage des ressources,
-                des infrastructures et la confiance des populations. La rigueur de la saisie
-                n'est pas une contrainte administrative — c'est une exigence opérationnelle.
-            </p>
-            <p>
-                Cette plateforme impose des contrôles à chaque étape : validation par statut
-                (brouillon/définitif), verrouillage des données confirmées, alertes sur les
-                anomalies statistiques, et traçabilité opérateur.
-            </p>
-            <ul class="quality-list">
-                <li>Saisie séquentielle validée par l'opérateur responsable (matricule)</li>
+<!-- ══ QUALITÉ ══════════════════════════════════════════════════════════════ -->
+<section class="quality-sec" id="qualite">
+    <div class="q-inner">
+        <div class="r">
+            <p class="q-ey">Qualité &amp; Fiabilité des données</p>
+            <h2 class="q-h">Une donnée inexacte,<br>c'est une <em>décision compromise</em>.</h2>
+            <p class="q-p">Dans la gestion de l'eau potable, chaque chiffre engage des ressources, des infrastructures et la confiance des populations. La rigueur de la saisie n'est pas une contrainte — c'est une exigence opérationnelle.</p>
+            <p class="q-p">La plateforme impose des contrôles à chaque étape : validation par statut, verrouillage définitif, alertes statistiques et traçabilité opérateur.</p>
+            <ul class="q-list">
+                <li>Saisie séquentielle validée par l'opérateur responsable</li>
                 <li>Verrouillage irréversible après enregistrement définitif</li>
                 <li>Alertes automatiques sur 6 ratios prudentiels avec détection de tendances</li>
-                <li>Consolidation multi-niveaux (agence → DR → national) sans saisie redondante</li>
+                <li>Consolidation multi-niveaux sans saisie redondante</li>
             </ul>
         </div>
-
-        <div class="quality-visual reveal">
-            <div class="quality-stat">
-                <span class="num" id="stat-drs">12</span>
-                <span class="lbl">Directions Régionales surveillées</span>
-            </div>
-            <div class="quality-stat">
-                <span class="num" id="stat-agences">—</span>
-                <span class="lbl">Agences et centres intégrés</span>
-            </div>
-            <div class="quality-stat">
-                <span class="num">6</span>
-                <span class="lbl">Ratios prudentiels en surveillance temps réel</span>
-            </div>
-            <div class="quality-stat">
-                <span class="num">12</span>
-                <span class="lbl">Mois de suivi continu sur l'exercice</span>
-            </div>
+        <div class="q-stats r">
+            <div class="q-stat"><span class="n">12</span><span class="l">Directions Régionales en surveillance</span></div>
+            <div class="q-stat"><span class="n" id="st-ag">129</span><span class="l">Agences et centres intégrés</span></div>
+            <div class="q-stat"><span class="n">6</span><span class="l">Ratios prudentiels automatisés</span></div>
+            <div class="q-stat"><span class="n">12</span><span class="l">Mois de suivi continu par exercice</span></div>
         </div>
     </div>
 </section>
 
-
-<!-- ══════════════════════════════════════════════════════════════════ FOOTER -->
+<!-- ══ FOOTER ═══════════════════════════════════════════════════════════════ -->
 <footer class="footer">
-    <div class="footer-inner">
-        <div class="footer-brand">
-            <div class="brand-name">CAM<span>WATER</span></div>
-            <p>
-                Cameroon Water Utilities Corporation — Société Anonyme à capitaux publics
-                chargée de la production, du transport et de la distribution de l'eau potable
-                sur l'ensemble du territoire camerounais.
-            </p>
-            <p class="water-quote">
-                « L'accès à l'eau potable est un droit fondamental.<br>
-                La performance commerciale en est la condition de durabilité. »
-            </p>
+    <div class="f-inner">
+        <div class="f-brand">
+            <div class="fn">cam<span>water</span></div>
+            <span class="sub">Cameroon Water Utilities Corporation</span>
+            <p>Société Anonyme à capitaux publics chargée de la production, du transport et de la distribution de l'eau potable sur l'ensemble du territoire camerounais.</p>
+            <p class="quote">« L'accès à l'eau potable est un droit fondamental.<br>La performance commerciale en est la condition de durabilité. »</p>
         </div>
-
-        <div class="footer-col">
+        <div class="f-col">
             <h4>Espaces</h4>
             <a href="/central">Centralisation</a>
             <a href="/agences">Agents Terrain</a>
             <a href="/direction">Direction</a>
-            <a href="/monitoring">Monitoring</a>
+            <a href="/monitoring">Surveillance</a>
             <a href="/dashboard">Tableau de Bord</a>
         </div>
-
-        <div class="footer-col">
+        <div class="f-col">
             <h4>Saisie</h4>
             <a href="/saisie/volumes">Volumes (m³)</a>
             <a href="/saisie/encaissements">Encaissements</a>
@@ -857,185 +551,112 @@
             <a href="/saisie/facturation_abonnes">Facturation</a>
         </div>
     </div>
-
-    <div class="footer-bottom">
+    <div class="f-bottom">
         <span>© 2026 CAMWATER — Système d'Information Commercial v2</span>
-        <span class="water-drops">〰 〰 〰</span>
+        <span class="f-drops">〰 〰 〰</span>
         <span>Exercice 2026 · Données confidentielles</span>
     </div>
 </footer>
 
-
-<!-- ══════════════════════════════════════════════════════════════════ MODAL À PROPOS -->
-<div class="modal-overlay" id="about-modal" onclick="closeAboutOnBg(event)">
+<!-- ══ MODAL À PROPOS ═══════════════════════════════════════════════════════ -->
+<div class="modal-bg" id="about-modal" onclick="closeAboutBg(event)">
     <div class="modal-box">
         <button class="modal-close" onclick="closeAbout()">✕</button>
-        <h2>À propos de la plateforme</h2>
-        <p class="modal-sub">Guide d'utilisation · CAMWATER SIC v2 · Exercice 2026</p>
-
-        <div class="modal-section">
-            <h3>🎯 Objectif de l'outil</h3>
-            <p>
-                Cette plateforme centralise l'ensemble des données commerciales de la CAMWATER —
-                des volumes facturés aux encaissements, en passant par les impayés et les branchements.
-                Elle remplace les fichiers Excel dispersés par un système unifié, consolidé et sécurisé,
-                accessible depuis n'importe quel appareil connecté.
-            </p>
+        <h2>Guide d'utilisation</h2>
+        <p class="modal-sub">CAMWATER SIC v2 · Exercice 2026</p>
+        <div class="m-sec">
+            <h3>🎯 Objectif de la plateforme</h3>
+            <p>Centraliser l'ensemble des données commerciales de la CAMWATER en remplaçant les fichiers Excel dispersés par un système unifié, consolidé et sécurisé, accessible depuis tout appareil connecté.</p>
         </div>
-
-        <div class="modal-section">
-            <h3>👥 Les profils utilisateurs</h3>
-            <div class="modal-role-grid">
-                <div class="modal-role">
-                    <strong>Niveau Central</strong>
-                    <span>Saisie complète des données mensuelles, validation définitive, exports Excel, objectifs. Accès via matricule opérateur.</span>
-                </div>
-                <div class="modal-role">
-                    <strong>Agents Terrain</strong>
-                    <span>Saisie quotidienne des recettes et branchements par agence, depuis le terrain. Accès restreint et simplifié.</span>
-                </div>
-                <div class="modal-role">
-                    <strong>Direction</strong>
-                    <span>Tableau de bord en lecture seule — KPIs, graphiques, comparaisons. Aucun login requis. URL à partager : /direction</span>
-                </div>
-                <div class="modal-role">
-                    <strong>Responsables Monitoring</strong>
-                    <span>Surveillance des 6 ratios prudentiels, paramétrage des seuils d'alerte. Accessible via /monitoring.</span>
-                </div>
+        <div class="m-sec">
+            <h3>👥 Profils utilisateurs</h3>
+            <div class="m-roles">
+                <div class="m-role"><strong>Niveau Central</strong><span>Saisie complète, validation définitive, exports. Accès via matricule.</span></div>
+                <div class="m-role"><strong>Agents Terrain</strong><span>Recettes et branchements quotidiens. Interface mobile simplifiée.</span></div>
+                <div class="m-role"><strong>Direction</strong><span>Tableau de bord lecture seule. URL : /direction — sans login.</span></div>
+                <div class="m-role"><strong>Monitoring</strong><span>Surveillance 6 ratios prudentiels + paramétrage des seuils.</span></div>
             </div>
         </div>
-
-        <div class="modal-section">
+        <div class="m-sec">
             <h3>📋 Flux de saisie recommandé</h3>
             <ul>
-                <li>1. <strong>Volumes (m³)</strong> — saisir les volumes facturés par catégorie pour le mois</li>
-                <li>2. <strong>CA Vente Eau</strong> — compléter les montants non dérivés (ENEO 871/873, GCO, locations)</li>
-                <li>3. <strong>CA Travaux</strong> — saisir les compléments travaux remboursables</li>
-                <li>4. <strong>Encaissements</strong> — toutes les sections (Cciale, ADM, Banques, Travaux)</li>
-                <li>5. <strong>Impayés</strong> — stock du portefeuille en fin de mois</li>
-                <li>6. <strong>Monitoring</strong> — facturation abonnés, délais branchements, réémissions</li>
-                <li>7. Cliquer <strong>"Enregistrement définitif"</strong> pour verrouiller chaque fenêtre validée</li>
+                <li>1. <strong>Volumes (m³)</strong> — volumes facturés par catégorie</li>
+                <li>2. <strong>CA Vente Eau</strong> — montants non dérivés (ENEO, GCO, locations)</li>
+                <li>3. <strong>CA Travaux</strong> — compléments travaux remboursables</li>
+                <li>4. <strong>Encaissements</strong> — Cciale, ADM, Banques, Travaux</li>
+                <li>5. <strong>Impayés</strong> — portefeuille en fin de mois</li>
+                <li>6. <strong>Monitoring</strong> — facturation abonnés, délais, réémissions</li>
+                <li>7. Cliquer <strong>"Enregistrement définitif"</strong> pour verrouiller</li>
             </ul>
         </div>
-
-        <div class="modal-section">
-            <h3>⚠️ Règles de qualité</h3>
+        <div class="m-sec">
+            <h3>⚠️ Règles qualité</h3>
             <ul>
-                <li>Un enregistrement <strong>définitif est irréversible</strong> — vérifiez avant de valider</li>
-                <li>La sauvegarde temporaire (brouillon) peut être modifiée autant de fois que nécessaire</li>
-                <li>Les alertes de monitoring sont calculées automatiquement après chaque saisie</li>
-                <li>En cas d'erreur sur un enregistrement définitif, contacter l'administrateur système</li>
+                <li>Un enregistrement définitif est <strong>irréversible</strong> — vérifiez avant de valider</li>
+                <li>La sauvegarde temporaire peut être modifiée autant que nécessaire</li>
+                <li>Les alertes monitoring sont calculées automatiquement après chaque saisie</li>
             </ul>
         </div>
     </div>
 </div>
 
-
 <script>
-// ── KPI Vitrine ────────────────────────────────────────────────────────────
-const MOIS_FR = ['Janvier','Février','Mars','Avril','Mai','Juin',
-                 'Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
+/* ── KPI ─────────────────────────────────────────────────────────────────── */
+const MF=['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
 
-function fmtMilliards(n) {
-    if (!n && n !== 0) return '—';
-    if (Math.abs(n) >= 1e9) return (n / 1e9).toFixed(2).replace('.', ',') + ' Md';
-    if (Math.abs(n) >= 1e6) return Math.round(n / 1e6).toLocaleString('fr-FR') + ' M';
-    if (Math.abs(n) >= 1e3) return Math.round(n / 1e3).toLocaleString('fr-FR') + ' K';
+function fm(n){
+    if(n===null||n===undefined)return'—';
+    if(Math.abs(n)>=1e9)return(n/1e9).toFixed(2).replace('.',',')+'&nbsp;Md';
+    if(Math.abs(n)>=1e6)return Math.round(n/1e6).toLocaleString('fr-FR')+'&nbsp;M';
+    if(Math.abs(n)>=1e3)return Math.round(n/1e3).toLocaleString('fr-FR')+'&nbsp;K';
     return Math.round(n).toLocaleString('fr-FR');
 }
 
-function loadKPIs() {
-    fetch('/api/vitrine-kpi?exercice=2026')
-        .then(r => r.json())
-        .then(d => {
-            const moisLabel = d.dernier_mois ? MOIS_FR[d.dernier_mois - 1] : '—';
-            const moisFin   = d.mois_fin     ? MOIS_FR[d.mois_fin - 1]     : '—';
+fetch('/api/vitrine-kpi?exercice=2026')
+    .then(r=>r.json())
+    .then(d=>{
+        const ml=d.dernier_mois?MF[d.dernier_mois-1]:'—';
+        const mf=d.mois_fin?MF[d.mois_fin-1]:'—';
+        set('kv-ca',`${fm(d.ca_global)}<span class="unit">FCFA</span>`);
+        set('km-ca',`<span class="ok">Jan → ${ml}</span> · Vente eau + travaux`);
+        set('kv-enc',`${fm(d.total_encaissements)}<span class="unit">FCFA</span>`);
+        set('km-enc',`<span class="ok">Cumul Jan → ${ml}</span>`);
+        set('kv-brch',`${(d.branchements_vendus||0).toLocaleString('fr-FR')}`);
+        set('km-brch',`<span class="ok">Jan → ${ml}</span> · Raccordements`);
+        const t=d.taux_objectif||0;
+        set('kv-obj',`${(t*100).toFixed(1).replace('.',',')}%`);
+        const bar=document.getElementById('kpb');
+        setTimeout(()=>{bar.style.width=Math.min(t*100,100)+'%';},300);
+        if(t>=1)bar.classList.add('good');
+        set('km-obj',t>=1
+            ?`<span class="ok">✓ Objectif atteint</span> à ${mf}`
+            :`<span class="warn">${(t*100).toFixed(1)}%</span> réalisé à ${mf}`);
+    })
+    .catch(()=>['kv-ca','kv-enc','kv-brch','kv-obj'].forEach(id=>{
+        const el=document.getElementById(id);
+        if(el)el.innerHTML='<span style="color:#8FA6C2;font-size:.9rem">Aucune donnée</span>';
+    }));
 
-            // CA
-            document.getElementById('kpi-ca').innerHTML =
-                `<span>${fmtMilliards(d.ca_global)}</span><span class="unit">FCFA</span>`;
-            document.getElementById('kpi-ca-meta').innerHTML =
-                `<span class="ok">Jan → ${moisLabel}</span> · Vente eau + travaux`;
+function set(id,html){const el=document.getElementById(id);if(el)el.innerHTML=html;}
 
-            // Encaissements
-            document.getElementById('kpi-enc').innerHTML =
-                `<span>${fmtMilliards(d.total_encaissements)}</span><span class="unit">FCFA</span>`;
-            document.getElementById('kpi-enc-meta').innerHTML =
-                `<span class="ok">Cumul Jan → ${moisLabel}</span>`;
+/* ── Modal ───────────────────────────────────────────────────────────────── */
+function openAbout(){document.getElementById('about-modal').classList.add('open');document.body.style.overflow='hidden';}
+function closeAbout(){document.getElementById('about-modal').classList.remove('open');document.body.style.overflow='';}
+function closeAboutBg(e){if(e.target===document.getElementById('about-modal'))closeAbout();}
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeAbout();});
 
-            // Branchements
-            document.getElementById('kpi-brch').innerHTML =
-                `<span>${(d.branchements_vendus || 0).toLocaleString('fr-FR')}</span>`;
-            document.getElementById('kpi-brch-meta').innerHTML =
-                `<span class="ok">Nouveaux raccordements</span> · Jan → ${moisLabel}`;
-
-            // Objectif
-            const taux = d.taux_objectif || 0;
-            const tauxPct = (taux * 100).toFixed(1);
-            document.getElementById('kpi-obj').innerHTML =
-                `<span>${tauxPct.replace('.', ',')}</span><span class="unit">%</span>`;
-            const bar = document.getElementById('kpi-obj-bar');
-            const pct = Math.min(taux * 100, 100);
-            setTimeout(() => { bar.style.width = pct + '%'; }, 300);
-            if (taux >= 1) bar.classList.add('good');
-            const meta = taux >= 1
-                ? `<span class="up">✓ Objectif atteint</span> à ${moisFin}`
-                : `<span class="warn">${tauxPct}%</span> réalisé à ${moisFin}`;
-            document.getElementById('kpi-obj-meta').innerHTML = meta;
-        })
-        .catch(() => {
-            ['kpi-ca','kpi-enc','kpi-brch','kpi-obj'].forEach(id => {
-                const el = document.getElementById(id);
-                if (el) el.innerHTML = '<span style="color:#bbb;font-size:1rem;">Aucune donnée</span>';
-            });
-        });
-}
-
-// ── Comptage agences ────────────────────────────────────────────────────────
-function loadAgenceCount() {
-    fetch('/api/vitrine-kpi?exercice=2026')
-        .then(() => {})
-        .catch(() => {});
-
-    // Compter via structure connue
-    const structure = {"DRYA":10,"DRDA":6,"DREN":13,"DRN":5,"DRA":5,"DRC":24,
-                       "DRS":8,"DRE":7,"DRO":21,"DRNO":10,"DRSO":8,"DRL":12};
-    const total = Object.values(structure).reduce((a,b) => a+b, 0);
-    const el = document.getElementById('stat-agences');
-    if (el) el.textContent = total;
-}
-
-// ── Modal À propos ──────────────────────────────────────────────────────────
-function openAbout() {
-    document.getElementById('about-modal').classList.add('open');
-    document.body.style.overflow = 'hidden';
-}
-function closeAbout() {
-    document.getElementById('about-modal').classList.remove('open');
-    document.body.style.overflow = '';
-}
-function closeAboutOnBg(e) {
-    if (e.target === document.getElementById('about-modal')) closeAbout();
-}
-document.addEventListener('keydown', e => { if (e.key === 'Escape') closeAbout(); });
-
-// ── Scroll reveal ────────────────────────────────────────────────────────────
-function initReveal() {
-    const obs = new IntersectionObserver((entries) => {
-        entries.forEach((en, i) => {
-            if (en.isIntersecting) {
-                setTimeout(() => en.target.classList.add('visible'), i * 80);
-                obs.unobserve(en.target);
-            }
-        });
-    }, { threshold: 0.12 });
-    document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
-}
-
-// ── Init ─────────────────────────────────────────────────────────────────────
-loadKPIs();
-loadAgenceCount();
-initReveal();
+/* ── Scroll Reveal ───────────────────────────────────────────────────────── */
+new IntersectionObserver((entries)=>{
+    entries.forEach((en,i)=>{
+        if(en.isIntersecting){setTimeout(()=>en.target.classList.add('v'),i*70);new IntersectionObserver(()=>{}).observe(en.target);}
+    });
+},{threshold:.1}).observe||
+(()=>{
+    const obs=new IntersectionObserver((entries)=>{
+        entries.forEach((en,i)=>{if(en.isIntersecting){setTimeout(()=>en.target.classList.add('v'),i*70);obs.unobserve(en.target);}});
+    },{threshold:.1});
+    document.querySelectorAll('.r').forEach(el=>obs.observe(el));
+})();
 </script>
 </body>
 </html>

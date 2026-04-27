@@ -1,6 +1,19 @@
 """Moteur de calcul v2 - reproduit toutes les formules Excel.
 Supporte : agence, DR, national, plage de mois, comparaison N/N-1."""
+from functools import lru_cache
 from database import get_db, TVA_RATE, STRUCTURE_CW
+
+
+# ── Cache LRU : prix_unitaires ne change pas en cours d'exercice ─────────────
+# Réduit les appels DB de ~129x lors du chargement du dashboard national.
+@lru_cache(maxsize=8)
+def _prix_unitaires_cached(exercice: int) -> dict:
+    db = get_db()
+    result = {r['categorie']: r['prix'] for r in
+              db.execute("SELECT categorie, prix FROM prix_unitaires WHERE exercice=?",
+                         (exercice,)).fetchall()}
+    db.close()
+    return result
 
 # ═══════════════════════════════════════════════════════════════
 # Niveau Agence - mois unique
@@ -44,10 +57,7 @@ def get_complement_travaux(agence_id, mois, exercice=2026):
 
 def calcul_ca_agence(agence_id, mois, exercice=2026):
     """Calcul complet du CA pour une agence/mois. Retourne un dict structuré."""
-    db = get_db()
-    prix = {r['categorie']: r['prix'] for r in
-            db.execute("SELECT categorie, prix FROM prix_unitaires WHERE exercice=?", (exercice,)).fetchall()}
-    db.close()
+    prix = _prix_unitaires_cached(exercice)  # cache LRU → 1 seul appel DB par exercice
 
     volumes = get_volumes_agence(agence_id, mois, exercice)
     ca_spec = get_ca_specifiques_agence(agence_id, mois, exercice)
