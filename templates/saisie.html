@@ -55,6 +55,11 @@
             <div class="nav-section">4. IMPAY&Eacute;S</div>
             <a href="/saisie/impayes" class="nav-link {% if fenetre=='impayes' %}active{% endif %}">Impay&eacute;s</a>
 
+            <div class="nav-section">5. MONITORING</div>
+            <a href="/saisie/facturation_abonnes" class="nav-link {% if fenetre=='facturation_abonnes' %}active{% endif %}">Facturation Abonn&eacute;s</a>
+            <a href="/saisie/branchements_delais" class="nav-link {% if fenetre=='branchements_delais' %}active{% endif %}">Branchements D&eacute;lais</a>
+            <a href="/saisie/reemissions" class="nav-link {% if fenetre=='reemissions' %}active{% endif %}">R&eacute;&eacute;missions Factures</a>
+
             <a href="#" id="btn-dashboard" onclick="goToDashboard(); return false;" class="nav-btn dashboard-btn" style="margin-top:auto;">&#9889; Tableau de bord Commercial</a>
         </nav>
 
@@ -316,6 +321,134 @@
                 </div>
             </div>
 
+            {% elif fenetre == 'facturation_abonnes' %}
+            <!-- ════════ FACTURATION ABONNÉS (Indicateur 1) ════════ -->
+            <h1>Facturation Abonn&eacute;s</h1>
+            <p class="form-desc">Saisie mensuelle du nombre d&rsquo;abonn&eacute;s actifs et du nombre d&rsquo;abonn&eacute;s factur&eacute;s &mdash; indispensable pour le calcul du <strong>Taux de Facturation</strong> (Indicateur 1 du monitoring).</p>
+            <div class="cumul-banner" id="cumul-banner-fab">
+                <div class="cumul-title">Taux de facturation calcul&eacute;</div>
+                <div class="cumul-row">
+                    <div class="cumul-item"><span class="cumul-label">Abonn&eacute;s Actifs</span><span class="cumul-val" id="fab-actifs">—</span></div>
+                    <div class="cumul-item"><span class="cumul-label">Abonn&eacute;s Factur&eacute;s</span><span class="cumul-val" id="fab-factures">—</span></div>
+                    <div class="cumul-item"><span class="cumul-label">Taux de Facturation</span><span class="cumul-val" id="fab-taux">—</span></div>
+                </div>
+            </div>
+            <div class="form-grid" id="form-fab">
+                <table class="data-table">
+                    <thead><tr><th>Rubrique</th><th>Valeur</th></tr></thead>
+                    <tbody>
+                        <tr class="section-header"><td colspan="2">Cycle de Facturation du Mois S&eacute;lectionn&eacute;</td></tr>
+                        <tr>
+                            <td>Nombre d&rsquo;abonn&eacute;s actifs (liste de facturation)</td>
+                            <td><input type="number" id="fab-input-actifs" class="fab-input" step="1" min="0" placeholder="ex : 12 500" oninput="updateFabTaux()"></td>
+                        </tr>
+                        <tr>
+                            <td>Nombre d&rsquo;abonn&eacute;s effectivement factur&eacute;s</td>
+                            <td><input type="number" id="fab-input-factures" class="fab-input" step="1" min="0" placeholder="ex : 12 100" oninput="updateFabTaux()"></td>
+                        </tr>
+                        <tr class="subtotal-row">
+                            <td><strong>Taux de Facturation calcul&eacute;</strong></td>
+                            <td class="imp-computed" id="fab-taux-computed">—</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div class="save-actions">
+                    <div class="statut-badge statut-vide" id="statut-badge">Aucune sauvegarde</div>
+                    <div class="save-btns" id="save-btns">
+                        <button type="button" class="btn-brouillon" onclick="doSaveBrouillon()">Sauvegarde temporaire</button>
+                        <button type="button" class="btn-definitif" onclick="doSaveDefinitif()">Enregistrement d&eacute;finitif</button>
+                    </div>
+                    <div class="save-status" id="save-status"></div>
+                </div>
+            </div>
+
+            {% elif fenetre == 'branchements_delais' %}
+            <!-- ════════ BRANCHEMENTS DÉLAIS (Indicateur 4) ════════ -->
+            <h1>Branchements &mdash; R&eacute;alisation dans les D&eacute;lais</h1>
+            <p class="form-desc">Saisie mensuelle du suivi des d&eacute;lais de r&eacute;alisation des branchements &mdash; calcule le <strong>Taux de r&eacute;alisation dans les 15 jours</strong> (Indicateur 4 du monitoring). Objectif r&eacute;glementaire : 100%.</p>
+            <div class="cumul-banner" id="cumul-banner-brd">
+                <div class="cumul-title">Taux de r&eacute;alisation dans les d&eacute;lais</div>
+                <div class="cumul-row">
+                    <div class="cumul-item"><span class="cumul-label">Devis pay&eacute;s</span><span class="cumul-val" id="brd-total">—</span></div>
+                    <div class="cumul-item"><span class="cumul-label">R&eacute;alis&eacute;s &le; 15 jours</span><span class="cumul-val" id="brd-15j">—</span></div>
+                    <div class="cumul-item"><span class="cumul-label">Taux ≤ 15j</span><span class="cumul-val" id="brd-taux">—</span></div>
+                    <div class="cumul-item"><span class="cumul-label">D&eacute;lai moyen</span><span class="cumul-val" id="brd-delai">—</span></div>
+                </div>
+            </div>
+            <div class="form-grid" id="form-brd">
+                <table class="data-table">
+                    <thead><tr><th>Rubrique</th><th>Valeur</th></tr></thead>
+                    <tbody>
+                        <tr class="section-header"><td colspan="2">Suivi des Branchements du Mois S&eacute;lectionn&eacute;</td></tr>
+                        <tr>
+                            <td>Nombre total de devis pay&eacute;s (branchements command&eacute;s)</td>
+                            <td><input type="number" id="brd-input-total" class="brd-input" step="1" min="0" placeholder="ex : 45" oninput="updateBrdTaux()"></td>
+                        </tr>
+                        <tr>
+                            <td>Dont : r&eacute;alis&eacute;s en &le; 15 jours calendaires</td>
+                            <td><input type="number" id="brd-input-15j" class="brd-input" step="1" min="0" placeholder="ex : 43" oninput="updateBrdTaux()"></td>
+                        </tr>
+                        <tr>
+                            <td>D&eacute;lai moyen de r&eacute;alisation observ&eacute; (jours)</td>
+                            <td><input type="number" id="brd-input-delai" class="brd-input" step="0.1" min="0" max="30" placeholder="ex : 11.5" oninput="updateBrdTaux()"></td>
+                        </tr>
+                        <tr class="subtotal-row">
+                            <td><strong>Taux de r&eacute;alisation &le; 15 jours</strong></td>
+                            <td class="imp-computed" id="brd-taux-computed">—</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div class="save-actions">
+                    <div class="statut-badge statut-vide" id="statut-badge">Aucune sauvegarde</div>
+                    <div class="save-btns" id="save-btns">
+                        <button type="button" class="btn-brouillon" onclick="doSaveBrouillon()">Sauvegarde temporaire</button>
+                        <button type="button" class="btn-definitif" onclick="doSaveDefinitif()">Enregistrement d&eacute;finitif</button>
+                    </div>
+                    <div class="save-status" id="save-status"></div>
+                </div>
+            </div>
+
+            {% elif fenetre == 'reemissions' %}
+            <!-- ════════ RÉÉMISSIONS FACTURES (Indicateur 6) ════════ -->
+            <h1>R&eacute;&eacute;missions de Factures</h1>
+            <p class="form-desc">Saisie mensuelle du volume de factures annul&eacute;es et r&eacute;&eacute;mises par rapport au total &eacute;mis &mdash; calcule le <strong>Taux de R&eacute;&eacute;mission</strong> (Indicateur 6 du monitoring). Seuil qualit&eacute; CAMWATER : &le; 2%.</p>
+            <div class="cumul-banner" id="cumul-banner-reem">
+                <div class="cumul-title">Taux de r&eacute;&eacute;mission calcul&eacute;</div>
+                <div class="cumul-row">
+                    <div class="cumul-item"><span class="cumul-label">Factures &eacute;mises</span><span class="cumul-val" id="reem-emises">—</span></div>
+                    <div class="cumul-item"><span class="cumul-label">Factures r&eacute;&eacute;mises</span><span class="cumul-val" id="reem-nb">—</span></div>
+                    <div class="cumul-item"><span class="cumul-label">Taux de R&eacute;&eacute;mission</span><span class="cumul-val" id="reem-taux">—</span></div>
+                </div>
+            </div>
+            <div class="form-grid" id="form-reem">
+                <table class="data-table">
+                    <thead><tr><th>Rubrique</th><th>Valeur</th></tr></thead>
+                    <tbody>
+                        <tr class="section-header"><td colspan="2">Cycle de Facturation du Mois S&eacute;lectionn&eacute;</td></tr>
+                        <tr>
+                            <td>Nombre total de factures d&rsquo;eau &eacute;mises</td>
+                            <td><input type="number" id="reem-input-emises" class="reem-input" step="1" min="0" placeholder="ex : 12 500" oninput="updateReemTaux()"></td>
+                        </tr>
+                        <tr>
+                            <td>Dont : factures annul&eacute;es et r&eacute;&eacute;mises (corrections d&rsquo;index, anomalies)</td>
+                            <td><input type="number" id="reem-input-nb" class="reem-input" step="1" min="0" placeholder="ex : 85" oninput="updateReemTaux()"></td>
+                        </tr>
+                        <tr class="subtotal-row">
+                            <td><strong>Taux de R&eacute;&eacute;mission calcul&eacute;</strong></td>
+                            <td class="imp-computed" id="reem-taux-computed">—</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div class="save-actions">
+                    <div class="statut-badge statut-vide" id="statut-badge">Aucune sauvegarde</div>
+                    <div class="save-btns" id="save-btns">
+                        <button type="button" class="btn-brouillon" onclick="doSaveBrouillon()">Sauvegarde temporaire</button>
+                        <button type="button" class="btn-definitif" onclick="doSaveDefinitif()">Enregistrement d&eacute;finitif</button>
+                    </div>
+                    <div class="save-status" id="save-status"></div>
+                </div>
+            </div>
+
             {% endif %}
         </main>
     </div>
@@ -431,6 +564,53 @@
 
         const FENETRE = '{{ fenetre }}';
         const MOIS_NAMES = {{ mois | tojson }};
+
+        // ═══ FACTURATION ABONNÉS (Indicateur 1) ═══════════════════════════
+        function updateFabTaux() {
+            var a = parseInt(document.getElementById('fab-input-actifs').value) || 0;
+            var f = parseInt(document.getElementById('fab-input-factures').value) || 0;
+            var taux = a > 0 ? (f / a * 100).toFixed(2) + ' %' : '—';
+            var el = document.getElementById('fab-taux-computed');
+            if (el) {
+                el.textContent = taux;
+                el.style.color = (a > 0 && f/a < 0.95) ? '#e74c3c' : '#27ae60';
+            }
+            document.getElementById('fab-actifs')   && (document.getElementById('fab-actifs').textContent   = a.toLocaleString('fr-FR'));
+            document.getElementById('fab-factures') && (document.getElementById('fab-factures').textContent = f.toLocaleString('fr-FR'));
+            document.getElementById('fab-taux')     && (document.getElementById('fab-taux').textContent     = taux);
+        }
+
+        // ═══ BRANCHEMENTS DÉLAIS (Indicateur 4) ═══════════════════════════
+        function updateBrdTaux() {
+            var tot  = parseInt(document.getElementById('brd-input-total').value) || 0;
+            var d15j = parseInt(document.getElementById('brd-input-15j').value)   || 0;
+            var del  = parseFloat(document.getElementById('brd-input-delai').value) || null;
+            var taux = tot > 0 ? (d15j / tot * 100).toFixed(1) + ' %' : '—';
+            var el = document.getElementById('brd-taux-computed');
+            if (el) {
+                el.textContent = taux;
+                el.style.color = (tot > 0 && d15j < tot) ? '#e74c3c' : '#27ae60';
+            }
+            document.getElementById('brd-total') && (document.getElementById('brd-total').textContent = tot.toLocaleString('fr-FR'));
+            document.getElementById('brd-15j')   && (document.getElementById('brd-15j').textContent   = d15j.toLocaleString('fr-FR'));
+            document.getElementById('brd-taux')  && (document.getElementById('brd-taux').textContent  = taux);
+            document.getElementById('brd-delai') && (document.getElementById('brd-delai').textContent = del !== null ? del.toFixed(1) + ' j' : '—');
+        }
+
+        // ═══ RÉÉMISSIONS (Indicateur 6) ═══════════════════════════════════
+        function updateReemTaux() {
+            var em = parseInt(document.getElementById('reem-input-emises').value) || 0;
+            var nb = parseInt(document.getElementById('reem-input-nb').value)     || 0;
+            var taux = em > 0 ? (nb / em * 100).toFixed(2) + ' %' : '—';
+            var el = document.getElementById('reem-taux-computed');
+            if (el) {
+                el.textContent = taux;
+                el.style.color = (em > 0 && nb/em > 0.02) ? '#e74c3c' : '#27ae60';
+            }
+            document.getElementById('reem-emises') && (document.getElementById('reem-emises').textContent = em.toLocaleString('fr-FR'));
+            document.getElementById('reem-nb')     && (document.getElementById('reem-nb').textContent     = nb.toLocaleString('fr-FR'));
+            document.getElementById('reem-taux')   && (document.getElementById('reem-taux').textContent   = taux);
+        }
         const CATEGORIES_VOL = [
             ["Particuliers <= 10m3", 293], ["Particuliers > 10m3 T2", 364], ["Particuliers > 10m3 T3", 364],
             ["Sonel 870", 50], ["Sonel 871", 314], ["Sonel 872", 364], ["Sonel 873", 243],

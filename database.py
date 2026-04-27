@@ -485,6 +485,68 @@ def init_db():
     except Exception:
         pass
 
+    # ── Tables du module Monitoring (alertes automatisées) ────────────────────
+    c.executescript("""
+    -- Indicateur 1 : abonnés actifs / facturés par agence et mois
+    CREATE TABLE IF NOT EXISTS facturation_abonnes (
+        id INTEGER PRIMARY KEY,
+        agence_id INTEGER NOT NULL,
+        mois INTEGER NOT NULL CHECK(mois BETWEEN 1 AND 12),
+        exercice INTEGER NOT NULL DEFAULT 2026,
+        abonnes_actifs INTEGER DEFAULT 0,
+        abonnes_factures INTEGER DEFAULT 0,
+        FOREIGN KEY (agence_id) REFERENCES agences(id),
+        UNIQUE(agence_id, mois, exercice)
+    );
+
+    -- Indicateur 4 : branchements réalisés dans les délais réglementaires (≤ 15 jours)
+    CREATE TABLE IF NOT EXISTS branchements_delais (
+        id INTEGER PRIMARY KEY,
+        agence_id INTEGER NOT NULL,
+        mois INTEGER NOT NULL CHECK(mois BETWEEN 1 AND 12),
+        exercice INTEGER NOT NULL DEFAULT 2026,
+        total_devis_payes INTEGER DEFAULT 0,
+        dans_15j INTEGER DEFAULT 0,
+        delai_moyen_jours REAL,
+        FOREIGN KEY (agence_id) REFERENCES agences(id),
+        UNIQUE(agence_id, mois, exercice)
+    );
+
+    -- Indicateur 6 : factures annulées/réémises vs total émises par agence et mois
+    CREATE TABLE IF NOT EXISTS reemissions_factures (
+        id INTEGER PRIMARY KEY,
+        agence_id INTEGER NOT NULL,
+        mois INTEGER NOT NULL CHECK(mois BETWEEN 1 AND 12),
+        exercice INTEGER NOT NULL DEFAULT 2026,
+        nb_factures_emises INTEGER DEFAULT 0,
+        nb_reemissions INTEGER DEFAULT 0,
+        FOREIGN KEY (agence_id) REFERENCES agences(id),
+        UNIQUE(agence_id, mois, exercice)
+    );
+
+    -- Seuils paramétrables par la Direction Financière
+    CREATE TABLE IF NOT EXISTS monitoring_params (
+        id INTEGER PRIMARY KEY,
+        exercice INTEGER NOT NULL DEFAULT 2026,
+        cle TEXT NOT NULL,
+        valeur REAL NOT NULL,
+        libelle TEXT,
+        UNIQUE(exercice, cle)
+    );
+    """)
+
+    # Paramètres par défaut (uniquement si absents)
+    params_defaut = [
+        (2026, 'seuil_facturation',          0.95,  'Seuil critique taux de facturation (%)'),
+        (2026, 'seuil_tarif_variation',       0.05,  'Variation max tarif m³ HT (%)'),
+        (2026, 'seuil_reemissions',           0.02,  'Seuil critique réémissions factures (%)'),
+        (2026, 'seuil_impayes_pct_recettes',  0.05,  'Seuil min encaissements impayés / recettes (%)'),
+        (2026, 'seuil_delais_warn_jours',     12.0,  'Délai moyen warning branchements (jours)'),
+    ]
+    for exercice_p, cle, val, lib in params_defaut:
+        c.execute("""INSERT OR IGNORE INTO monitoring_params (exercice, cle, valeur, libelle)
+                     VALUES (?, ?, ?, ?)""", (exercice_p, cle, val, lib))
+
     conn.commit()
     conn.close()
 

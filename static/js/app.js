@@ -22,6 +22,9 @@ function loadData() {
     else if (FENETRE === 'ca_travaux') loadPromise = loadComplements();
     else if (FENETRE === 'encaissements') loadPromise = loadEnc();
     else if (FENETRE === 'impayes') loadPromise = loadImpayes();
+    else if (FENETRE === 'facturation_abonnes') loadPromise = loadFacturationAbonnes();
+    else if (FENETRE === 'branchements_delais') loadPromise = loadBranchDelais();
+    else if (FENETRE === 'reemissions') loadPromise = loadReemissions();
     if (['ca_ve', 'ca_travaux'].includes(FENETRE)) loadCaTotalBanner();
     // Charger les cumuls de l'agence
     loadCumulBanner();
@@ -508,9 +511,94 @@ function getSaveFn() {
         'encaissements': saveEnc,
         'branchements': saveBranchements,
         'recettes': saveRecettes,
-        'impayes': saveImpayes
+        'impayes': saveImpayes,
+        'facturation_abonnes': saveFacturationAbonnes,
+        'branchements_delais': saveBranchDelais,
+        'reemissions': saveReemissions
     };
     return map[FENETRE];
+}
+
+// ── Facturation Abonnés ──────────────────────────────────────────────────────
+function loadFacturationAbonnes() {
+    const agId = getAgenceId(), mois = getMois();
+    return fetch(`/api/facturation-abonnes?agence_id=${agId}&mois=${mois}`)
+        .then(r => r.json())
+        .then(d => {
+            const ia = document.getElementById('fab-input-actifs');
+            const ib = document.getElementById('fab-input-factures');
+            if (ia) ia.value = d.abonnes_actifs || '';
+            if (ib) ib.value = d.abonnes_factures || '';
+            if (typeof updateFabTaux === 'function') updateFabTaux();
+        });
+}
+
+function saveFacturationAbonnes() {
+    const agId = getAgenceId(), mois = getMois();
+    const actifs   = parseInt(document.getElementById('fab-input-actifs').value)   || 0;
+    const factures = parseInt(document.getElementById('fab-input-factures').value) || 0;
+    return fetch('/api/facturation-abonnes', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ agence_id: parseInt(agId), mois: parseInt(mois),
+                               exercice: 2026, abonnes_actifs: actifs, abonnes_factures: factures })
+    }).then(r => { if (!r.ok) return r.json().then(d => Promise.reject(d.error || 'Erreur')); return r.json(); });
+}
+
+// ── Branchements Délais ──────────────────────────────────────────────────────
+function loadBranchDelais() {
+    const agId = getAgenceId(), mois = getMois();
+    return fetch(`/api/branchements-delais?agence_id=${agId}&mois=${mois}`)
+        .then(r => r.json())
+        .then(d => {
+            const it = document.getElementById('brd-input-total');
+            const i1 = document.getElementById('brd-input-15j');
+            const id = document.getElementById('brd-input-delai');
+            if (it) it.value = d.total_devis_payes || '';
+            if (i1) i1.value = d.dans_15j || '';
+            if (id) id.value = d.delai_moyen_jours !== null ? d.delai_moyen_jours : '';
+            if (typeof updateBrdTaux === 'function') updateBrdTaux();
+        });
+}
+
+function saveBranchDelais() {
+    const agId = getAgenceId(), mois = getMois();
+    const total = parseInt(document.getElementById('brd-input-total').value) || 0;
+    const d15j  = parseInt(document.getElementById('brd-input-15j').value)   || 0;
+    const delai = parseFloat(document.getElementById('brd-input-delai').value) || null;
+    return fetch('/api/branchements-delais', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ agence_id: parseInt(agId), mois: parseInt(mois),
+                               exercice: 2026, total_devis_payes: total,
+                               dans_15j: d15j, delai_moyen_jours: delai })
+    }).then(r => { if (!r.ok) return r.json().then(d => Promise.reject(d.error || 'Erreur')); return r.json(); });
+}
+
+// ── Réémissions Factures ─────────────────────────────────────────────────────
+function loadReemissions() {
+    const agId = getAgenceId(), mois = getMois();
+    return fetch(`/api/reemissions?agence_id=${agId}&mois=${mois}`)
+        .then(r => r.json())
+        .then(d => {
+            const ie = document.getElementById('reem-input-emises');
+            const ib = document.getElementById('reem-input-nb');
+            if (ie) ie.value = d.nb_factures_emises || '';
+            if (ib) ib.value = d.nb_reemissions     || '';
+            if (typeof updateReemTaux === 'function') updateReemTaux();
+        });
+}
+
+function saveReemissions() {
+    const agId = getAgenceId(), mois = getMois();
+    const emises = parseInt(document.getElementById('reem-input-emises').value) || 0;
+    const nb     = parseInt(document.getElementById('reem-input-nb').value)     || 0;
+    return fetch('/api/reemissions', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ agence_id: parseInt(agId), mois: parseInt(mois),
+                               exercice: 2026, nb_factures_emises: emises, nb_reemissions: nb })
+    }).then(r => { if (!r.ok) return r.json().then(d => Promise.reject(d.error || 'Erreur')); return r.json(); });
 }
 
 function doSaveBrouillon() {

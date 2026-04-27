@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CAMWATER — Surveillance &amp; Alertes</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <style>
+        /* ── Layout ── */
+        .mon-layout { display:flex; min-height:100vh; }
+        .mon-sidebar {
+            width:260px; min-width:220px; background:#1a1a2e; color:#fff;
+            display:flex; flex-direction:column; padding:0; flex-shrink:0;
+        }
+        .mon-sidebar-header {
+            padding:18px 16px 10px; border-bottom:1px solid rgba(255,255,255,.12);
+        }
+        .mon-sidebar-header h2 { margin:0 0 4px; font-size:1.1rem; }
+        .mon-sidebar-header .sub { font-size:.78rem; color:#aaa; }
+        .mon-sidebar nav { padding:10px 0; flex:1; }
+        .mon-sidebar .nav-section {
+            font-size:.68rem; font-weight:700; letter-spacing:.08em;
+            color:#7f8fa6; padding:12px 16px 4px; text-transform:uppercase;
+        }
+        .mon-sidebar a {
+            display:block; padding:9px 16px; color:#ccd1d9; text-decoration:none;
+            font-size:.85rem; transition:background .15s;
+        }
+        .mon-sidebar a:hover, .mon-sidebar a.active {
+            background:rgba(255,255,255,.1); color:#fff;
+        }
+        .mon-sidebar a.active { border-left:3px solid #e74c3c; }
+        .mon-sidebar .btn-accueil {
+            margin:10px 12px; padding:8px 14px; background:#2c3e7a;
+            border-radius:5px; font-size:.83rem; color:#fff; text-align:center;
+        }
+        .mon-sidebar .btn-accueil:hover { background:#3a5199; }
+
+        /* ── Main ── */
+        .mon-main { flex:1; background:#f0f2f5; overflow-y:auto; padding:0; }
+        .mon-topbar {
+            background:#1a1a2e; color:#fff; padding:14px 24px;
+            display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px;
+        }
+        .mon-topbar h1 { margin:0; font-size:1.15rem; }
+        .mon-controls { display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+        .mon-controls label { font-size:.82rem; color:#ccc; }
+        .mon-controls select, .mon-controls button {
+            padding:5px 10px; border-radius:4px; border:none; font-size:.85rem;
+        }
+        .mon-controls select { background:#2a2a45; color:#fff; }
+        .btn-refresh {
+            background:#e74c3c; color:#fff; cursor:pointer; font-weight:600;
+            padding:6px 14px; border-radius:4px; border:none;
+        }
+        .btn-refresh:hover { background:#c0392b; }
+
+        /* ── Bandeaux résumé ── */
+        .mon-summary {
+            display:grid; grid-template-columns:repeat(3,1fr); gap:12px;
+            padding:16px 20px 0;
+        }
+        .sum-card {
+            background:#fff; border-radius:8px; padding:14px 18px;
+            box-shadow:0 1px 4px rgba(0,0,0,.08); display:flex; align-items:center; gap:14px;
+        }
+        .sum-icon { font-size:1.8rem; }
+        .sum-label { font-size:.75rem; color:#888; text-transform:uppercase; letter-spacing:.05em; }
+        .sum-value { font-size:1.7rem; font-weight:700; line-height:1; }
+        .sum-card.critiques .sum-value { color:#e74c3c; }
+        .sum-card.warnings .sum-value  { color:#e67e22; }
+        .sum-card.ok .sum-value        { color:#27ae60; }
+
+        /* ── Section indicateurs ── */
+        .mon-section { padding:16px 20px; }
+        .mon-section h2 { margin:0 0 12px; font-size:.95rem; color:#444; display:flex; align-items:center; gap:8px; }
+        .ind-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; }
+
+        .ind-card {
+            background:#fff; border-radius:8px; padding:14px 16px;
+            box-shadow:0 1px 4px rgba(0,0,0,.07);
+            border-left:4px solid #ddd;
+            position:relative;
+        }
+        .ind-card.status-ok      { border-left-color:#27ae60; }
+        .ind-card.status-warning { border-left-color:#e67e22; }
+        .ind-card.status-critique{ border-left-color:#e74c3c; }
+        .ind-card.status-vide    { border-left-color:#bdc3c7; }
+
+        .ind-header { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px; }
+        .ind-num { font-size:.68rem; font-weight:700; color:#888; text-transform:uppercase; letter-spacing:.05em; }
+        .ind-badge {
+            font-size:.7rem; font-weight:700; padding:2px 8px; border-radius:12px;
+        }
+        .badge-ok       { background:#d5f5e3; color:#1e8449; }
+        .badge-warning  { background:#fdebd0; color:#d35400; }
+        .badge-critique { background:#fadbd8; color:#c0392b; }
+        .badge-vide     { background:#eaecee; color:#7f8c8d; }
+
+        .ind-title { font-size:.85rem; font-weight:600; color:#222; margin:4px 0 6px; }
+        .ind-value { font-size:1.35rem; font-weight:700; }
+        .ind-value.ok       { color:#27ae60; }
+        .ind-value.warning  { color:#e67e22; }
+        .ind-value.critique { color:#e74c3c; }
+        .ind-value.vide     { color:#bdc3c7; }
+        .ind-desc { font-size:.75rem; color:#888; margin-top:4px; }
+        .ind-seuil { font-size:.72rem; color:#aaa; }
+
+        /* ── Table alertes ── */
+        .alertes-table-wrap { overflow-x:auto; }
+        .alertes-table {
+            width:100%; border-collapse:collapse; font-size:.82rem;
+        }
+        .alertes-table th {
+            background:#1a1a2e; color:#fff; padding:9px 12px;
+            text-align:left; font-size:.78rem; font-weight:600;
+            position:sticky; top:0;
+        }
+        .alertes-table td { padding:8px 12px; border-bottom:1px solid #f0f0f0; }
+        .alertes-table tr:hover td { background:#fafbff; }
+        .alertes-table .badge-critique { display:inline-block; }
+        .alertes-table .badge-warning  { display:inline-block; }
+
+        .type-dot {
+            display:inline-block; width:8px; height:8px;
+            border-radius:50%; margin-right:5px;
+        }
+        .dot-critique { background:#e74c3c; }
+        .dot-warning  { background:#e67e22; }
+
+        /* ── Paramètres ── */
+        .params-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:12px; }
+        .param-item {
+            background:#fff; border-radius:7px; padding:12px 16px;
+            box-shadow:0 1px 3px rgba(0,0,0,.07);
+        }
+        .param-item label { font-size:.78rem; color:#666; display:block; margin-bottom:4px; }
+        .param-item input {
+            width:100%; padding:6px 10px; border:1px solid #ddd;
+            border-radius:4px; font-size:.88rem; box-sizing:border-box;
+        }
+        .btn-save-params {
+            background:#2ecc71; color:#fff; border:none; padding:9px 22px;
+            border-radius:5px; font-size:.88rem; font-weight:600; cursor:pointer;
+            margin-top:12px;
+        }
+        .btn-save-params:hover { background:#27ae60; }
+
+        /* ── Loaders ── */
+        .mon-loader {
+            text-align:center; padding:40px; color:#aaa; font-size:.9rem;
+        }
+        .mon-empty { text-align:center; padding:30px; color:#bbb; }
+
+        /* ── Filtres scope ── */
+        .scope-bar {
+            display:flex; gap:8px; align-items:center; padding:12px 20px 0;
+            flex-wrap:wrap;
+        }
+        .scope-bar label { font-size:.82rem; color:#555; }
+        .scope-bar select { padding:5px 10px; border:1px solid #ddd; border-radius:4px; font-size:.84rem; }
+
+        /* ── Mobile ── */
+        @media (max-width:900px) {
+            .mon-sidebar { display:none; }
+            .ind-grid { grid-template-columns:1fr 1fr; }
+            .mon-summary { grid-template-columns:1fr 1fr; }
+            .params-grid { grid-template-columns:1fr; }
+        }
+        @media (max-width:600px) {
+            .ind-grid, .mon-summary { grid-template-columns:1fr; }
+        }
+    </style>
+</head>
+<body>
+<div class="mon-layout">
+
+    <!-- ── Sidebar ── -->
+    <aside class="mon-sidebar">
+        <div class="mon-sidebar-header">
+            <h2>CAMWATER</h2>
+            <div class="sub">Surveillance &amp; Alertes</div>
+        </div>
+        <nav>
+            <div class="nav-section">Navigation</div>
+            <a href="/" class="btn-accueil">&#127968; Accueil</a>
+            <a href="/dashboard">&#9889; Tableau de bord</a>
+            {% if not read_only %}
+            <a href="/saisie/volumes">&#9998; Saisie des données</a>
+            {% endif %}
+            <div class="nav-section">Monitoring</div>
+            <a href="#indicateurs" class="active" onclick="showSection('indicateurs')">&#128200; Indicateurs</a>
+            <a href="#alertes" onclick="showSection('alertes')">&#128276; Liste des alertes</a>
+            {% if not read_only %}
+            <a href="#parametres" onclick="showSection('parametres')">&#9881; Paramètres seuils</a>
+            {% endif %}
+        </nav>
+    </aside>
+
+    <!-- ── Contenu principal ── -->
+    <div class="mon-main">
+
+        <!-- Topbar -->
+        <div class="mon-topbar">
+            <h1>&#128683; Surveillance des Ratios Prudentiels</h1>
+            <div class="mon-controls">
+                <label>Mois</label>
+                <select id="sel-mois">
+                    {% for m in mois %}
+                    <option value="{{ loop.index }}">{{ m }}</option>
+                    {% endfor %}
+                </select>
+                <label>Exercice</label>
+                <select id="sel-exercice">
+                    <option value="2026">2026</option>
+                    <option value="2025">2025</option>
+                </select>
+                <label>Portée</label>
+                <select id="sel-scope">
+                    <option value="national">National</option>
+                    {% for dr in drs %}
+                    <option value="dr:{{ dr }}">{{ dr }}</option>
+                    {% endfor %}
+                </select>
+                <button class="btn-refresh" onclick="refreshAll()">&#8635; Actualiser</button>
+            </div>
+        </div>
+
+        <!-- ── Résumé en chiffres ── -->
+        <div class="mon-summary">
+            <div class="sum-card critiques">
+                <div class="sum-icon">&#128683;</div>
+                <div>
+                    <div class="sum-label">Alertes Critiques</div>
+                    <div class="sum-value" id="sum-critiques">—</div>
+                </div>
+            </div>
+            <div class="sum-card warnings">
+                <div class="sum-icon">&#9888;</div>
+                <div>
+                    <div class="sum-label">Avertissements</div>
+                    <div class="sum-value" id="sum-warnings">—</div>
+                </div>
+            </div>
+            <div class="sum-card ok">
+                <div class="sum-icon">&#9989;</div>
+                <div>
+                    <div class="sum-label">Indicateurs OK</div>
+                    <div class="sum-value" id="sum-ok">—</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ════ SECTION INDICATEURS ════ -->
+        <div class="mon-section" id="section-indicateurs">
+            <h2>&#128200; Les 6 Ratios Prudentiels</h2>
+            <div class="ind-grid" id="ind-grid">
+                <!-- Indicateur 1 -->
+                <div class="ind-card status-vide" id="ind-1">
+                    <div class="ind-header">
+                        <span class="ind-num">IND. 1</span>
+                        <span class="ind-badge badge-vide" id="badge-1">—</span>
+                    </div>
+                    <div class="ind-title">Taux de Facturation</div>
+                    <div class="ind-value vide" id="val-1">—</div>
+                    <div class="ind-desc" id="desc-1">Abonnés facturés / Abonnés actifs</div>
+                    <div class="ind-seuil" id="seuil-1">Seuil critique : &lt; 95%</div>
+                </div>
+                <!-- Indicateur 2 -->
+                <div class="ind-card status-vide" id="ind-2">
+                    <div class="ind-header">
+                        <span class="ind-num">IND. 2</span>
+                        <span class="ind-badge badge-vide" id="badge-2">—</span>
+                    </div>
+                    <div class="ind-title">Tarif Moyen HT du m³</div>
+                    <div class="ind-value vide" id="val-2">—</div>
+                    <div class="ind-desc" id="desc-2">CA Vente Eau HT / Volume total m³</div>
+                    <div class="ind-seuil" id="seuil-2">Seuil : variation &gt; 5% vs hist. 6 mois</div>
+                </div>
+                <!-- Indicateur 3 -->
+                <div class="ind-card status-vide" id="ind-3">
+                    <div class="ind-header">
+                        <span class="ind-num">IND. 3</span>
+                        <span class="ind-badge badge-vide" id="badge-3">—</span>
+                    </div>
+                    <div class="ind-title">Taux Recouvrement EF</div>
+                    <div class="ind-value vide" id="val-3">—</div>
+                    <div class="ind-desc" id="desc-3">Encaissements / Facturation fraîche</div>
+                    <div class="ind-seuil">OK ≥ 95% · Warning 80–95% · Critique &lt; 80%</div>
+                </div>
+                <!-- Indicateur 4 -->
+                <div class="ind-card status-vide" id="ind-4">
+                    <div class="ind-header">
+                        <span class="ind-num">IND. 4</span>
+                        <span class="ind-badge badge-vide" id="badge-4">—</span>
+                    </div>
+                    <div class="ind-title">Branchements dans les Délais (≤ 15 j)</div>
+                    <div class="ind-value vide" id="val-4">—</div>
+                    <div class="ind-desc" id="desc-4">Réalisés ≤ 15j / Total devis payés</div>
+                    <div class="ind-seuil">Objectif réglementaire : 100%</div>
+                </div>
+                <!-- Indicateur 5 -->
+                <div class="ind-card status-vide" id="ind-5">
+                    <div class="ind-header">
+                        <span class="ind-num">IND. 5</span>
+                        <span class="ind-badge badge-vide" id="badge-5">—</span>
+                    </div>
+                    <div class="ind-title">Recouvrement des Impayés</div>
+                    <div class="ind-value vide" id="val-5">—</div>
+                    <div class="ind-desc" id="desc-5">Enc. impayés / Stock créances ciblées</div>
+                    <div class="ind-seuil" id="seuil-5">Seuil : &lt; 5% des recettes mensuelles</div>
+                </div>
+                <!-- Indicateur 6 -->
+                <div class="ind-card status-vide" id="ind-6">
+                    <div class="ind-header">
+                        <span class="ind-num">IND. 6</span>
+                        <span class="ind-badge badge-vide" id="badge-6">—</span>
+                    </div>
+                    <div class="ind-title">Taux de Réémission des Factures</div>
+                    <div class="ind-value vide" id="val-6">—</div>
+                    <div class="ind-desc" id="desc-6">Factures réémises / Total factures émises</div>
+                    <div class="ind-seuil">Seuil critique : &gt; 2%</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ════ SECTION LISTE DES ALERTES ════ -->
+        <div class="mon-section" id="section-alertes">
+            <h2>&#128276; Détail des Alertes
+                <span style="font-size:.75rem;font-weight:400;color:#999;margin-left:8px;" id="alerte-scope-label"></span>
+            </h2>
+
+            <!-- Filtre par indicateur -->
+            <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;">
+                <button class="filter-btn active" data-ind="tous" onclick="filterAlertes('tous', this)">Tous</button>
+                <button class="filter-btn" data-ind="Taux de Facturation" onclick="filterAlertes('Taux de Facturation', this)">Facturation</button>
+                <button class="filter-btn" data-ind="Tarif Moyen HT/m³" onclick="filterAlertes('Tarif Moyen HT/m³', this)">Tarif m³</button>
+                <button class="filter-btn" data-ind="Taux Recouvrement EF" onclick="filterAlertes('Taux Recouvrement EF', this)">Recouv. EF</button>
+                <button class="filter-btn" data-ind="Branchements dans les délais" onclick="filterAlertes('Branchements dans les délais', this)">Branchements</button>
+                <button class="filter-btn" data-ind="Recouvrement Impayés" onclick="filterAlertes('Recouvrement Impayés', this)">Impayés</button>
+                <button class="filter-btn" data-ind="Réémissions de Factures" onclick="filterAlertes('Réémissions de Factures', this)">Réémissions</button>
+            </div>
+
+            <div class="alertes-table-wrap">
+                <div class="mon-loader" id="alertes-loader">Chargement des alertes…</div>
+                <table class="alertes-table" id="alertes-table" style="display:none;">
+                    <thead>
+                        <tr>
+                            <th>Type</th>
+                            <th>Indicateur</th>
+                            <th>DR</th>
+                            <th>Agence</th>
+                            <th>Valeur</th>
+                            <th>Seuil</th>
+                            <th>Message</th>
+                        </tr>
+                    </thead>
+                    <tbody id="alertes-tbody"></tbody>
+                </table>
+                <div class="mon-empty" id="alertes-empty" style="display:none;">
+                    &#9989; Aucune alerte pour la période sélectionnée.
+                </div>
+            </div>
+        </div>
+
+        <!-- ════ SECTION PARAMÈTRES ════ -->
+        {% if not read_only %}
+        <div class="mon-section" id="section-parametres">
+            <h2>&#9881; Paramètres des Seuils (Direction Financière)</h2>
+            <div class="params-grid" id="params-grid">
+                <div class="mon-loader">Chargement…</div>
+            </div>
+            <button class="btn-save-params" onclick="saveParams()">&#128190; Enregistrer les seuils</button>
+            <div id="params-status" style="margin-top:8px;font-size:.83rem;color:#27ae60;"></div>
+        </div>
+        {% endif %}
+
+    </div><!-- /mon-main -->
+</div><!-- /mon-layout -->
+
+<style>
+    .filter-btn {
+        padding:5px 12px; border:1px solid #ddd; border-radius:14px;
+        background:#fff; cursor:pointer; font-size:.78rem; color:#555;
+        transition:all .15s;
+    }
+    .filter-btn:hover { background:#e8eaf6; border-color:#aaa; }
+    .filter-btn.active { background:#1a1a2e; color:#fff; border-color:#1a1a2e; }
+</style>
+
+<script>
+const MOIS_NAMES = {{ mois | tojson }};
+const READ_ONLY  = {{ 'true' if read_only else 'false' }};
+let _allAlertes  = [];
+let _currentFilter = 'tous';
+
+// ── Helpers formatage ─────────────────────────────────────────────────────
+function fmt(n, suffix='%', dec=1) {
+    if (n === null || n === undefined) return '—';
+    return (n * (suffix === '%' ? 100 : 1)).toFixed(dec) + ' ' + suffix;
+}
+function fmtPct(v, dec=1)  { return v === null ? '—' : (v * 100).toFixed(dec) + '%'; }
+function fmtFCFA(v)         { return v === null ? '—' : Math.round(v).toLocaleString('fr-FR') + ' F'; }
+function fmtVal(v, unit)    { return v === null ? '—' : parseFloat(v).toFixed(1) + ' ' + unit; }
+
+// ── Navigation sections ───────────────────────────────────────────────────
+function showSection(id) {
+    // Scroll smooth vers la section
+    var el = document.getElementById('section-' + id);
+    if (el) el.scrollIntoView({ behavior:'smooth' });
+}
+
+// ── Lecture sélecteurs ────────────────────────────────────────────────────
+function getParams() {
+    var mois     = parseInt(document.getElementById('sel-mois').value);
+    var exercice = parseInt(document.getElementById('sel-exercice').value);
+    var scopeRaw = document.getElementById('sel-scope').value;
+    var scope = 'national', scopeId = '';
+    if (scopeRaw.startsWith('dr:')) { scope = 'dr'; scopeId = scopeRaw.slice(3); }
+    return { mois, exercice, scope, scopeId };
+}
+
+// ── Actualisation principale ──────────────────────────────────────────────
+function refreshAll() {
+    loadAlertes();
+}
+
+// ── Chargement et rendu des alertes ──────────────────────────────────────
+function loadAlertes() {
+    var { mois, exercice, scope, scopeId } = getParams();
+    var label = MOIS_NAMES[mois-1] + ' ' + exercice
+              + (scope === 'dr' ? ' — ' + scopeId : ' — National');
+    document.getElementById('alerte-scope-label').textContent = label;
+
+    // Reset cartes indicateurs
+    resetIndicCards();
+
+    document.getElementById('alertes-loader').style.display = 'block';
+    document.getElementById('alertes-table').style.display  = 'none';
+    document.getElementById('alertes-empty').style.display  = 'none';
+
+    var url = '/api/monitoring/alertes?mois=' + mois + '&exercice=' + exercice
+            + '&scope=' + scope + (scopeId ? '&scope_id=' + scopeId : '');
+
+    fetch(url)
+        .then(r => r.json())
+        .then(data => {
+            _allAlertes = data.alertes || [];
+            document.getElementById('sum-critiques').textContent = data.nb_critiques || 0;
+            document.getElementById('sum-warnings').textContent  = data.nb_warnings  || 0;
+            var okCount = Math.max(0, 6 - countBadIndicateurs(_allAlertes));
+            document.getElementById('sum-ok').textContent = okCount;
+
+            updateIndicCards(_allAlertes, data.params || {});
+            renderAlertesTable(_allAlertes, _currentFilter);
+
+            document.getElementById('alertes-loader').style.display = 'none';
+        })
+        .catch(err => {
+            document.getElementById('alertes-loader').textContent = 'Erreur : ' + err.message;
+        });
+}
+
+function countBadIndicateurs(alertes) {
+    var bad = new Set();
+    alertes.forEach(a => bad.add(a.indicateur));
+    return bad.size;
+}
+
+// ── Mise à jour des 6 cartes indicateurs ─────────────────────────────────
+function resetIndicCards() {
+    for (var i = 1; i <= 6; i++) {
+        setCard(i, 'vide', '—', '—', '');
+    }
+    document.getElementById('sum-critiques').textContent = '—';
+    document.getElementById('sum-warnings').textContent  = '—';
+    document.getElementById('sum-ok').textContent        = '—';
+}
+
+function setCard(num, status, valStr, badgeText, descExtra) {
+    var card  = document.getElementById('ind-' + num);
+    var val   = document.getElementById('val-'   + num);
+    var badge = document.getElementById('badge-' + num);
+    var desc  = document.getElementById('desc-'  + num);
+
+    card.className  = 'ind-card status-' + status;
+    val.className   = 'ind-value ' + status;
+    badge.className = 'ind-badge badge-' + status;
+    val.textContent   = valStr;
+    badge.textContent = badgeText;
+    if (descExtra && desc) desc.textContent = descExtra;
+}
+
+function updateIndicCards(alertes, params) {
+    // Construire un map indicateur → niveau le plus grave
+    var worst = {};
+    var details = {};
+    alertes.forEach(a => {
+        var ind = a.indicateur;
+        if (!worst[ind] || (a.type === 'critique' && worst[ind] !== 'critique')) {
+            worst[ind] = a.type;
+            details[ind] = a;
+        }
+    });
+
+    // Ind 1 : Taux de Facturation
+    (function() {
+        var ind = 'Taux de Facturation';
+        if (worst[ind]) {
+            var a = details[ind];
+            var s = worst[ind] === 'critique' ? 'critique' : 'warning';
+            setCard(1, s, fmtPct(a.valeur), s === 'critique' ? '⚠ CRITIQUE' : '▲ WARNING', '');
+        } else {
+            setCard(1, 'ok', '≥ 95%', '✓ OK', '');
+        }
+        var seuil = params.seuil_facturation;
+        if (seuil !== undefined) document.getElementById('seuil-1').textContent =
+            'Seuil critique : < ' + (seuil*100).toFixed(0) + '%';
+    })();
+
+    // Ind 2 : Tarif Moyen HT/m³
+    (function() {
+        var ind = 'Tarif Moyen HT/m³';
+        if (worst[ind]) {
+            var a = details[ind];
+            var s = worst[ind] === 'critique' ? 'critique' : 'warning';
+            setCard(2, s, fmtFCFA(a.valeur) + '/m³', s === 'critique' ? '⚠ CRITIQUE' : '▲ WARNING', '');
+        } else {
+            setCard(2, 'ok', 'Stable', '✓ OK', '');
+        }
+    })();
+
+    // Ind 3 : Recouvrement EF
+    (function() {
+        var ind = 'Taux Recouvrement EF';
+        if (worst[ind]) {
+            var a = details[ind];
+            var s = worst[ind] === 'critique' ? 'critique' : 'warning';
+            setCard(3, s, fmtPct(a.valeur), s === 'critique' ? '⚠ CRITIQUE' : '▲ WARNING', '');
+        } else {
+            setCard(3, 'ok', '≥ 95%', '✓ OK', '');
+        }
+    })();
+
+    // Ind 4 : Branchements dans les délais
+    (function() {
+        var ind = 'Branchements dans les délais';
+        if (worst[ind]) {
+            var a = details[ind];
+            var s = worst[ind] === 'critique' ? 'critique' : 'warning';
+            var display = a.type === 'critique' ? fmtPct(a.valeur) : fmtVal(a.valeur, 'j');
+            setCard(4, s, display, s === 'critique' ? '⚠ CRITIQUE' : '▲ WARNING', '');
+        } else {
+            setCard(4, 'ok', '100% ≤ 15j', '✓ OK', '');
+        }
+    })();
+
+    // Ind 5 : Recouvrement Impayés
+    (function() {
+        var ind = 'Recouvrement Impayés';
+        if (worst[ind]) {
+            var a = details[ind];
+            var s = worst[ind] === 'critique' ? 'critique' : 'warning';
+            setCard(5, s, fmtPct(a.valeur), s === 'critique' ? '⚠ CRITIQUE' : '▲ WARNING', '');
+        } else {
+            setCard(5, 'ok', 'Objectif atteint', '✓ OK', '');
+        }
+        var sp = params.seuil_impayes_pct_recettes;
+        if (sp !== undefined) document.getElementById('seuil-5').textContent =
+            'Seuil : < ' + (sp*100).toFixed(0) + '% des recettes';
+    })();
+
+    // Ind 6 : Réémissions
+    (function() {
+        var ind = 'Réémissions de Factures';
+        if (worst[ind]) {
+            var a = details[ind];
+            var s = worst[ind] === 'critique' ? 'critique' : 'warning';
+            setCard(6, s, fmtPct(a.valeur, 2), s === 'critique' ? '⚠ CRITIQUE' : '▲ WARNING', '');
+        } else {
+            setCard(6, 'ok', '≤ 2%', '✓ OK', '');
+        }
+    })();
+}
+
+// ── Rendu tableau des alertes ─────────────────────────────────────────────
+function renderAlertesTable(alertes, filter) {
+    var list = filter === 'tous' ? alertes : alertes.filter(a => a.indicateur === filter);
+    var tbody = document.getElementById('alertes-tbody');
+    tbody.innerHTML = '';
+    document.getElementById('alertes-table').style.display  = list.length ? 'table' : 'none';
+    document.getElementById('alertes-empty').style.display  = list.length ? 'none'  : 'block';
+
+    list.forEach(a => {
+        var tr = document.createElement('tr');
+        var typeCls = a.type === 'critique' ? 'critique' : 'warning';
+        var typeIcon = a.type === 'critique' ? '⛔' : '⚠️';
+        var valStr = '';
+        if (a.indicateur === 'Branchements dans les délais' && a.type === 'warning') {
+            valStr = fmtVal(a.valeur, 'j');
+        } else if (typeof a.valeur === 'number' && a.valeur <= 1) {
+            valStr = fmtPct(a.valeur);
+        } else if (a.valeur > 1) {
+            valStr = fmtFCFA(a.valeur);
+        }
+        var seuilStr = '';
+        if (typeof a.seuil === 'number' && a.seuil <= 1) {
+            seuilStr = fmtPct(a.seuil);
+        } else if (a.seuil > 1) {
+            seuilStr = fmtFCFA(a.seuil);
+        }
+
+        tr.innerHTML = `
+            <td><span class="ind-badge badge-${typeCls}">${typeIcon} ${a.type.toUpperCase()}</span></td>
+            <td style="font-weight:600;">${a.indicateur}</td>
+            <td>${a.dr_code}</td>
+            <td>${a.agence_nom}</td>
+            <td style="font-weight:700;">${valStr}</td>
+            <td style="color:#888;">${seuilStr}</td>
+            <td style="font-size:.8rem;color:#444;">${a.message}</td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
+function filterAlertes(ind, btn) {
+    _currentFilter = ind;
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    renderAlertesTable(_allAlertes, ind);
+}
+
+// ── Chargement et sauvegarde des paramètres ───────────────────────────────
+function loadParams() {
+    if (READ_ONLY) return;
+    var exercice = parseInt(document.getElementById('sel-exercice').value);
+    fetch('/api/monitoring/params?exercice=' + exercice)
+        .then(r => r.json())
+        .then(data => {
+            var grid = document.getElementById('params-grid');
+            grid.innerHTML = '';
+            data.details.forEach(p => {
+                var div = document.createElement('div');
+                div.className = 'param-item';
+                var pct = (p.cle.includes('seuil_delais')) ? '' : ' (décimal, ex: 0.05 = 5%)';
+                div.innerHTML = `
+                    <label>${p.libelle || p.cle}${pct}</label>
+                    <input type="number" step="0.001" id="param-${p.cle}" value="${p.valeur}">
+                `;
+                grid.appendChild(div);
+            });
+        });
+}
+
+function saveParams() {
+    var exercice = parseInt(document.getElementById('sel-exercice').value);
+    var params = {};
+    document.querySelectorAll('[id^="param-"]').forEach(inp => {
+        var cle = inp.id.replace('param-', '');
+        params[cle] = parseFloat(inp.value);
+    });
+    fetch('/api/monitoring/params', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ exercice, params })
+    }).then(r => r.json()).then(d => {
+        var st = document.getElementById('params-status');
+        st.textContent = d.status === 'ok' ? '✓ Paramètres enregistrés' : ('Erreur : ' + d.error);
+        st.style.color = d.status === 'ok' ? '#27ae60' : '#e74c3c';
+        setTimeout(() => { st.textContent = ''; }, 3000);
+        refreshAll();
+    });
+}
+
+// ── Init ──────────────────────────────────────────────────────────────────
+(function() {
+    // Pré-sélectionner le mois courant
+    var now = new Date();
+    var selM = document.getElementById('sel-mois');
+    if (selM) selM.value = now.getMonth() + 1;
+
+    loadAlertes();
+    if (!READ_ONLY) loadParams();
+})();
+</script>
+</body>
+</html>

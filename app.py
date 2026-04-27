@@ -12,6 +12,8 @@ from calculs import (calcul_ca_agence, calcul_dr, calcul_national,
                       calcul_dashboard, get_agences_dr, classement_performances)
 from export_excel import (export_consolidation, export_budget,
                           export_fiscal, export_reporting)
+from monitoring import (generer_alertes, synthese_par_dr, get_params,
+                        save_params, indicateurs_agence)
 import io
 
 app = Flask(__name__)
@@ -99,6 +101,13 @@ def _is_direction_allowed(path, method='GET'):
     if path.startswith('/api/export/'):
         return True
     if path == '/api/objectifs' or path == '/api/statut':
+        return True
+    # Tableau de bord monitoring (lecture seule pour la Direction)
+    if path == '/monitoring':
+        return True
+    if path == '/api/monitoring/alertes' or path == '/api/monitoring/indicateurs':
+        return True
+    if path == '/api/monitoring/params' and method == 'GET':
         return True
     return False
 
@@ -3323,6 +3332,212 @@ def api_paiements_elec_dashboard_operators():
         "montant_total": grand_total,
         "source": source,
     })
+
+
+# ════════════════════════════════════════════════════════════════════════════
+# MODULE MONITORING — Alertes Automatisées
+# ════════════════════════════════════════════════════════════════════════════
+
+@app.route('/monitoring')
+def monitoring_page():
+    operateur = session.get('operateur', {})
+    role = session.get('role') or 'anonyme'
+    read_only = (role == 'direction')
+    return render_template('monitoring.html',
+                           mois=MOIS,
+                           drs=list(STRUCTURE_CW.keys()),
+                           operateur=operateur,
+                           role=role,
+                           read_only=read_only)
+
+
+@app.route('/api/monitoring/alertes')
+def api_monitoring_alertes():
+    mois = request.args.get('mois', 1, type=int)
+    exercice = request.args.get('exercice', 2026, type=int)
+    scope = request.args.get('scope', 'national')
+    scope_id = request.args.get('scope_id', None)
+    try:
+        data = generer_alertes(mois, exercice, scope, scope_id)
+        return jsonify(data)
+    except Exception as e:
+        return jsonify({'error': str(e), 'alertes': [], 'nb_critiques': 0,
+                        'nb_warnings': 0, 'total': 0}), 500
+
+
+@app.route('/api/monitoring/indicateurs')
+def api_monitoring_indicateurs():
+    agence_id = request.args.get('agence_id', type=int)
+    mois = request.args.get('mois', 1, type=int)
+    exercice = request.args.get('exercice', 2026, type=int)
+    if not agence_id:
+        return jsonify({'error': 'agence_id requis'}), 400
+    data = indicateurs_agence(agence_id, mois, exercice)
+    return jsonify(data)
+
+
+@app.route('/api/monitoring/synthese-dr')
+def api_monitoring_synthese_dr():
+    mois = request.args.get('mois', 1, type=int)
+    exercice = request.args.get('exercice', 2026, type=int)
+    data = synthese_par_dr(mois, exercice)
+    return jsonify(data)
+
+
+@app.route('/api/monitoring/params', methods=['GET'])
+def api_monitoring_params_get():
+    exercice = request.args.get('exercice', 2026, type=int)
+    params = get_params(exercice)
+    # Retourner avec libellés
+    db = get_db()
+    rows = db.execute(
+        "SELECT cle, valeur, libelle FROM monitoring_params WHERE exercice=?", (exercice,)
+    ).fetchall()
+    db.close()
+    return jsonify({
+        'params': params,
+        'details': [{'cle': r['cle'], 'valeur': r['valeur'], 'libelle': r['libelle']} for r in rows],
+    })
+
+
+@app.route('/api/monitoring/params', methods=['POST'])
+def api_monitoring_params_post():
+    data = request.json
+    exercice = data.get('exercice', 2026)
+    updates = data.get('params', {})
+    if not updates:
+        return jsonify({'error': 'Aucun paramètre fourni'}), 400
+    save_params(updates, exercice)
+    return jsonify({'status': 'ok'})
+
+
+# ─── API Saisie Monitoring : Facturation Abonnés (Indicateur 1) ─────────────
+
+@app.route('/api/facturation-abonnes', methods=['GET'])
+def api_get_facturation_abonnes():
+    agence_id = request.args.get('agence_id', type=int)
+    mois = request.args.get('mois', type=int)
+    exercice = request.args.get('exercice', 2026, type=int)
+    db = get_db()
+    row = db.execute(
+        "SELECT abonnes_actifs, abonnes_factures FROM facturation_abonnes "
+        "WHERE agence_id=? AND mois=? AND exercice=?",
+        (agence_id, mois, exercice)
+    ).fetchone()
+    db.close()
+    if row:
+        return jsonify({'abonnes_actifs': row['abonnes_actifs'],
+                        'abonnes_factures': row['abonnes_factures']})
+    return jsonify({'abonnes_actifs': 0, 'abonnes_factures': 0})
+
+
+@app.route('/api/facturation-abonnes', methods=['POST'])
+def api_save_facturation_abonnes():
+    data = request.json
+    agence_id = data.get('agence_id')
+    mois = data.get('mois')
+    exercice = data.get('exercice', 2026)
+    if not agence_id or not mois:
+        return jsonify({'error': 'agence_id et mois requis'}), 400
+    db = get_db()
+    db.execute("""INSERT INTO facturation_abonnes (agence_id, mois, exercice, abonnes_actifs, abonnes_factures)
+                  VALUES (?, ?, ?, ?, ?)
+                  ON CONFLICT(agence_id, mois, exercice)
+                  DO UPDATE SET abonnes_actifs=excluded.abonnes_actifs,
+                                abonnes_factures=excluded.abonnes_factures""",
+               (int(agence_id), int(mois), exercice,
+                data.get('abonnes_actifs', 0) or 0,
+                data.get('abonnes_factures', 0) or 0))
+    db.commit()
+    db.close()
+    return jsonify({'status': 'ok'})
+
+
+# ─── API Saisie Monitoring : Branchements Délais (Indicateur 4) ─────────────
+
+@app.route('/api/branchements-delais', methods=['GET'])
+def api_get_branchements_delais():
+    agence_id = request.args.get('agence_id', type=int)
+    mois = request.args.get('mois', type=int)
+    exercice = request.args.get('exercice', 2026, type=int)
+    db = get_db()
+    row = db.execute(
+        "SELECT total_devis_payes, dans_15j, delai_moyen_jours FROM branchements_delais "
+        "WHERE agence_id=? AND mois=? AND exercice=?",
+        (agence_id, mois, exercice)
+    ).fetchone()
+    db.close()
+    if row:
+        return jsonify({'total_devis_payes': row['total_devis_payes'],
+                        'dans_15j': row['dans_15j'],
+                        'delai_moyen_jours': row['delai_moyen_jours']})
+    return jsonify({'total_devis_payes': 0, 'dans_15j': 0, 'delai_moyen_jours': None})
+
+
+@app.route('/api/branchements-delais', methods=['POST'])
+def api_save_branchements_delais():
+    data = request.json
+    agence_id = data.get('agence_id')
+    mois = data.get('mois')
+    exercice = data.get('exercice', 2026)
+    if not agence_id or not mois:
+        return jsonify({'error': 'agence_id et mois requis'}), 400
+    db = get_db()
+    db.execute("""INSERT INTO branchements_delais (agence_id, mois, exercice, total_devis_payes, dans_15j, delai_moyen_jours)
+                  VALUES (?, ?, ?, ?, ?, ?)
+                  ON CONFLICT(agence_id, mois, exercice)
+                  DO UPDATE SET total_devis_payes=excluded.total_devis_payes,
+                                dans_15j=excluded.dans_15j,
+                                delai_moyen_jours=excluded.delai_moyen_jours""",
+               (int(agence_id), int(mois), exercice,
+                data.get('total_devis_payes', 0) or 0,
+                data.get('dans_15j', 0) or 0,
+                data.get('delai_moyen_jours') or None))
+    db.commit()
+    db.close()
+    return jsonify({'status': 'ok'})
+
+
+# ─── API Saisie Monitoring : Réémissions Factures (Indicateur 6) ────────────
+
+@app.route('/api/reemissions', methods=['GET'])
+def api_get_reemissions():
+    agence_id = request.args.get('agence_id', type=int)
+    mois = request.args.get('mois', type=int)
+    exercice = request.args.get('exercice', 2026, type=int)
+    db = get_db()
+    row = db.execute(
+        "SELECT nb_factures_emises, nb_reemissions FROM reemissions_factures "
+        "WHERE agence_id=? AND mois=? AND exercice=?",
+        (agence_id, mois, exercice)
+    ).fetchone()
+    db.close()
+    if row:
+        return jsonify({'nb_factures_emises': row['nb_factures_emises'],
+                        'nb_reemissions': row['nb_reemissions']})
+    return jsonify({'nb_factures_emises': 0, 'nb_reemissions': 0})
+
+
+@app.route('/api/reemissions', methods=['POST'])
+def api_save_reemissions():
+    data = request.json
+    agence_id = data.get('agence_id')
+    mois = data.get('mois')
+    exercice = data.get('exercice', 2026)
+    if not agence_id or not mois:
+        return jsonify({'error': 'agence_id et mois requis'}), 400
+    db = get_db()
+    db.execute("""INSERT INTO reemissions_factures (agence_id, mois, exercice, nb_factures_emises, nb_reemissions)
+                  VALUES (?, ?, ?, ?, ?)
+                  ON CONFLICT(agence_id, mois, exercice)
+                  DO UPDATE SET nb_factures_emises=excluded.nb_factures_emises,
+                                nb_reemissions=excluded.nb_reemissions""",
+               (int(agence_id), int(mois), exercice,
+                data.get('nb_factures_emises', 0) or 0,
+                data.get('nb_reemissions', 0) or 0))
+    db.commit()
+    db.close()
+    return jsonify({'status': 'ok'})
 
 
 if __name__ == '__main__':
