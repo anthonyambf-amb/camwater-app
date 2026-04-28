@@ -175,6 +175,28 @@ def get_all_drs():
     return [dict(r) for r in rows]
 
 
+# ─── API Structure DRs / Agences (publique, sans auth) ──────────────
+
+@app.route('/api/drs-agences')
+def api_drs_agences():
+    """Retourne la structure DRs → Agences pour le modal de connexion vitrine."""
+    db = get_db()
+    drs = db.execute(
+        "SELECT id, code, nom FROM directions_regionales ORDER BY code"
+    ).fetchall()
+    result = []
+    for dr in drs:
+        agences = db.execute(
+            "SELECT id, nom FROM agences WHERE dr_id=? ORDER BY nom", (dr['id'],)
+        ).fetchall()
+        result.append({
+            'id': dr['id'], 'code': dr['code'], 'nom': dr['nom'],
+            'agences': [{'id': a['id'], 'nom': a['nom']} for a in agences]
+        })
+    db.close()
+    return jsonify(result)
+
+
 # ─── API Vitrine (publique, sans auth) ──────────────────────────────
 
 @app.route('/api/vitrine-kpi')

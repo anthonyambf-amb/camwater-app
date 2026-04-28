@@ -82,19 +82,130 @@
         }
 
         .nav-links { display:flex; gap:4px; align-items:center; }
-        .nav-links a {
+        .nav-links a, .nav-link-btn {
             color:rgba(255,255,255,.7); font-size:.8rem; font-weight:600;
             padding:7px 15px; border-radius:20px; transition:all var(--t);
+            background:none; border:none; cursor:pointer;
+            font-family:'Raleway',sans-serif;
         }
-        .nav-links a:hover { color:#fff; background:rgba(255,255,255,.09); }
+        .nav-links a:hover, .nav-link-btn:hover { color:#fff; background:rgba(255,255,255,.09); }
         .nav-cta {
-            background:rgba(91,172,216,.2) !important;
+            background:rgba(91,172,216,.2);
             border:1px solid rgba(91,172,216,.4) !important;
-            color:rgba(168,216,242,.9) !important;
+            color:rgba(168,216,242,.9);
+            font-family:'Raleway',sans-serif; font-weight:700; font-size:.8rem;
+            padding:7px 18px; border-radius:20px; cursor:pointer;
+            transition:all var(--t);
         }
-        .nav-cta:hover {
-            background:rgba(91,172,216,.35) !important; color:#fff !important;
+        .nav-cta:hover { background:rgba(91,172,216,.38); color:#fff; }
+
+        /* ══ Modal Connexion ══════════════════════════════════════════════ */
+        .cx-overlay {
+            display:none; position:fixed; inset:0; z-index:2000;
+            background:rgba(7,15,32,.72); backdrop-filter:blur(6px);
+            align-items:center; justify-content:center;
         }
+        .cx-overlay.open { display:flex; }
+        .cx-box {
+            background:#fff; border-radius:20px; padding:38px 40px;
+            width:92%; max-width:520px; max-height:90vh; overflow-y:auto;
+            position:relative; box-shadow:0 32px 80px rgba(0,0,0,.3);
+            border-top:4px solid var(--p);
+            animation:mIn .25s cubic-bezier(.4,0,.2,1);
+        }
+        .cx-close {
+            position:absolute; top:14px; right:16px; width:32px; height:32px;
+            border-radius:50%; background:#F0F4FA; border:none; cursor:pointer;
+            display:flex; align-items:center; justify-content:center;
+            font-size:1rem; color:var(--n); transition:background var(--t);
+        }
+        .cx-close:hover { background:#D6E4F0; }
+        .cx-logo { text-align:center; margin-bottom:20px; }
+        .cx-logo .wm { font-weight:800; font-size:1.3rem; color:var(--n); letter-spacing:.04em; }
+        .cx-logo .wm span { color:var(--s); }
+        .cx-logo .sub { font-size:.6rem; font-weight:600; letter-spacing:.18em; text-transform:uppercase; color:#8FA6C2; }
+        .cx-title { font-size:1.1rem; font-weight:800; color:var(--n); margin-bottom:5px; }
+        .cx-sub { font-size:.82rem; color:#5B7399; margin-bottom:24px; }
+        .cx-field { margin-bottom:15px; }
+        .cx-field label {
+            display:block; font-size:.68rem; font-weight:800; color:#5B7399;
+            text-transform:uppercase; letter-spacing:.09em; margin-bottom:6px;
+        }
+        .cx-field input, .cx-field select {
+            width:100%; padding:11px 14px; border:1.5px solid #C8D9EE;
+            border-radius:8px; font-family:'Raleway',sans-serif; font-size:.9rem;
+            font-weight:500; color:var(--n); transition:border-color var(--t), box-shadow var(--t);
+        }
+        .cx-field input:focus, .cx-field select:focus {
+            border-color:var(--p); outline:none; box-shadow:0 0 0 3px rgba(27,83,171,.12);
+        }
+        .cx-row { display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; }
+        .cx-row .cx-field { margin-bottom:0; }
+        .cx-err { color:#B91C1C; font-size:.8rem; min-height:1rem; margin:4px 0 10px; font-weight:600; }
+        .cx-btn {
+            display:block; width:100%; padding:13px; background:var(--p); color:#fff;
+            border:none; border-radius:9px; font-family:'Raleway',sans-serif;
+            font-size:.94rem; font-weight:800; cursor:pointer;
+            transition:background var(--t), transform var(--t); letter-spacing:.03em;
+        }
+        .cx-btn:hover { background:var(--n); transform:translateY(-1px); }
+        .cx-btn:disabled { background:#C8D9EE; cursor:not-allowed; transform:none; }
+
+        /* Espaces post-login Siège */
+        .cx-spaces { display:flex; flex-direction:column; gap:10px; margin-top:18px; }
+        .cx-space-link {
+            display:flex; align-items:center; gap:14px; padding:14px 18px;
+            background:#F4F8FC; border-radius:12px; border:1.5px solid #D6EDF8;
+            transition:all var(--t); text-decoration:none; color:var(--n);
+        }
+        .cx-space-link:hover { background:#fff; border-color:var(--p); box-shadow:0 4px 16px rgba(13,43,94,.1); transform:translateX(4px); }
+        .cx-space-link .csl-ico { width:38px; height:38px; border-radius:9px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+        .cx-space-link .csl-ico svg { width:18px; height:18px; }
+        .cx-space-link .csl-info strong { display:block; font-size:.88rem; font-weight:800; }
+        .cx-space-link .csl-info span { font-size:.73rem; color:#5B7399; }
+        .cx-space-link .csl-arrow { margin-left:auto; color:#C8D9EE; font-size:1.1rem; transition:color var(--t); }
+        .cx-space-link:hover .csl-arrow { color:var(--p); }
+
+        /* Blocs terrain */
+        .cx-terrain-cards { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:18px; }
+        .cx-terrain-card {
+            display:block; background:#F4F8FC; border-radius:12px;
+            padding:20px 16px; border:1.5px solid #D6EDF8; text-decoration:none;
+            color:var(--n); text-align:center; transition:all var(--t);
+        }
+        .cx-terrain-card:hover { background:#fff; border-color:var(--p); box-shadow:0 4px 16px rgba(13,43,94,.1); transform:translateY(-3px); }
+        .cx-terrain-card svg { width:28px; height:28px; margin-bottom:9px; display:block; margin-left:auto; margin-right:auto; }
+        .cx-terrain-card strong { display:block; font-size:.88rem; font-weight:800; margin-bottom:4px; }
+        .cx-terrain-card span { font-size:.72rem; color:#5B7399; }
+
+        /* Banner utilisateur connecté */
+        .cx-user-banner {
+            background:linear-gradient(135deg,#EBF4FF,#E0F0FA); border:1px solid #A8D8F2;
+            border-radius:10px; padding:10px 16px; margin-bottom:18px;
+            display:flex; align-items:center; justify-content:space-between; gap:10px;
+        }
+        .cx-user-info { font-size:.8rem; color:var(--n); font-weight:600; }
+        .cx-user-info small { display:block; font-weight:400; color:#5B7399; font-size:.7rem; }
+        .cx-deconnect {
+            font-size:.72rem; font-weight:700; color:#B91C1C; background:#FEF0EE;
+            border:1px solid #FECACA; padding:5px 12px; border-radius:6px;
+            cursor:pointer; transition:background var(--t); white-space:nowrap;
+            font-family:'Raleway',sans-serif;
+        }
+        .cx-deconnect:hover { background:#FEE2E2; }
+
+        /* Séparateur avec libellé */
+        .cx-sep { text-align:center; margin:16px 0; position:relative; }
+        .cx-sep::before { content:''; position:absolute; top:50%; left:0; right:0; height:1px; background:#E2EBF5; }
+        .cx-sep span { position:relative; background:#fff; padding:0 12px; font-size:.7rem; color:#8FA6C2; font-weight:600; text-transform:uppercase; letter-spacing:.08em; }
+
+        /* Alerte enregistrement définitif */
+        .cx-definitive-warn {
+            background:#FFF8E6; border:1.5px solid #F0C060; border-radius:10px;
+            padding:12px 16px; margin-bottom:16px; font-size:.8rem; color:#92400E;
+            font-weight:600; line-height:1.5;
+        }
+        .cx-definitive-warn strong { display:block; margin-bottom:3px; font-size:.82rem; }
 
         /* ── Hero Body ── */
         .hero-body {
@@ -436,10 +547,9 @@
             </div>
         </div>
         <div class="nav-links">
-            <a href="#espaces">Espaces</a>
+            <button class="nav-cta" onclick="openConnexion()" aria-haspopup="dialog">Connexion</button>
             <a href="#kpi">Indicateurs</a>
-            <a href="#qualite">Qualité</a>
-            <a href="javascript:void(0)" onclick="openAbout()" class="nav-cta">À propos</a>
+            <button class="nav-link-btn" onclick="openAbout()" aria-haspopup="dialog">À propos</button>
         </div>
     </nav>
 
@@ -620,6 +730,124 @@
     </div>
 </footer>
 
+<!-- ══ MODAL CONNEXION ══════════════════════════════════════════════════════ -->
+<div class="cx-overlay" id="cx-modal" role="dialog" aria-modal="true" aria-labelledby="cx-modal-title" onclick="closeCxOnBg(event)">
+  <div class="cx-box">
+    <button class="cx-close" onclick="closeConnexion()" aria-label="Fermer">✕</button>
+
+    <div class="cx-logo">
+      <div class="wm">cam<span>water</span></div>
+      <div class="sub">Cameroon Water Utilities Corporation</div>
+    </div>
+
+    <!-- ── ÉTAPE 0 : Identification ── -->
+    <div id="cx-step0">
+      <h2 class="cx-title" id="cx-modal-title">Identification</h2>
+      <p class="cx-sub">Renseignez vos informations pour accéder à votre espace.</p>
+      <div class="cx-field">
+        <label for="cx-nom">Nom complet</label>
+        <input type="text" id="cx-nom" placeholder="Ex : NDONGO Jean-Pierre" autocomplete="name">
+      </div>
+      <div class="cx-field">
+        <label for="cx-mat">Matricule</label>
+        <input type="text" id="cx-mat" placeholder="Ex : 1A23" maxlength="10" autocomplete="off" style="text-transform:uppercase;letter-spacing:.08em">
+      </div>
+      <div class="cx-field">
+        <label for="cx-site">Site de rattachement</label>
+        <select id="cx-site">
+          <option value="">-- Sélectionnez --</option>
+          <option value="siege">Siège</option>
+          <option value="dr">Direction Régionale (DR)</option>
+        </select>
+      </div>
+      <div class="cx-err" id="cx-err0" role="alert"></div>
+      <button class="cx-btn" onclick="validerEtape0()">Valider →</button>
+    </div>
+
+    <!-- ── ÉTAPE 1 SIÈGE : Espaces disponibles ── -->
+    <div id="cx-step-siege" style="display:none">
+      <div class="cx-user-banner" id="cx-banner-siege">
+        <div class="cx-user-info">
+          <span id="cx-banner-name-siege"></span>
+          <small id="cx-banner-mat-siege"></small>
+        </div>
+        <button class="cx-deconnect" onclick="deconnexion()">⏏ Déconnexion</button>
+      </div>
+      <h2 class="cx-title">Vos espaces — Siège</h2>
+      <p class="cx-sub">Sélectionnez l'espace auquel vous souhaitez accéder.</p>
+      <div class="cx-spaces">
+        <a href="/central" class="cx-space-link" onclick="verifAvantNav(event,this)">
+          <div class="csl-ico" style="background:#EBF3FA"><svg><use href="#ic-clipboard"/></svg></div>
+          <div class="csl-info"><strong>Centralisation</strong><span>Saisie, tableau de bord, exports — identification requise</span></div>
+          <span class="csl-arrow">›</span>
+        </a>
+        <a href="/monitoring" class="cx-space-link" onclick="verifAvantNav(event,this)">
+          <div class="csl-ico" style="background:#FDECEA"><svg style="color:#B91C1C"><use href="#ic-alert"/></svg></div>
+          <div class="csl-info"><strong>Surveillance &amp; Alertes</strong><span>Monitoring des 6 ratios prudentiels</span></div>
+          <span class="csl-arrow">›</span>
+        </a>
+        <a href="/direction" class="cx-space-link" onclick="verifAvantNav(event,this)">
+          <div class="csl-ico" style="background:#F3EBF9"><svg style="color:#6B35C7"><use href="#ic-trending"/></svg></div>
+          <div class="csl-info"><strong>Direction &amp; Responsables</strong><span>Tableau de bord lecture seule</span></div>
+          <span class="csl-arrow">›</span>
+        </a>
+      </div>
+    </div>
+
+    <!-- ── ÉTAPE 1 DR : Sélection DR + Agence ── -->
+    <div id="cx-step-dr" style="display:none">
+      <div class="cx-user-banner" id="cx-banner-dr">
+        <div class="cx-user-info">
+          <span id="cx-banner-name-dr"></span>
+          <small id="cx-banner-mat-dr"></small>
+        </div>
+        <button class="cx-deconnect" onclick="deconnexion()">⏏ Déconnexion</button>
+      </div>
+      <h2 class="cx-title">Saisie terrain — DR</h2>
+      <p class="cx-sub">Sélectionnez votre Direction Régionale, votre agence et la date de saisie.</p>
+
+      <div class="cx-field">
+        <label for="cx-dr">Direction Régionale</label>
+        <select id="cx-dr" onchange="chargerAgences()">
+          <option value="">-- Choisissez une DR --</option>
+        </select>
+      </div>
+      <div class="cx-row">
+        <div class="cx-field">
+          <label for="cx-agence">Agence / Centre</label>
+          <select id="cx-agence" disabled>
+            <option value="">-- DR d'abord --</option>
+          </select>
+        </div>
+        <div class="cx-field">
+          <label for="cx-mat-dr">Matricule</label>
+          <input type="text" id="cx-mat-dr" readonly style="background:#F4F8FC;color:#5B7399">
+        </div>
+        <div class="cx-field">
+          <label for="cx-date">Date</label>
+          <input type="date" id="cx-date">
+        </div>
+      </div>
+      <div class="cx-err" id="cx-err-dr" role="alert"></div>
+
+      <div class="cx-sep"><span>Sélectionnez votre saisie</span></div>
+
+      <div class="cx-terrain-cards">
+        <a href="#" class="cx-terrain-card" id="btn-recettes" onclick="accederSaisie(event,'recettes')">
+          <svg><use href="#ic-banknote"/></svg>
+          <strong>Recettes du Jour</strong>
+          <span>Encaissements de la journée</span>
+        </a>
+        <a href="#" class="cx-terrain-card" id="btn-branchements" onclick="accederSaisie(event,'branchements')">
+          <svg><use href="#ic-wrench"/></svg>
+          <strong>Branchements du Jour</strong>
+          <span>Raccordements de la journée</span>
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- ══ MODAL À PROPOS ═══════════════════════════════════════════════════════ -->
 <div class="modal-bg" id="about-modal" onclick="closeAboutBg(event)">
     <div class="modal-box">
@@ -666,11 +894,9 @@
 /* ── KPI ─────────────────────────────────────────────────────────────────── */
 const MF=['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
 
+/* Montants toujours en intégralité — ex : 320 726 183 (pas 320M) */
 function fm(n){
-    if(n===null||n===undefined)return'—';
-    if(Math.abs(n)>=1e9)return(n/1e9).toFixed(2).replace('.',',')+'&nbsp;Md';
-    if(Math.abs(n)>=1e6)return Math.round(n/1e6).toLocaleString('fr-FR')+'&nbsp;M';
-    if(Math.abs(n)>=1e3)return Math.round(n/1e3).toLocaleString('fr-FR')+'&nbsp;K';
+    if(n===null||n===undefined||isNaN(n))return'—';
     return Math.round(n).toLocaleString('fr-FR');
 }
 
@@ -701,11 +927,180 @@ fetch('/api/vitrine-kpi?exercice=2026')
 
 function set(id,html){const el=document.getElementById(id);if(el)el.innerHTML=html;}
 
-/* ── Modal ───────────────────────────────────────────────────────────────── */
+/* ── Modal À propos ───────────────────────────────────────────────────────── */
 function openAbout(){document.getElementById('about-modal').classList.add('open');document.body.style.overflow='hidden';}
 function closeAbout(){document.getElementById('about-modal').classList.remove('open');document.body.style.overflow='';}
 function closeAboutBg(e){if(e.target===document.getElementById('about-modal'))closeAbout();}
-document.addEventListener('keydown',e=>{if(e.key==='Escape')closeAbout();});
+
+/* ── Modal Connexion ──────────────────────────────────────────────────────── */
+var _drData=[];         // [{id, code, nom, agences:[...]}]
+var _session={};        // {nom, matricule, site, drCode, agenceId, agenceNom}
+
+function openConnexion(){
+    document.getElementById('cx-modal').classList.add('open');
+    document.body.style.overflow='hidden';
+    var s=_session;
+    // Si session active → afficher directement l'espace correspondant
+    if(s.nom){
+        if(s.site==='siege') afficherSiege();
+        else afficherDR();
+    }
+    if(!_drData.length) chargerDRs();
+}
+function closeConnexion(){
+    document.getElementById('cx-modal').classList.remove('open');
+    document.body.style.overflow='';
+}
+function closeCxOnBg(e){if(e.target===document.getElementById('cx-modal'))closeConnexion();}
+
+document.addEventListener('keydown',function(e){
+    if(e.key==='Escape'){
+        closeAbout();
+        closeConnexion();
+    }
+});
+
+/* Charger la liste DRs/agences */
+function chargerDRs(){
+    fetch('/api/drs-agences')
+        .then(function(r){return r.json();})
+        .then(function(data){
+            _drData=data;
+            var sel=document.getElementById('cx-dr');
+            sel.innerHTML='<option value="">-- Choisissez une DR --</option>';
+            data.forEach(function(dr){
+                var o=document.createElement('option');
+                o.value=dr.id; o.textContent=dr.code+' — '+dr.nom;
+                sel.appendChild(o);
+            });
+        });
+}
+
+/* Remplir le menu Agences selon la DR sélectionnée */
+function chargerAgences(){
+    var drId=parseInt(document.getElementById('cx-dr').value);
+    var selA=document.getElementById('cx-agence');
+    selA.innerHTML='<option value="">-- Choisissez --</option>';
+    selA.disabled=!drId;
+    if(!drId)return;
+    var dr=_drData.find(function(d){return d.id===drId;});
+    if(!dr)return;
+    dr.agences.forEach(function(a){
+        var o=document.createElement('option');
+        o.value=a.id; o.textContent=a.nom;
+        selA.appendChild(o);
+    });
+}
+
+/* Valider étape 0 (identification initiale) */
+function validerEtape0(){
+    var nom=document.getElementById('cx-nom').value.trim();
+    var mat=document.getElementById('cx-mat').value.trim().toUpperCase();
+    var site=document.getElementById('cx-site').value;
+    var err=document.getElementById('cx-err0');
+    if(!nom){err.textContent='Veuillez saisir votre nom.';return;}
+    if(!mat){err.textContent='Veuillez saisir votre matricule.';return;}
+    if(!site){err.textContent='Veuillez sélectionner un site.';return;}
+    err.textContent='';
+    _session={nom:nom,matricule:mat,site:site};
+    if(site==='siege') afficherSiege();
+    else afficherDR();
+}
+
+/* Afficher espace Siège */
+function afficherSiege(){
+    document.getElementById('cx-step0').style.display='none';
+    document.getElementById('cx-step-dr').style.display='none';
+    document.getElementById('cx-step-siege').style.display='block';
+    document.getElementById('cx-banner-name-siege').textContent=_session.nom;
+    document.getElementById('cx-banner-mat-siege').textContent='Matricule : '+_session.matricule+' · Siège';
+}
+
+/* Afficher espace DR */
+function afficherDR(){
+    document.getElementById('cx-step0').style.display='none';
+    document.getElementById('cx-step-siege').style.display='none';
+    document.getElementById('cx-step-dr').style.display='block';
+    document.getElementById('cx-banner-name-dr').textContent=_session.nom;
+    document.getElementById('cx-banner-mat-dr').textContent='Matricule : '+_session.matricule+' · Saisie Terrain';
+    document.getElementById('cx-mat-dr').value=_session.matricule;
+    // Date du jour par défaut
+    var today=new Date().toISOString().split('T')[0];
+    document.getElementById('cx-date').value=today;
+    if(!_drData.length) chargerDRs();
+}
+
+/* Accéder à la saisie terrain après avoir sélectionné agence + date */
+function accederSaisie(e,type){
+    e.preventDefault();
+    var agenceId=document.getElementById('cx-agence').value;
+    var agenceNom=document.getElementById('cx-agence').options[document.getElementById('cx-agence').selectedIndex]&&
+                  document.getElementById('cx-agence').options[document.getElementById('cx-agence').selectedIndex].text||'';
+    var date=document.getElementById('cx-date').value;
+    var err=document.getElementById('cx-err-dr');
+    if(!document.getElementById('cx-dr').value){err.textContent='Sélectionnez une DR.';return;}
+    if(!agenceId){err.textContent='Sélectionnez une agence.';return;}
+    if(!date){err.textContent='Indiquez la date de saisie.';return;}
+    err.textContent='';
+    // Stocker session terrain en localStorage pour les pages de saisie
+    var terrain={
+        nom:_session.nom, matricule:_session.matricule,
+        agence_id:agenceId, agence_nom:agenceNom,
+        dr_code:document.getElementById('cx-dr').options[document.getElementById('cx-dr').selectedIndex].text.split(' — ')[0]||'',
+        date_saisie:date
+    };
+    localStorage.setItem('cw_terrain_session',JSON.stringify(terrain));
+    // Authentification via l'API terrain puis redirection
+    var endpoint=type==='recettes'?'/api/recettes-jour/login':'/api/branchements-jour/login';
+    fetch(endpoint,{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({
+            nom:terrain.nom, matricule:terrain.matricule,
+            agence_id:parseInt(agenceId), date_saisie:date
+        })
+    }).then(function(r){return r.json();}).then(function(d){
+        if(d.status==='ok'){
+            var cible=type==='recettes'?'/recettes-jour/saisie':'/branchements-jour/saisie';
+            window.location.href=cible;
+        } else {
+            err.textContent=d.error||'Erreur de connexion. Vérifiez vos informations.';
+        }
+    }).catch(function(){
+        err.textContent='Erreur réseau. Réessayez.';
+    });
+}
+
+/* Déconnexion avec vérification enregistrement définitif */
+function deconnexion(){
+    if(!confirm(
+        '⚠️ CONDITION OBLIGATOIRE\n\n'+
+        'Avant de vous déconnecter, confirmez avoir effectué\n'+
+        'l\'ENREGISTREMENT DÉFINITIF de toutes vos saisies.\n\n'+
+        'Les données en brouillon ne sont PAS consolidées.\n\n'+
+        'Confirmer la déconnexion ?'
+    )) return;
+    _session={};
+    localStorage.removeItem('cw_terrain_session');
+    // Logout session serveur si nécessaire
+    fetch('/api/logout',{method:'POST'}).finally(function(){
+        // Revenir à l'étape 0
+        document.getElementById('cx-step-siege').style.display='none';
+        document.getElementById('cx-step-dr').style.display='none';
+        document.getElementById('cx-step0').style.display='block';
+        document.getElementById('cx-nom').value='';
+        document.getElementById('cx-mat').value='';
+        document.getElementById('cx-site').value='';
+        document.getElementById('cx-err0').textContent='';
+    });
+}
+
+/* Vérification avant navigation depuis espace Siège */
+function verifAvantNav(e,link){
+    // Simple — l'alerte est gérée sur les pages de saisie au moment de la déconnexion
+    // Ici on laisse naviguer normalement
+    closeConnexion();
+}
 
 /* ── Scroll Reveal ───────────────────────────────────────────────────────── */
 document.documentElement.classList.add('js-loaded');

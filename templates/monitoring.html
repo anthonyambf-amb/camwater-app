@@ -185,7 +185,8 @@
         </div>
         <nav>
             <div class="nav-section">Navigation</div>
-            <a href="/" class="btn-accueil">&#127968; Accueil</a>
+            <button onclick="history.back()" class="btn-accueil" style="border:none;cursor:pointer;font-family:'Raleway',sans-serif;margin-bottom:4px;">&#8592; Retour</button>
+            <a href="/" class="btn-accueil">&#8962; Accueil</a>
             <a href="/dashboard">&#9889; Tableau de bord</a>
             {% if not read_only %}
             <a href="/saisie/volumes">&#9998; Saisie des données</a>
