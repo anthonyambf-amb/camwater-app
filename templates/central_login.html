@@ -2,230 +2,228 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#0D2B5E">
     <title>CAMWATER — Centralisation</title>
     <link rel="stylesheet" href="/static/css/style.css">
     <style>
-        /* ── Mise en page pleine page ── */
-        body { margin:0; }
-        .cl-page {
-            min-height:100vh;
-            background: linear-gradient(160deg, #0D2B5E 0%, #133672 45%, #1B53AB 78%, #5BACD8 100%);
-            display:flex; flex-direction:column;
+        body{margin:0;overflow-x:hidden;}
+
+        /* ── Page pleine — même gradient que la vitrine ── */
+        .cl-page{
+            min-height:100svh;
+            background:linear-gradient(155deg,#060E1E 0%,#091E3E 15%,#0D2B5E 38%,#133672 60%,#1B53AB 82%,#5BACD8 100%);
+            display:flex;flex-direction:column;
             font-family:'Raleway','Segoe UI',sans-serif;
-            position:relative; overflow:hidden;
+            position:relative;overflow-x:hidden;
         }
-        .cl-page::before {
-            content:''; position:absolute;
-            width:600px; height:600px; border-radius:50%;
-            background:radial-gradient(circle, rgba(91,172,216,.15) 0%, transparent 70%);
-            top:-150px; right:-100px; pointer-events:none;
-        }
-
-        /* ── Navbar ── */
-        .cl-nav {
-            position:relative; z-index:10;
-            display:flex; align-items:center; justify-content:space-between;
-            padding:20px 52px;
-        }
-        .cl-nav-brand { display:flex; align-items:center; gap:12px; }
-        .cl-nav-logo {
-            width:40px; height:40px; border-radius:50%;
-            background:rgba(255,255,255,.12); border:2px solid rgba(91,172,216,.4);
-            display:flex; align-items:center; justify-content:center; font-size:1.1rem;
-        }
-        .cl-nav-name {
-            font-family:'Raleway',sans-serif;font-weight:800;
-            font-size:1.35rem; font-weight:700; color:#fff; letter-spacing:.06em;
-        }
-        .cl-nav-name span { color:#5BACD8; }
-        .cl-nav-back {
-            color:rgba(255,255,255,.65); font-size:.82rem; font-weight:500;
-            padding:7px 16px; border-radius:20px; border:1px solid rgba(255,255,255,.2);
-            transition:all .2s;
-        }
-        .cl-nav-back:hover { background:rgba(255,255,255,.1); color:#fff; }
-
-        /* ── Zone centrale ── */
-        .cl-body {
-            position:relative; z-index:5;
-            flex:1; display:flex; flex-direction:column;
-            align-items:center; justify-content:center;
-            padding:20px 24px 60px;
-        }
-        .cl-badge {
-            display:inline-flex; align-items:center; gap:7px;
-            background:rgba(91,172,216,.14); border:1px solid rgba(91,172,216,.32);
-            color:#A8D8F2; font-size:.7rem; font-weight:700;
-            letter-spacing:.14em; text-transform:uppercase;
-            padding:5px 16px; border-radius:20px; margin-bottom:22px;
-        }
-        .cl-badge::before { content:''; display:block; width:5px; height:5px; background:#5BACD8; border-radius:50%; }
-
-        .cl-title {
-            font-family:'Raleway',sans-serif;font-weight:800;
-            font-size:clamp(1.8rem,4vw,2.8rem); font-weight:700;
-            color:#fff; text-align:center; line-height:1.2; margin-bottom:8px;
-        }
-        .cl-title .accent { color:#5BACD8; }
-        .cl-sub {
-            color:rgba(255,255,255,.6); font-size:.95rem; text-align:center;
-            margin-bottom:36px; font-style:italic;
+        .cl-page::before{
+            content:'';position:absolute;
+            width:600px;height:600px;border-radius:50%;
+            background:radial-gradient(circle,rgba(91,172,216,.14) 0%,transparent 70%);
+            top:-150px;right:-100px;pointer-events:none;
         }
 
-        /* ── Carte login ── */
-        .cl-card {
-            background:#fff; border-radius:18px; padding:36px 40px;
-            width:100%; max-width:420px;
-            box-shadow:0 20px 60px rgba(0,0,0,.22);
+        /* ── Navbar glass fixe ── */
+        .cl-nav{
+            position:fixed;top:0;left:0;right:0;z-index:100;
+            backdrop-filter:blur(22px) saturate(190%);
+            -webkit-backdrop-filter:blur(22px) saturate(190%);
+            background:rgba(13,43,94,.42);
+            border-bottom:1px solid rgba(168,216,242,.18);
+            box-shadow:0 4px 28px rgba(0,0,0,.22),inset 0 1px 0 rgba(255,255,255,.14);
+            display:flex;align-items:center;justify-content:space-between;
+            padding:0 36px;height:62px;
         }
-        .cl-card-header { text-align:center; margin-bottom:24px; }
-        .cl-card-header .icon { font-size:1.8rem; margin-bottom:8px; }
-        .cl-card-header h2 { font-size:1.1rem; color:#0D2B5E; margin-bottom:4px; }
-        .cl-card-header p { font-size:.8rem; color:#64748b; }
+        .cl-nav-brand{display:flex;align-items:center;gap:10px;}
+        .cl-nav-name{font-weight:800;font-size:1.2rem;color:#fff;letter-spacing:.04em;}
+        .cl-nav-name span{color:#A8D8F2;}
+        .cl-nav-sub{font-size:.56rem;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:rgba(255,255,255,.33);}
+        .cl-nav-right{display:flex;align-items:center;gap:8px;flex-shrink:0;}
+        .cl-agent-badge{
+            font-size:.76rem;color:rgba(255,255,255,.78);font-weight:500;
+            background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.16);
+            border-radius:20px;padding:5px 14px;white-space:nowrap;
+        }
+        .cl-agent-badge strong{color:#fff;}
+        .cl-btn-nav{
+            font-size:.76rem;font-weight:600;color:rgba(255,255,255,.75);
+            background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.16);
+            border-radius:20px;padding:6px 14px;cursor:pointer;
+            font-family:'Raleway',sans-serif;text-decoration:none;
+            transition:all .2s cubic-bezier(.4,0,.2,1);
+        }
+        .cl-btn-nav:hover{background:rgba(255,255,255,.15);color:#fff;}
+        .cl-btn-deconnect{
+            font-size:.76rem;font-weight:700;
+            color:rgba(255,255,255,.85);
+            background:rgba(185,28,28,.3);border:1px solid rgba(252,165,165,.35);
+            border-radius:20px;padding:6px 14px;cursor:pointer;
+            font-family:'Raleway',sans-serif;
+            transition:all .2s cubic-bezier(.4,0,.2,1);
+        }
+        .cl-btn-deconnect:hover{background:rgba(185,28,28,.55);color:#fff;}
 
-        .cl-field { margin-bottom:16px; }
-        .cl-field label {
-            display:block; font-size:.72rem; font-weight:700;
-            color:#64748b; margin-bottom:6px;
-            text-transform:uppercase; letter-spacing:.07em;
+        /* ── Corps ── */
+        .cl-body{
+            position:relative;z-index:5;flex:1;
+            display:flex;flex-direction:column;
+            align-items:center;justify-content:center;
+            padding:90px 20px 50px;
         }
-        .cl-field input {
-            width:100%; padding:12px 14px;
-            border:1.5px solid #d0d9e8; border-radius:9px;
-            font-family:'Raleway',sans-serif; font-size:.95rem;
-            color:#0d1b2a; transition:border-color .15s, box-shadow .15s;
-        }
-        .cl-field input:focus { border-color:#1B53AB; outline:none; box-shadow:0 0 0 3px rgba(27,83,171,.12); }
 
-        .cl-error { color:#e74c3c; font-size:.82rem; min-height:1.2rem; margin:4px 0 10px; }
-        .cl-btn {
-            display:block; width:100%; padding:13px;
-            background:#1B53AB; color:#fff; border:none; border-radius:9px;
-            font-family:'Raleway',sans-serif; font-size:.96rem; font-weight:700;
-            cursor:pointer; transition:background .2s, transform .15s;
-            letter-spacing:.02em;
+        .cl-eyebrow{
+            display:inline-flex;align-items:center;gap:7px;
+            background:rgba(168,216,242,.12);border:1px solid rgba(168,216,242,.28);
+            color:rgba(168,216,242,.9);font-size:.64rem;font-weight:700;
+            letter-spacing:.18em;text-transform:uppercase;
+            padding:5px 16px;border-radius:20px;margin-bottom:20px;
         }
-        .cl-btn:hover { background:#0D2B5E; transform:translateY(-1px); }
+        .cl-eyebrow i{display:block;width:5px;height:5px;background:#5BACD8;border-radius:50%;}
 
-        /* ── Menus post-login ── */
-        .cl-menus { width:100%; max-width:780px; }
-        .cl-welcome {
-            background:rgba(255,255,255,.12); border:1px solid rgba(255,255,255,.18);
-            color:#fff; padding:10px 20px; border-radius:10px;
-            margin-bottom:24px; font-size:.88rem;
-            display:flex; align-items:center; justify-content:center; gap:16px;
+        .cl-title{
+            font-weight:800;font-size:clamp(1.5rem,4vw,2.4rem);
+            color:#fff;text-align:center;line-height:1.2;margin-bottom:8px;
         }
-        .cl-menu-grid {
-            display:grid; grid-template-columns:repeat(3,1fr); gap:14px;
-            margin-bottom:14px;
+        .cl-title .hl{color:#A8D8F2;}
+        .cl-sub{
+            font-size:.88rem;color:rgba(255,255,255,.58);
+            text-align:center;margin-bottom:32px;
         }
-        .cl-menu-card {
-            display:block; background:#fff; border-radius:14px;
-            padding:24px 18px; text-align:left;
-            box-shadow:0 8px 30px rgba(0,0,0,.14);
+
+        /* ── Grille des menus ── */
+        .cl-grid{
+            display:grid;grid-template-columns:repeat(3,1fr);
+            gap:14px;width:100%;max-width:780px;
+        }
+        .cl-card{
+            display:block;background:rgba(255,255,255,.97);border-radius:15px;
+            padding:24px 18px;text-decoration:none;color:#0D2B5E;
             border-bottom:3px solid transparent;
-            transition:transform .2s, box-shadow .2s;
+            box-shadow:0 6px 24px rgba(0,0,0,.16);
+            transition:transform .2s cubic-bezier(.4,0,.2,1),box-shadow .2s;
         }
-        .cl-menu-card:hover { transform:translateY(-4px); box-shadow:0 14px 40px rgba(0,0,0,.22); }
-        .cl-menu-card .mc-icon { font-size:1.6rem; margin-bottom:10px; }
-        .cl-menu-card h3 { font-size:.95rem; color:#0D2B5E; margin-bottom:5px; }
-        .cl-menu-card p { font-size:.77rem; color:#64748b; line-height:1.5; }
-
-        .cl-menu-card.mc-saisie    { border-bottom-color:#1B53AB; }
-        .cl-menu-card.mc-recettes  { border-bottom-color:#2980b9; }
-        .cl-menu-card.mc-branch    { border-bottom-color:#219653; }
-        .cl-menu-card.mc-pe        { border-bottom-color:#219653; }
-        .cl-menu-card.mc-consult   { border-bottom-color:#133672; }
-        .cl-menu-card.mc-dashboard { border-bottom-color:#0D2B5E; }
-
-        /* ── Vague ── */
-        .cl-wave {
-            position:absolute; bottom:0; left:0; right:0; line-height:0; z-index:4;
+        .cl-card:hover{transform:translateY(-4px);box-shadow:0 12px 36px rgba(0,0,0,.22);}
+        .cl-card .cc-ico{
+            width:38px;height:38px;border-radius:9px;
+            display:flex;align-items:center;justify-content:center;
+            margin-bottom:12px;
         }
-        .cl-wave svg { display:block; width:100%; }
+        .cl-card .cc-ico svg{width:18px;height:18px;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+        .cl-card h3{font-size:.9rem;font-weight:800;margin-bottom:5px;}
+        .cl-card p{font-size:.74rem;color:#5B7399;line-height:1.5;}
 
-        @media (max-width:700px) {
-            .cl-nav { padding:16px 20px; }
-            .cl-card { padding:26px 20px; }
-            .cl-menu-grid { grid-template-columns:1fr 1fr; }
+        .cl-card.c1{border-bottom-color:#1B53AB;} .cl-card.c1 .cc-ico{background:#EBF3FA;} .cl-card.c1 .cc-ico svg{stroke:#1B53AB;}
+        .cl-card.c2{border-bottom-color:#219653;} .cl-card.c2 .cc-ico{background:#E8F7EF;} .cl-card.c2 .cc-ico svg{stroke:#219653;}
+        .cl-card.c3{border-bottom-color:#2E6CBF;} .cl-card.c3 .cc-ico{background:#E0EBF9;} .cl-card.c3 .cc-ico svg{stroke:#2E6CBF;}
+        .cl-card.c4{border-bottom-color:#B91C1C;} .cl-card.c4 .cc-ico{background:#FDECEA;} .cl-card.c4 .cc-ico svg{stroke:#B91C1C;}
+        .cl-card.c5{border-bottom-color:#6B35C7;} .cl-card.c5 .cc-ico{background:#F3EBF9;} .cl-card.c5 .cc-ico svg{stroke:#6B35C7;}
+        .cl-card.c6{border-bottom-color:#D68910;} .cl-card.c6 .cc-ico{background:#FEF8E8;} .cl-card.c6 .cc-ico svg{stroke:#D68910;}
+
+        /* ── Formulaire login (si pas de session) ── */
+        .cl-login-wrap{background:rgba(255,255,255,.97);border-radius:20px;padding:36px 38px;width:100%;max-width:420px;box-shadow:0 24px 60px rgba(0,0,0,.28);}
+        .cl-login-wrap h2{font-size:1.1rem;color:#0D2B5E;margin-bottom:4px;font-weight:800;}
+        .cl-login-wrap .lw-sub{font-size:.8rem;color:#5B7399;margin-bottom:22px;}
+        .cl-lf{margin-bottom:14px;}
+        .cl-lf label{display:block;font-size:.68rem;font-weight:800;color:#4A6285;text-transform:uppercase;letter-spacing:.09em;margin-bottom:5px;}
+        .cl-lf input{width:100%;padding:11px 14px;border:1.5px solid #C8D9EE;border-radius:8px;font-family:'Raleway',sans-serif;font-size:.9rem;color:#0D2B5E;}
+        .cl-lf input:focus{border-color:#1B53AB;outline:none;box-shadow:0 0 0 3px rgba(27,83,171,.12);}
+        .cl-lerr{color:#B91C1C;font-size:.8rem;font-weight:600;margin:4px 0 10px;}
+        .cl-lbtn{display:block;width:100%;padding:13px;background:#1B53AB;color:#fff;border:none;border-radius:9px;font-family:'Raleway',sans-serif;font-size:.94rem;font-weight:800;cursor:pointer;transition:background .2s,transform .15s;}
+        .cl-lbtn:hover{background:#0D2B5E;transform:translateY(-1px);}
+
+        /* ── Wave ── */
+        .cl-wave{position:fixed;bottom:0;left:0;right:0;line-height:0;z-index:0;pointer-events:none;opacity:.35;}
+        .cl-wave svg{display:block;width:100%;}
+
+        @media(max-width:760px){
+            .cl-nav{padding:0 16px;}
+            .cl-agent-badge{display:none;}
+            .cl-grid{grid-template-columns:1fr 1fr;}
+            .cl-body{padding:80px 14px 40px;}
         }
-        @media (max-width:500px) {
-            .cl-menu-grid { grid-template-columns:1fr; }
+        @media(max-width:480px){
+            .cl-grid{grid-template-columns:1fr;}
         }
     </style>
 </head>
 <body>
 <div class="cl-page">
+
+    <!-- Navbar glass fixe -->
     <nav class="cl-nav">
         <div class="cl-nav-brand">
-            <div class="cl-nav-logo">💧</div>
-            <div class="cl-nav-name">CAM<span>WATER</span></div>
+            <div>
+                <div class="cl-nav-name">cam<span>water</span></div>
+                <div class="cl-nav-sub">Centralisation</div>
+            </div>
         </div>
-        <a href="/" class="cl-nav-back">← Accueil</a>
+        <div id="cl-agent-badge" class="cl-agent-badge" style="display:none"></div>
+        <div class="cl-nav-right">
+            <button onclick="history.back()" class="cl-btn-nav">← Retour</button>
+            <a href="/" class="cl-btn-nav">⌂ Accueil</a>
+            <button id="cl-btn-deconnect" class="cl-btn-deconnect" onclick="doLogout()" style="display:none">⏏ Déconnexion</button>
+        </div>
     </nav>
 
     <div class="cl-body">
-        <div class="cl-badge">Espace 01 — Centralisation</div>
 
-        <!-- Formulaire de login -->
-        <div id="section-login">
-            <h1 class="cl-title">Saisie &amp; Tableau de bord<br><span class="accent">Commercial</span></h1>
+        <!-- Vue non-connecté : formulaire -->
+        <div id="cl-section-login">
+            <div class="cl-eyebrow"><i></i> Espace 01 — Centralisation</div>
+            <h1 class="cl-title">Saisie &amp; Tableau de bord<br><span class="hl">Commercial</span></h1>
             <p class="cl-sub">Identification requise pour accéder à cet espace.</p>
 
-            <div class="cl-card">
-                <div class="cl-card-header">
-                    <div class="icon">🔑</div>
-                    <h2>Identification de l'agent</h2>
-                    <p>Renseignez votre nom et votre matricule CAMWATER</p>
+            <div class="cl-login-wrap">
+                <h2>Identification</h2>
+                <p class="lw-sub">Renseignez votre nom et votre matricule CAMWATER.</p>
+                <div class="cl-lf">
+                    <label for="ln-nom">Nom complet</label>
+                    <input type="text" id="ln-nom" placeholder="Ex : NDONGO Jean-Pierre" autocomplete="name">
                 </div>
-                <div class="cl-field">
-                    <label>Nom complet</label>
-                    <input type="text" id="login-nom" placeholder="Ex : NDONGO Jean-Pierre" autocomplete="name">
+                <div class="cl-lf">
+                    <label for="ln-mat">Matricule <span style="font-weight:400;text-transform:none">(format 1A23)</span></label>
+                    <input type="text" id="ln-mat" placeholder="Ex : 1A23" maxlength="4" autocomplete="off" style="text-transform:uppercase;letter-spacing:.1em">
                 </div>
-                <div class="cl-field">
-                    <label>Matricule <span style="font-weight:400;text-transform:none;font-size:.9em;">(format 1A23)</span></label>
-                    <input type="text" id="login-matricule" placeholder="Ex : 1A23" maxlength="4" autocomplete="off" style="text-transform:uppercase;letter-spacing:.12em;">
-                </div>
-                <div class="cl-error" id="login-error"></div>
-                <button class="cl-btn" onclick="doLogin()">Accéder à l'espace →</button>
+                <div class="cl-lerr" id="ln-err"></div>
+                <button class="cl-lbtn" onclick="doLogin()">Accéder →</button>
             </div>
         </div>
 
-        <!-- Menus post-identification -->
-        <div id="section-menus" style="display:none;" class="cl-menus">
-            <div class="cl-welcome" id="welcome-banner"></div>
+        <!-- Vue connecté : cartes menus -->
+        <div id="cl-section-cards" style="display:none">
+            <div class="cl-eyebrow"><i></i> Espace 01 — Centralisation</div>
+            <h1 class="cl-title">Vos espaces<br><span class="hl">de travail</span></h1>
+            <p class="cl-sub">Sélectionnez le module que vous souhaitez utiliser.</p>
 
-            <div class="cl-menu-grid">
-                <a href="/saisie/volumes" class="cl-menu-card mc-saisie">
-                    <div class="mc-icon">📋</div>
+            <div class="cl-grid">
+                <a href="/saisie/volumes" class="cl-card c1">
+                    <div class="cc-ico"><svg viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="13" y2="16"/></svg></div>
                     <h3>Saisie des données</h3>
                     <p>Volumes, CA, Encaissements, Impayés, Monitoring</p>
                 </a>
-                <a href="/recettes-jour/suivi" class="cl-menu-card mc-recettes">
-                    <div class="mc-icon">📈</div>
+                <a href="/recettes-jour/suivi" class="cl-card c2">
+                    <div class="cc-ico"><svg viewBox="0 0 24 24"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg></div>
                     <h3>Suivi des Recettes</h3>
                     <p>Synthèse centralisée des recettes quotidiennes</p>
                 </a>
-                <a href="/branchements-jour/suivi" class="cl-menu-card mc-branch">
-                    <div class="mc-icon">🔧</div>
+                <a href="/branchements-jour/suivi" class="cl-card c3">
+                    <div class="cc-ico"><svg viewBox="0 0 24 24"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/></svg></div>
                     <h3>Suivi des Branchements</h3>
                     <p>Synthèse centralisée des branchements quotidiens</p>
                 </a>
-            </div>
-            <div class="cl-menu-grid">
-                <a href="/paiements-electroniques" class="cl-menu-card mc-pe">
-                    <div class="mc-icon">💳</div>
+                <a href="/paiements-electroniques" class="cl-card c4">
+                    <div class="cc-ico"><svg viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2"/><path d="M6 12h.01M18 12h.01"/></svg></div>
                     <h3>Paiements Électroniques</h3>
-                    <p>Chargement CSV, analyse par centre et opérateur</p>
+                    <p>Chargement CSV, analyse par opérateur</p>
                 </a>
-                <a href="/consultations" class="cl-menu-card mc-consult">
-                    <div class="mc-icon">🔍</div>
+                <a href="/consultations" class="cl-card c5">
+                    <div class="cc-ico"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg></div>
                     <h3>Consultations</h3>
-                    <p>Impayés, Reporting, Fiscalité, Budget, Objectifs</p>
+                    <p>Impayés, Reporting, Fiscalité, Objectifs</p>
                 </a>
-                <a href="/dashboard" class="cl-menu-card mc-dashboard">
-                    <div class="mc-icon">⚡</div>
+                <a href="/dashboard" class="cl-card c6">
+                    <div class="cc-ico"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg></div>
                     <h3>Tableau de bord</h3>
                     <p>KPI, graphiques, exports Excel &amp; PDF</p>
                 </a>
@@ -233,60 +231,80 @@
         </div>
     </div>
 
+    <!-- Wave -->
     <div class="cl-wave">
-        <svg viewBox="0 0 1440 60" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M0,30 C360,60 720,0 1080,30 C1260,45 1380,20 1440,30 L1440,60 L0,60 Z" fill="#F4F8FC"/>
+        <svg viewBox="0 0 1440 80" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M0,40 C360,80 720,0 1080,40 C1260,60 1380,20 1440,40 L1440,80 L0,80 Z" fill="#F4F8FC"/>
         </svg>
     </div>
 </div>
 
 <script>
-const savedOp = localStorage.getItem('camwater_operateur');
-if (savedOp) showMenus(JSON.parse(savedOp));
+/* ── Auto-login si session active ── */
+(function(){
+    // Vérifier session Flask
+    fetch('/api/operator')
+        .then(function(r){return r.json();})
+        .then(function(d){
+            if(d.nom && d.role==='central'){
+                afficherCartes({nom:d.nom, matricule:d.matricule});
+            } else {
+                // Vérifier localStorage (connexion depuis vitrine)
+                var stored=localStorage.getItem('camwater_operateur');
+                if(stored){
+                    try{
+                        var op=JSON.parse(stored);
+                        if(op.nom) afficherCartes(op);
+                    } catch(e){}
+                }
+            }
+        }).catch(function(){
+            var stored=localStorage.getItem('camwater_operateur');
+            if(stored){try{afficherCartes(JSON.parse(stored));}catch(e){}}
+        });
+})();
 
-function doLogin() {
-    const nom = document.getElementById('login-nom').value.trim();
-    const matricule = document.getElementById('login-matricule').value.trim().toUpperCase();
-    document.getElementById('login-matricule').value = matricule;
-    if (!nom || !matricule) {
-        document.getElementById('login-error').textContent = 'Veuillez renseigner le nom et le matricule.';
-        return;
-    }
-    if (!/^[0-9][A-Z][0-9][0-9]$/.test(matricule)) {
-        document.getElementById('login-error').textContent = 'Matricule invalide. Format requis : 1A23';
-        return;
-    }
-    fetch('/api/login', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({nom, matricule})
-    }).then(r => r.json().then(d => ({ok: r.ok, data: d}))).then(result => {
-        if (result.ok && result.data.status === 'ok') {
-            localStorage.setItem('camwater_operateur', JSON.stringify({nom, matricule}));
-            showMenus({nom, matricule});
+function afficherCartes(op){
+    document.getElementById('cl-section-login').style.display='none';
+    document.getElementById('cl-section-cards').style.display='block';
+    // Badge agent dans la navbar
+    var badge=document.getElementById('cl-agent-badge');
+    badge.innerHTML='👤 <strong>'+op.nom+'</strong> · '+op.matricule;
+    badge.style.display='inline-block';
+    document.getElementById('cl-btn-deconnect').style.display='inline-block';
+}
+
+function doLogin(){
+    var nom=document.getElementById('ln-nom').value.trim();
+    var mat=document.getElementById('ln-mat').value.trim().toUpperCase();
+    var err=document.getElementById('ln-err');
+    if(!nom||!mat){err.textContent='Nom et matricule requis.';return;}
+    if(!/^[0-9][A-Z][0-9][0-9]$/.test(mat)){err.textContent='Format invalide (ex : 1A23).';return;}
+    fetch('/api/login',{
+        method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({nom:nom,matricule:mat})
+    }).then(function(r){return r.json();}).then(function(d){
+        if(d.status==='ok'){
+            localStorage.setItem('camwater_operateur',JSON.stringify({nom:nom,matricule:mat}));
+            afficherCartes({nom:nom,matricule:mat});
         } else {
-            document.getElementById('login-error').textContent = result.data.error || 'Erreur de connexion';
+            err.textContent=d.error||'Erreur de connexion.';
         }
     });
 }
 
-function showMenus(op) {
-    document.getElementById('section-login').style.display = 'none';
-    document.getElementById('section-menus').style.display = 'block';
-    document.getElementById('welcome-banner').innerHTML =
-        '👤 Agent : <strong>' + op.nom + '</strong> &nbsp;·&nbsp; Matricule : <strong>' + op.matricule + '</strong>' +
-        '&nbsp; <button class="btn-logout" onclick="doLogout()">Changer</button>';
-}
-
-function doLogout() {
+function doLogout(){
+    if(!confirm('Confirmez avoir effectué l\'enregistrement DÉFINITIF de toutes vos saisies.\n\nConfirmer la déconnexion ?')) return;
     localStorage.removeItem('camwater_operateur');
-    fetch('/api/logout', {method:'POST'}).finally(() => window.location = '/');
+    fetch('/api/logout',{method:'POST'}).finally(function(){window.location.href='/';});
 }
 
-const mInput = document.getElementById('login-matricule');
-const nInput = document.getElementById('login-nom');
-if (mInput) mInput.addEventListener('keypress', e => { if (e.key === 'Enter') doLogin(); });
-if (nInput) nInput.addEventListener('keypress', e => { if (e.key === 'Enter') mInput && mInput.focus(); });
+// Enter key sur le formulaire login
+document.addEventListener('keypress',function(e){
+    if(e.key==='Enter'&&document.getElementById('cl-section-login').style.display!=='none'){
+        doLogin();
+    }
+});
 </script>
 </body>
 </html>

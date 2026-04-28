@@ -82,22 +82,61 @@
         }
 
         .nav-links { display:flex; gap:4px; align-items:center; }
+        /* ══ Navbar sticky liquid glass ══════════════════════════════════ */
+        .nav {
+            position:fixed; top:0; left:0; right:0; z-index:1000;
+            /* Liquid glass : translucidité + reflet eau */
+            backdrop-filter:blur(22px) saturate(190%);
+            -webkit-backdrop-filter:blur(22px) saturate(190%);
+            background:rgba(13,43,94,.42);
+            border-bottom:1px solid rgba(168,216,242,.18);
+            box-shadow:0 4px 28px rgba(0,0,0,.22),
+                       inset 0 1px 0 rgba(255,255,255,.14),
+                       inset 0 -1px 0 rgba(91,172,216,.08);
+        }
+
         .nav-links a, .nav-link-btn {
-            color:rgba(255,255,255,.7); font-size:.8rem; font-weight:600;
+            color:rgba(255,255,255,.78); font-size:.8rem; font-weight:600;
             padding:7px 15px; border-radius:20px; transition:all var(--t);
             background:none; border:none; cursor:pointer;
             font-family:'Raleway',sans-serif;
         }
-        .nav-links a:hover, .nav-link-btn:hover { color:#fff; background:rgba(255,255,255,.09); }
+        .nav-links a:hover, .nav-link-btn:hover {
+            color:#fff; background:rgba(255,255,255,.1);
+        }
         .nav-cta {
-            background:rgba(91,172,216,.2);
-            border:1px solid rgba(91,172,216,.4) !important;
-            color:rgba(168,216,242,.9);
+            background:rgba(91,172,216,.22);
+            border:1px solid rgba(91,172,216,.45) !important;
+            color:rgba(168,216,242,.95);
             font-family:'Raleway',sans-serif; font-weight:700; font-size:.8rem;
             padding:7px 18px; border-radius:20px; cursor:pointer;
             transition:all var(--t);
+            box-shadow:inset 0 1px 0 rgba(255,255,255,.1);
         }
-        .nav-cta:hover { background:rgba(91,172,216,.38); color:#fff; }
+        .nav-cta:hover { background:rgba(91,172,216,.4); color:#fff; }
+
+        /* ══ Radio Siège / DR ════════════════════════════════════════════ */
+        .cx-site-choices { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:16px; }
+        .cx-radio-opt { cursor:pointer; }
+        .cx-radio-opt input[type=radio] { position:absolute; opacity:0; width:0; height:0; }
+        .cx-radio-card {
+            display:flex; flex-direction:column; align-items:center; justify-content:center;
+            gap:8px; padding:18px 12px; border-radius:12px; text-align:center;
+            border:2px solid #D6EDF8; background:#F4F8FC;
+            transition:all var(--t); min-height:88px;
+        }
+        .cx-radio-opt input:checked + .cx-radio-card {
+            border-color:var(--p); background:#EBF3FA;
+            box-shadow:0 0 0 3px rgba(27,83,171,.12);
+        }
+        .cx-radio-opt:hover .cx-radio-card { border-color:var(--s); background:#EEF7FC; }
+        .cx-radio-card .rc-icon {
+            width:36px; height:36px; border-radius:9px;
+            display:flex; align-items:center; justify-content:center;
+        }
+        .cx-radio-card .rc-icon svg { width:18px; height:18px; }
+        .cx-radio-card strong { display:block; font-size:.86rem; font-weight:800; color:var(--n); }
+        .cx-radio-card small { font-size:.7rem; color:#5B7399; }
 
         /* ══ Modal Connexion ══════════════════════════════════════════════ */
         .cx-overlay {
@@ -207,12 +246,12 @@
         }
         .cx-definitive-warn strong { display:block; margin-bottom:3px; font-size:.82rem; }
 
-        /* ── Hero Body ── */
+        /* ── Hero Body — padding-top pour compenser navbar fixe ── */
         .hero-body {
             position:relative; z-index:10; flex:1;
             display:flex; flex-direction:column;
             align-items:center; justify-content:center;
-            text-align:center; padding:40px 24px 60px;
+            text-align:center; padding:96px 24px 60px;
         }
         .hero-eyebrow {
             display:inline-flex; align-items:center; gap:8px;
@@ -433,7 +472,7 @@
         /* ══ Responsive ═════════════════════════════════════════════════════ */
         @media (max-width:1024px) {
             .nav { padding:18px 30px; }
-            .kpi-sec,.spaces-sec,.quality-sec { padding:56px 30px; }
+            .kpi-sec,.quality-sec { padding:56px 30px; }
             .footer { padding:40px 30px 22px; }
             .kpi-grid { grid-template-columns:repeat(2,1fr); }
             .spaces-grid { grid-template-columns:repeat(2,1fr); }
@@ -444,7 +483,7 @@
             .nav { padding:14px 18px; }
             .nav-links { display:none; }
             .hero-body { padding:30px 18px 50px; }
-            .kpi-sec,.spaces-sec,.quality-sec { padding:44px 18px; }
+            .kpi-sec,.quality-sec { padding:44px 18px; }
             .footer { padding:36px 18px 20px; }
             .kpi-grid,.spaces-grid { grid-template-columns:1fr; }
             .f-inner { grid-template-columns:1fr; gap:24px; }
@@ -622,57 +661,6 @@
 </section>
 
 <!-- ══ ESPACES ══════════════════════════════════════════════════════════════ -->
-<section class="spaces-sec" id="espaces">
-    <p class="sec-eyebrow r">Accès par profil</p>
-    <h2 class="sec-title r" style="color:var(--n)">Vos espaces de travail</h2>
-    <p class="sec-sub r">Chaque espace est conçu pour un rôle précis. Partagez le lien correspondant à chaque profil.</p>
-
-    <div class="spaces-grid">
-        <a href="/central" class="sp-card s1 r" aria-label="Espace Centralisation">
-            <div class="sp-num">Espace 01</div>
-            <div class="sp-ico" aria-hidden="true"><svg width="22" height="22"><use href="#ic-clipboard"/></svg></div>
-            <div class="sp-title">Centralisation</div>
-            <p class="sp-desc">Saisie complète des données commerciales — volumes, CA, encaissements, impayés, objectifs. Exports Excel. <strong>Identification requise.</strong></p>
-            <span class="sp-cta" aria-hidden="true">Accéder à la saisie →</span>
-        </a>
-        <a href="/agences" class="sp-card s2 r" aria-label="Portail Agents Terrain">
-            <div class="sp-num">Espace 02</div>
-            <div class="sp-ico" aria-hidden="true"><svg width="22" height="22"><use href="#ic-mappin"/></svg></div>
-            <div class="sp-title">Agents Terrain</div>
-            <p class="sp-desc">Saisie quotidienne à distance des recettes et branchements par agence. Interface simplifiée, mobile-first. <strong>Accès restreint.</strong></p>
-            <span class="sp-cta" aria-hidden="true">Accéder au portail terrain →</span>
-        </a>
-        <a href="/direction" class="sp-card s3 r" aria-label="Tableau de bord Direction">
-            <div class="sp-num">Espace 03</div>
-            <div class="sp-ico" aria-hidden="true"><svg width="22" height="22"><use href="#ic-trending"/></svg></div>
-            <div class="sp-title">Direction &amp; Responsables</div>
-            <p class="sp-desc">Tableau de bord décisionnel — synthèses nationales, comparaisons N/N-1, classement des DR. <strong>Lecture seule, sans login.</strong></p>
-            <span class="sp-cta" aria-hidden="true">Consulter le tableau de bord →</span>
-        </a>
-        <a href="/monitoring" class="sp-card s4 r" aria-label="Surveillance et Alertes">
-            <div class="sp-num">Espace 04</div>
-            <div class="sp-ico" aria-hidden="true"><svg width="22" height="22"><use href="#ic-alert"/></svg></div>
-            <div class="sp-title">Surveillance &amp; Alertes</div>
-            <p class="sp-desc">Monitoring automatisé des 6 ratios prudentiels — taux de facturation, recouvrement, délais branchements, réémissions. Détection de tendances.</p>
-            <span class="sp-cta" aria-hidden="true">Accéder au monitoring →</span>
-        </a>
-        <a href="javascript:void(0)" onclick="openAbout()" class="sp-card s5 r" aria-label="Guide d'utilisation" role="button">
-            <div class="sp-num">Espace 05</div>
-            <div class="sp-ico" aria-hidden="true"><svg width="22" height="22"><use href="#ic-info"/></svg></div>
-            <div class="sp-title">À propos &amp; Guide</div>
-            <p class="sp-desc">Architecture de la plateforme, rôles, flux de données et bonnes pratiques pour une saisie fiable et une exploitation optimale des indicateurs.</p>
-            <span class="sp-cta" aria-hidden="true">Lire le guide →</span>
-        </a>
-        <a href="/dashboard" class="sp-card s6 r" aria-label="Tableau de bord commercial">
-            <div class="sp-num">Espace 06</div>
-            <div class="sp-ico" aria-hidden="true"><svg width="22" height="22"><use href="#ic-dashboard"/></svg></div>
-            <div class="sp-title">Tableau de Bord Commercial</div>
-            <p class="sp-desc">Vue consolidée — KPIs, graphiques mensuels, comparaisons inter-DRs, paiements électroniques, exports Excel &amp; PDF.</p>
-            <span class="sp-cta" aria-hidden="true">Ouvrir le tableau de bord →</span>
-        </a>
-    </div>
-</section>
-
 <!-- ══ QUALITÉ ══════════════════════════════════════════════════════════════ -->
 <section class="quality-sec" id="qualite">
     <div class="q-inner">
@@ -752,16 +740,35 @@
         <label for="cx-mat">Matricule</label>
         <input type="text" id="cx-mat" placeholder="Ex : 1A23" maxlength="10" autocomplete="off" style="text-transform:uppercase;letter-spacing:.08em">
       </div>
+
       <div class="cx-field">
-        <label for="cx-site">Site de rattachement</label>
-        <select id="cx-site">
-          <option value="">-- Sélectionnez --</option>
-          <option value="siege">Siège</option>
-          <option value="dr">Direction Régionale (DR)</option>
-        </select>
+        <label>Site de rattachement</label>
+        <div class="cx-site-choices">
+          <label class="cx-radio-opt">
+            <input type="radio" name="cx-site-choice" value="siege" id="cx-r-siege">
+            <div class="cx-radio-card">
+              <div class="rc-icon" style="background:#EBF3FA">
+                <svg fill="none" stroke="#1B53AB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+              </div>
+              <strong>Siège</strong>
+              <small>Centralisation, Monitoring, Direction</small>
+            </div>
+          </label>
+          <label class="cx-radio-opt">
+            <input type="radio" name="cx-site-choice" value="dr" id="cx-r-dr">
+            <div class="cx-radio-card">
+              <div class="rc-icon" style="background:#E8F7EF">
+                <svg fill="none" stroke="#219653" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+              </div>
+              <strong>DR</strong>
+              <small>Recettes &amp; Branchements du Jour</small>
+            </div>
+          </label>
+        </div>
       </div>
+
       <div class="cx-err" id="cx-err0" role="alert"></div>
-      <button class="cx-btn" onclick="validerEtape0()">Valider →</button>
+      <button class="cx-btn" onclick="validerEtape0()">Accéder →</button>
     </div>
 
     <!-- ── ÉTAPE 1 SIÈGE : Espaces disponibles ── -->
@@ -992,19 +999,45 @@ function chargerAgences(){
     });
 }
 
-/* Valider étape 0 (identification initiale) */
+/* Valider étape 0 → redirection directe selon le site */
 function validerEtape0(){
     var nom=document.getElementById('cx-nom').value.trim();
     var mat=document.getElementById('cx-mat').value.trim().toUpperCase();
-    var site=document.getElementById('cx-site').value;
+    var checked=document.querySelector('input[name="cx-site-choice"]:checked');
+    var site=checked?checked.value:'';
     var err=document.getElementById('cx-err0');
-    if(!nom){err.textContent='Veuillez saisir votre nom.';return;}
+    if(!nom){err.textContent='Veuillez saisir votre nom complet.';return;}
     if(!mat){err.textContent='Veuillez saisir votre matricule.';return;}
-    if(!site){err.textContent='Veuillez sélectionner un site.';return;}
+    if(!site){err.textContent='Veuillez sélectionner un site de rattachement.';return;}
     err.textContent='';
     _session={nom:nom,matricule:mat,site:site};
-    if(site==='siege') afficherSiege();
-    else afficherDR();
+
+    var btn=document.querySelector('.cx-btn');
+    btn.disabled=true; btn.textContent='Connexion…';
+
+    if(site==='siege'){
+        /* Connexion centrale via API puis redirection vers /central */
+        fetch('/api/login',{
+            method:'POST',
+            headers:{'Content-Type':'application/json'},
+            body:JSON.stringify({nom:nom,matricule:mat})
+        }).then(function(r){return r.json();}).then(function(d){
+            if(d.status==='ok'){
+                localStorage.setItem('camwater_operateur',JSON.stringify({nom:nom,matricule:mat}));
+                window.location.href='/central';
+            } else {
+                err.textContent=d.error||'Erreur de connexion.';
+                btn.disabled=false; btn.textContent='Accéder →';
+            }
+        }).catch(function(){
+            err.textContent='Erreur réseau. Réessayez.';
+            btn.disabled=false; btn.textContent='Accéder →';
+        });
+    } else {
+        /* DR : stocker session et rediriger vers /terrain-portal */
+        localStorage.setItem('cw_terrain_agent',JSON.stringify({nom:nom,matricule:mat}));
+        window.location.href='/terrain-portal';
+    }
 }
 
 /* Afficher espace Siège */

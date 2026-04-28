@@ -177,6 +177,12 @@ def get_all_drs():
 
 # ─── API Structure DRs / Agences (publique, sans auth) ──────────────
 
+@app.route('/terrain-portal')
+def terrain_portal_page():
+    """Portail DR — page dédiée après identification depuis la vitrine."""
+    return render_template('terrain_portal_page.html')
+
+
 @app.route('/api/drs-agences')
 def api_drs_agences():
     """Retourne la structure DRs → Agences pour le modal de connexion vitrine."""

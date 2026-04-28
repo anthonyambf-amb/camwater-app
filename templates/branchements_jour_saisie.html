@@ -5,15 +5,25 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CAMWATER - Saisie Branchements du Jour</title>
     <link rel="stylesheet" href="/static/css/style.css">
+    <style>
+        .rj-nav-btns{display:flex;gap:6px;align-items:center;}
+        .rj-btn-back{padding:6px 14px;background:#E8EFF8;border-radius:7px;font-size:.78rem;font-weight:700;color:#0D2B5E;text-decoration:none;transition:background .15s;min-height:36px;display:inline-flex;align-items:center;}
+        .rj-btn-back:hover{background:#D0E0F0;}
+        .rj-logout-btn{background:rgba(185,28,28,.1);color:#B91C1C;border:1px solid rgba(185,28,28,.25);border-radius:7px;padding:6px 14px;font-size:.78rem;font-weight:700;cursor:pointer;font-family:'Raleway',sans-serif;min-height:36px;transition:background .15s;}
+        .rj-logout-btn:hover{background:rgba(185,28,28,.2);}
+    </style>
 </head>
 <body>
     <div class="rj-container">
         <header class="rj-header">
             <div>
                 <h1>Branchements du Jour</h1>
-                <p class="rj-subtitle">CAMWATER - Exercice 2026</p>
+                <p class="rj-subtitle">CAMWATER — Exercice 2026</p>
             </div>
-            <a href="/branchements-jour" class="rj-logout-btn">Changer</a>
+            <div class="rj-nav-btns">
+                <button onclick="history.back()" class="rj-btn-back">← Retour</button>
+                <button class="rj-logout-btn" onclick="deconnexionTerrain()">⏏ Déconnexion</button>
+            </div>
         </header>
 
         <!-- Barre d'informations -->
@@ -93,5 +103,15 @@
     </div>
 
     <script src="/static/js/branchements_jour.js"></script>
+    <script>
+    function deconnexionTerrain(){
+        if(!confirm('⚠️ CONDITION OBLIGATOIRE\n\nConfirmez avoir effectué l\'ENREGISTREMENT DÉFINITIF\nde votre saisie avant de vous déconnecter.\n\nConfirmer ?')) return;
+        localStorage.removeItem('cw_terrain_agent');
+        localStorage.removeItem('cw_terrain_session');
+        fetch('/api/logout',{method:'POST'}).finally(function(){
+            window.location.href='/terrain-portal';
+        });
+    }
+    </script>
 </body>
 </html>

@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#0D2B5E">
+    <title>CAMWATER — Saisie Terrain</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Raleway:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        *,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+        html{scroll-behavior:smooth;}
+        body{
+            font-family:'Raleway',sans-serif;
+            min-height:100svh;
+            background:linear-gradient(155deg,#060E1E 0%,#091E3E 15%,#0D2B5E 38%,#133672 60%,#1B53AB 82%,#5BACD8 100%);
+            -webkit-font-smoothing:antialiased;
+            overflow-x:hidden;
+        }
+
+        /* ── Navbar glass fixe ── */
+        .tp-nav{
+            position:fixed;top:0;left:0;right:0;z-index:100;
+            backdrop-filter:blur(22px) saturate(190%);
+            -webkit-backdrop-filter:blur(22px) saturate(190%);
+            background:rgba(13,43,94,.42);
+            border-bottom:1px solid rgba(168,216,242,.18);
+            box-shadow:0 4px 28px rgba(0,0,0,.22),inset 0 1px 0 rgba(255,255,255,.14);
+            display:flex;align-items:center;justify-content:space-between;
+            padding:0 32px; height:62px;
+        }
+        .tp-brand{display:flex;align-items:center;gap:10px;}
+        .tp-brand-name{font-weight:800;font-size:1.15rem;color:#fff;letter-spacing:.04em;}
+        .tp-brand-name span{color:#A8D8F2;}
+        .tp-brand-sub{font-size:.58rem;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:rgba(255,255,255,.35);}
+        .tp-nav-agent{
+            font-size:.78rem;color:rgba(255,255,255,.75);font-weight:500;
+            background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14);
+            border-radius:20px;padding:5px 14px;
+        }
+        .tp-nav-agent strong{color:#fff;}
+        .tp-nav-right{display:flex;align-items:center;gap:8px;}
+        .tp-btn-back{
+            font-size:.78rem;font-weight:600;color:rgba(255,255,255,.7);
+            background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.16);
+            border-radius:20px;padding:6px 14px;cursor:pointer;
+            font-family:'Raleway',sans-serif;text-decoration:none;
+            transition:all .2s cubic-bezier(.4,0,.2,1);
+        }
+        .tp-btn-back:hover{background:rgba(255,255,255,.16);color:#fff;}
+        .tp-btn-deconnect{
+            font-size:.78rem;font-weight:700;color:rgba(255,255,255,.85);
+            background:rgba(185,28,28,.3);border:1px solid rgba(252,165,165,.35);
+            border-radius:20px;padding:6px 14px;cursor:pointer;
+            font-family:'Raleway',sans-serif;
+            transition:all .2s cubic-bezier(.4,0,.2,1);
+        }
+        .tp-btn-deconnect:hover{background:rgba(185,28,28,.55);color:#fff;}
+
+        /* ── Corps de page ── */
+        .tp-body{
+            min-height:100svh;
+            display:flex;flex-direction:column;align-items:center;justify-content:center;
+            padding:90px 20px 50px;
+        }
+
+        .tp-eyebrow{
+            display:inline-flex;align-items:center;gap:7px;
+            background:rgba(168,216,242,.12);border:1px solid rgba(168,216,242,.28);
+            color:rgba(168,216,242,.9);font-size:.64rem;font-weight:700;
+            letter-spacing:.18em;text-transform:uppercase;
+            padding:5px 16px;border-radius:20px;margin-bottom:20px;
+        }
+        .tp-eyebrow i{display:block;width:5px;height:5px;background:#5BACD8;border-radius:50%;}
+
+        .tp-title{
+            font-weight:800;font-size:clamp(1.6rem,4vw,2.6rem);
+            color:#fff;text-align:center;line-height:1.15;margin-bottom:8px;
+        }
+        .tp-title .hl{color:#A8D8F2;}
+        .tp-sub{
+            font-size:.9rem;font-weight:400;color:rgba(255,255,255,.6);
+            text-align:center;margin-bottom:36px;
+        }
+
+        /* ── Carte de sélection ── */
+        .tp-card{
+            background:rgba(255,255,255,.97);border-radius:20px;
+            padding:36px 36px 28px;width:100%;max-width:480px;
+            box-shadow:0 24px 60px rgba(0,0,0,.28),
+                       inset 0 1px 0 rgba(255,255,255,.8);
+        }
+
+        .tp-field{margin-bottom:16px;}
+        .tp-field label{
+            display:block;font-size:.68rem;font-weight:800;color:#4A6285;
+            text-transform:uppercase;letter-spacing:.09em;margin-bottom:6px;
+        }
+        .tp-field select{
+            width:100%;padding:12px 14px;border:1.5px solid #C8D9EE;border-radius:9px;
+            font-family:'Raleway',sans-serif;font-size:.9rem;font-weight:500;
+            color:#0D2B5E;background:#fff;
+            transition:border-color .2s,box-shadow .2s;cursor:pointer;
+            min-height:46px;
+        }
+        .tp-field select:focus{border-color:#1B53AB;outline:none;box-shadow:0 0 0 3px rgba(27,83,171,.12);}
+        .tp-field select:disabled{background:#F4F8FC;color:#8FA6C2;cursor:not-allowed;}
+
+        .tp-sep{
+            text-align:center;margin:20px 0 16px;position:relative;
+        }
+        .tp-sep::before{content:'';position:absolute;top:50%;left:0;right:0;height:1px;background:#E2EBF5;}
+        .tp-sep span{
+            position:relative;background:#fff;padding:0 14px;
+            font-size:.68rem;color:#8FA6C2;font-weight:700;text-transform:uppercase;letter-spacing:.1em;
+        }
+
+        /* ── Boutons saisie ── */
+        .tp-saisie-btns{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+        .tp-saisie-btn{
+            display:flex;flex-direction:column;align-items:center;justify-content:center;
+            gap:10px;padding:20px 14px;border-radius:14px;cursor:pointer;
+            border:2px solid transparent;background:#F4F8FC;
+            transition:all .22s cubic-bezier(.4,0,.2,1);text-decoration:none;color:#0D2B5E;
+            min-height:100px;
+        }
+        .tp-saisie-btn:hover{transform:translateY(-4px);box-shadow:0 8px 28px rgba(13,43,94,.15);}
+        .tp-saisie-btn.btn-r{border-color:#2E6CBF;}
+        .tp-saisie-btn.btn-r:hover{background:#EBF3FA;border-color:#1B53AB;}
+        .tp-saisie-btn.btn-b{border-color:#219653;}
+        .tp-saisie-btn.btn-b:hover{background:#E8F7EF;border-color:#166534;}
+        .tp-saisie-btn .sb-ico{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;}
+        .btn-r .sb-ico{background:#EBF3FA;}
+        .btn-b .sb-ico{background:#E8F7EF;}
+        .tp-saisie-btn .sb-ico svg{width:20px;height:20px;}
+        .btn-r .sb-ico svg{stroke:#1B53AB;}
+        .btn-b .sb-ico svg{stroke:#219653;}
+        .tp-saisie-btn strong{font-size:.85rem;font-weight:800;text-align:center;}
+        .tp-saisie-btn small{font-size:.7rem;color:#5B7399;text-align:center;}
+
+        .tp-err{color:#B91C1C;font-size:.8rem;font-weight:600;margin:6px 0 10px;min-height:1rem;}
+
+        /* ── Wave de fond ── */
+        .tp-wave{position:fixed;bottom:0;left:0;right:0;line-height:0;z-index:0;pointer-events:none;opacity:.4;}
+        .tp-wave svg{display:block;width:100%;}
+
+        @media(max-width:520px){
+            .tp-nav{padding:0 16px;}
+            .tp-nav-agent{display:none;}
+            .tp-card{padding:24px 18px 20px;border-radius:16px;}
+            .tp-saisie-btns{grid-template-columns:1fr;}
+        }
+    </style>
+</head>
+<body>
+
+<!-- ── Navbar glass fixe ── -->
+<nav class="tp-nav">
+    <div class="tp-brand">
+        <div>
+            <div class="tp-brand-name">cam<span>water</span></div>
+            <div class="tp-brand-sub">Saisie Terrain</div>
+        </div>
+    </div>
+    <div class="tp-nav-agent" id="tp-agent-info">—</div>
+    <div class="tp-nav-right">
+        <button onclick="history.back()" class="tp-btn-back">← Retour</button>
+        <a href="/" class="tp-btn-back">⌂ Accueil</a>
+        <button class="tp-btn-deconnect" onclick="deconnexionTerrain()">⏏ Déconnexion</button>
+    </div>
+</nav>
+
+<!-- ── Corps ── -->
+<div class="tp-body">
+    <div class="tp-eyebrow"><i></i> Espace Terrain — Saisie Quotidienne</div>
+    <h1 class="tp-title">Votre portail<br><span class="hl">de saisie journalière</span></h1>
+    <p class="tp-sub">Sélectionnez votre DR, votre agence et la date, puis choisissez votre module.</p>
+
+    <div class="tp-card">
+        <div class="tp-field">
+            <label for="tp-dr">Direction Régionale</label>
+            <select id="tp-dr" onchange="chargerAgencesTerrain()">
+                <option value="">— Choisissez une DR —</option>
+            </select>
+        </div>
+        <div class="tp-field">
+            <label for="tp-agence">Agence / Centre</label>
+            <select id="tp-agence" disabled>
+                <option value="">— Sélectionnez une DR d'abord —</option>
+            </select>
+        </div>
+        <div class="tp-field">
+            <label for="tp-date">Date de saisie</label>
+            <select id="tp-date"></select>
+        </div>
+
+        <div class="tp-err" id="tp-err" role="alert"></div>
+
+        <div class="tp-sep"><span>Sélectionnez votre module</span></div>
+
+        <div class="tp-saisie-btns">
+            <a href="#" class="tp-saisie-btn btn-r" onclick="accederSaisieTerrain(event,'recettes')">
+                <div class="sb-ico">
+                    <svg fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+                        <rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2"/><path d="M6 12h.01M18 12h.01"/>
+                    </svg>
+                </div>
+                <strong>Recettes du Jour</strong>
+                <small>Encaissements de la journée</small>
+            </a>
+            <a href="#" class="tp-saisie-btn btn-b" onclick="accederSaisieTerrain(event,'branchements')">
+                <div class="sb-ico">
+                    <svg fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+                        <path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/>
+                    </svg>
+                </div>
+                <strong>Branchements du Jour</strong>
+                <small>Raccordements de la journée</small>
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Wave décorative -->
+<div class="tp-wave">
+    <svg viewBox="0 0 1440 120" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M0,60 C360,120 720,0 1080,60 C1260,90 1380,30 1440,60 L1440,120 L0,120 Z" fill="#F4F8FC"/>
+    </svg>
+</div>
+
+<script>
+var _drData=[];
+var _agent={};
+
+/* ── Init ── */
+(function(){
+    // Récupérer agent depuis localStorage
+    var stored=localStorage.getItem('cw_terrain_agent');
+    if(!stored){window.location.href='/';return;}
+    _agent=JSON.parse(stored);
+    var el=document.getElementById('tp-agent-info');
+    if(el) el.innerHTML='👤 <strong>'+_agent.nom+'</strong> · '+_agent.matricule;
+
+    // Date du jour par défaut dans le sélecteur de date
+    remplirDates();
+
+    // Charger les DRs
+    fetch('/api/drs-agences')
+        .then(function(r){return r.json();})
+        .then(function(data){
+            _drData=data;
+            var sel=document.getElementById('tp-dr');
+            data.forEach(function(dr){
+                var o=document.createElement('option');
+                o.value=dr.id;
+                o.textContent=dr.code+' — '+dr.nom;
+                sel.appendChild(o);
+            });
+        });
+})();
+
+/* Remplir les 7 derniers jours dans le sélecteur date */
+function remplirDates(){
+    var sel=document.getElementById('tp-date');
+    var today=new Date();
+    for(var i=0;i<7;i++){
+        var d=new Date(today);
+        d.setDate(today.getDate()-i);
+        var iso=d.toISOString().split('T')[0];
+        var label=d.toLocaleDateString('fr-FR',{weekday:'short',day:'2-digit',month:'short'});
+        var o=document.createElement('option');
+        o.value=iso;
+        o.textContent=(i===0?'Aujourd\'hui — ':'')+label;
+        sel.appendChild(o);
+    }
+}
+
+/* Charger agences selon DR */
+function chargerAgencesTerrain(){
+    var drId=parseInt(document.getElementById('tp-dr').value);
+    var selA=document.getElementById('tp-agence');
+    selA.innerHTML='<option value="">— Choisissez —</option>';
+    selA.disabled=!drId;
+    if(!drId)return;
+    var dr=_drData.find(function(d){return d.id===drId;});
+    if(!dr)return;
+    dr.agences.forEach(function(a){
+        var o=document.createElement('option');
+        o.value=a.id; o.textContent=a.nom;
+        selA.appendChild(o);
+    });
+}
+
+/* Accéder à la saisie */
+function accederSaisieTerrain(e,type){
+    e.preventDefault();
+    var drSel=document.getElementById('tp-dr');
+    var agSel=document.getElementById('tp-agence');
+    var date=document.getElementById('tp-date').value;
+    var err=document.getElementById('tp-err');
+
+    if(!drSel.value){err.textContent='Veuillez sélectionner une DR.';return;}
+    if(!agSel.value){err.textContent='Veuillez sélectionner une agence.';return;}
+    if(!date){err.textContent='Veuillez indiquer une date.';return;}
+    err.textContent='';
+
+    var btn=e.currentTarget;
+    btn.style.opacity='.6';btn.style.pointerEvents='none';
+
+    var endpoint=type==='recettes'?'/api/recettes-jour/login':'/api/branchements-jour/login';
+    fetch(endpoint,{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({
+            nom:_agent.nom,
+            matricule:_agent.matricule,
+            agence_id:parseInt(agSel.value),
+            date_saisie:date
+        })
+    }).then(function(r){return r.json();})
+    .then(function(d){
+        if(d.status==='ok'||d.status==='locked'){
+            var cible=type==='recettes'?'/recettes-jour/saisie':'/branchements-jour/saisie';
+            window.location.href=cible;
+        } else {
+            err.textContent=d.error||'Erreur de connexion.';
+            btn.style.opacity='';btn.style.pointerEvents='';
+        }
+    }).catch(function(){
+        err.textContent='Erreur réseau — réessayez.';
+        btn.style.opacity='';btn.style.pointerEvents='';
+    });
+}
+
+/* Déconnexion avec vérification enregistrement définitif */
+function deconnexionTerrain(){
+    if(!confirm(
+        '⚠️ CONDITION OBLIGATOIRE\n\n'+
+        'Confirmez avoir effectué l\'ENREGISTREMENT DÉFINITIF\n'+
+        'de toutes vos saisies avant de vous déconnecter.\n\n'+
+        'Les données en brouillon ne sont PAS consolidées.\n\n'+
+        'Confirmer ?'
+    )) return;
+    localStorage.removeItem('cw_terrain_agent');
+    localStorage.removeItem('cw_terrain_session');
+    fetch('/api/logout',{method:'POST'}).finally(function(){
+        window.location.href='/';
+    });
+}
+</script>
+</body>
+</html>

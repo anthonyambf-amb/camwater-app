@@ -668,7 +668,9 @@ select.locked,select.locked:disabled {
 }
 
 @media (max-width:768px) {
-    .app-layout { flex-direction:column; }
+    /* Zéro scroll horizontal */
+    html,body { max-width:100vw; overflow-x:hidden; }
+    .app-layout { flex-direction:column; max-width:100%; overflow-x:hidden; }
     .sidebar {
         width:100%; height:auto; position:relative;
         flex-direction:row; flex-wrap:wrap;
@@ -717,6 +719,7 @@ select.locked,select.locked:disabled {
 }
 
 @media (max-width:480px) {
+    html,body { overflow-x:hidden; max-width:100vw; }
     .index-header h1 { font-size:1.8rem; }
     .kpi-cards { grid-template-columns:1fr; }
     .kpi-card { padding:14px; }
@@ -724,8 +727,12 @@ select.locked,select.locked:disabled {
     .pe-operator-bubbles { grid-template-columns:1fr; }
     .rj-cat-grid { grid-template-columns:1fr; }
     body { font-size:13px; }
-    .data-table th,.data-table td { padding:5px 8px; font-size:.75rem; }
+    .data-table { max-width:100vw; }
+    .data-table th,.data-table td { padding:5px 8px; font-size:.75rem; white-space:normal; }
     .dash-section > h2 { font-size:.75rem; }
     .selector-group select { font-size:.78rem; }
     .nav-link { font-size:.7rem; padding:5px 6px; }
+    .main-content { max-width:100vw; overflow-x:hidden; padding:14px 10px; }
+    .rj-container,.rj-suivi-container { max-width:100vw; overflow-x:hidden; padding:12px; }
+    .cumul-banner { margin-bottom:12px; }
 }
