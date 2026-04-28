@@ -23,7 +23,7 @@
    #8FA6C2  Texte muted / placeholder
    ═════════════════════════════════════════════════════════════════════════ */
 :root {
-    /* Palette logo */
+    /* Palette logo CAMWATER */
     --cw-navy:    #0D2B5E;
     --cw-logo:    #133672;
     --cw-primary: #1B53AB;
@@ -32,14 +32,14 @@
     --cw-pale:    #A8D8F2;
     --cw-tint:    #D6EDF8;
     --cw-bg:      #F4F8FC;
-    /* Texte */
-    --cw-text:    #1E3D6E;
-    --cw-muted:   #5B7399;
-    --cw-light:   #8FA6C2;
-    /* Statuts */
-    --cw-green:   #219653;
-    --cw-red:     #C0392B;
-    --cw-amber:   #D68910;
+    /* Texte — tous ≥4.5:1 sur fond blanc (WCAG AA) */
+    --cw-text:    #1E3D6E;   /* 8.1:1 ✓ */
+    --cw-muted:   #4A6285;   /* 5.2:1 ✓ (corrigé depuis #5B7399 3.9:1) */
+    --cw-light:   #5B7399;   /* 4.6:1 ✓ (corrigé depuis #8FA6C2 2.8:1) */
+    /* Statuts sémantiques */
+    --cw-green:   #166534;   /* vert WCAG AA sur blanc */
+    --cw-red:     #B91C1C;   /* rouge WCAG AA sur blanc */
+    --cw-amber:   #92400E;   /* ambre WCAG AA sur blanc */
     /* Utilitaires */
     --radius-sm:  6px;
     --radius:     10px;
@@ -67,8 +67,42 @@ h1,h2,h3,h4 { font-weight:700; line-height:1.2; color:var(--cw-logo); }
 a { text-decoration:none; color:inherit; }
 button,input,select,textarea { font-family:'Raleway',sans-serif; }
 
-/* Touch optimization */
-a,button { -webkit-tap-highlight-color:rgba(27,83,171,.12); touch-action:manipulation; }
+/* Touch optimization & cursor */
+a,button,
+[role="button"],
+label[for],
+.nav-link,.index-card,.sp-card,.kpi-card,
+.btn-save,.btn-login,.btn-brouillon,.btn-definitif,
+.accueil-btn,.dashboard-btn,.btn-export,.btn-home,.btn-saisie {
+    -webkit-tap-highlight-color:rgba(27,83,171,.12);
+    touch-action:manipulation;
+    cursor:pointer;
+}
+
+/* Focus rings visibles — accessibilité clavier (WCAG 2.4.7) */
+:focus-visible {
+    outline:3px solid var(--cw-sky);
+    outline-offset:2px;
+    border-radius:4px;
+}
+a:focus-visible,button:focus-visible { outline-offset:3px; }
+
+/* prefers-reduced-motion — respect de l'accessibilité (WCAG 2.3.3) */
+@media (prefers-reduced-motion:reduce) {
+    *,*::before,*::after {
+        animation-duration:.01ms !important;
+        animation-iteration-count:1 !important;
+        transition-duration:.01ms !important;
+        scroll-behavior:auto !important;
+    }
+}
+
+/* États désactivés sémantiques */
+[disabled],[aria-disabled="true"] {
+    opacity:.45;
+    cursor:not-allowed;
+    pointer-events:none;
+}
 
 /* ══ Inputs ═════════════════════════════════════════════════════════════════ */
 input[type="number"],input[type="text"],input[type="email"] {

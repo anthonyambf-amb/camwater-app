@@ -187,11 +187,20 @@
         .kpi-card.c2 { border-bottom-color:var(--s); } .kpi-card.c2::before { background:var(--s); }
         .kpi-card.c3 { border-bottom-color:var(--g); } .kpi-card.c3::before { background:var(--g); }
         .kpi-card.c4 { border-bottom-color:var(--a); } .kpi-card.c4::before { background:var(--a); }
-        .kpi-ico {
+        /* Icons SVG (Lucide — no emoji) */
+        .kpi-ico, .sp-ico {
             width:40px; height:40px; border-radius:9px;
             display:flex; align-items:center; justify-content:center;
-            font-size:1.2rem; margin-bottom:14px;
+            margin-bottom:14px;
         }
+        .kpi-ico svg, .sp-ico svg { display:block; flex-shrink:0; }
+        .c1 .kpi-ico svg,.sp-card.s1 .sp-ico svg { color:#1B53AB; }
+        .c2 .kpi-ico svg,.sp-card.s2 .sp-ico svg { color:#148F77; }
+        .c3 .kpi-ico svg,.sp-card.s3 .sp-ico svg { color:#219653; }
+        .c4 .kpi-ico svg,.sp-card.s4 .sp-ico svg { color:#B45309; }
+        .sp-card.s4 .sp-ico svg { color:#B91C1C; }
+        .sp-card.s5 .sp-ico svg { color:#1B53AB; }
+        .sp-card.s6 .sp-ico svg { color:#B45309; }
         .c1 .kpi-ico { background:#E8F0F9; }
         .c2 .kpi-ico { background:#E5F4FB; }
         .c3 .kpi-ico { background:#E8F7EF; }
@@ -306,9 +315,9 @@
         .f-bottom { max-width:1100px; margin:0 auto; display:flex; align-items:center; justify-content:space-between; padding-top:18px; border-top:1px solid rgba(255,255,255,.06); font-size:.72rem; flex-wrap:wrap; gap:7px; }
         .f-drops { color:var(--s); letter-spacing:4px; font-size:.9rem; }
 
-        /* ══ Scroll Reveal ══════════════════════════════════════════════════ */
-        .r { opacity:0; transform:translateY(24px); transition:opacity .55s ease, transform .55s ease; }
-        .r.v { opacity:1; transform:none; }
+        /* ══ Scroll Reveal (JS requis ; sans JS → visible) ═════════════════ */
+        .js-loaded .r { opacity:0; transform:translateY(24px); transition:opacity .55s ease, transform .55s ease; }
+        .js-loaded .r.v { opacity:1; transform:none; }
 
         /* ══ Responsive ═════════════════════════════════════════════════════ */
         @media (max-width:1024px) {
@@ -335,6 +344,57 @@
     </style>
 </head>
 <body>
+
+<!-- ══ SVG SPRITE (Lucide icons — zéro emoji en prod) ═══════════════════════
+     Règle UI/UX Pro Max P1 : "No Emoji as Structural Icons"
+     Source : lucide.dev · stroke-linecap=round, stroke-linejoin=round
+═════════════════════════════════════════════════════════════════════════════ -->
+<svg aria-hidden="true" style="display:none" xmlns="http://www.w3.org/2000/svg">
+  <!-- bar-chart-2 : CA Global -->
+  <symbol id="ic-chart" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>
+  </symbol>
+  <!-- banknote : Encaissements -->
+  <symbol id="ic-banknote" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2"/><path d="M6 12h.01M18 12h.01"/>
+  </symbol>
+  <!-- wrench : Branchements -->
+  <symbol id="ic-wrench" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/>
+  </symbol>
+  <!-- target : Objectif -->
+  <symbol id="ic-target" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/>
+  </symbol>
+  <!-- clipboard-list : Centralisation -->
+  <symbol id="ic-clipboard" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="13" y2="16"/>
+  </symbol>
+  <!-- map-pin : Agents Terrain -->
+  <symbol id="ic-mappin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/>
+  </symbol>
+  <!-- trending-up : Direction -->
+  <symbol id="ic-trending" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/>
+  </symbol>
+  <!-- alert-octagon : Monitoring -->
+  <symbol id="ic-alert" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <polygon points="7.86 2 16.14 2 22 7.86 22 16.14 16.14 22 7.86 22 2 16.14 2 7.86 7.86 2"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+  </symbol>
+  <!-- info : À propos -->
+  <symbol id="ic-info" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/>
+  </symbol>
+  <!-- layout-dashboard : Tableau de bord -->
+  <symbol id="ic-dashboard" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/>
+  </symbol>
+  <!-- droplet : logo nav portails -->
+  <symbol id="ic-drop" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M12 2.69l5.66 5.66a8 8 0 11-11.31 0z"/>
+  </symbol>
+</svg>
 
 <!-- ══ HERO ════════════════════════════════════════════════════════════════ -->
 <section class="hero" id="hero">
@@ -422,28 +482,30 @@
 
     <div class="kpi-grid">
         <div class="kpi-card c1 r">
-            <div class="kpi-ico">📊</div>
+            <div class="kpi-ico" aria-hidden="true"><svg width="20" height="20"><use href="#ic-chart"/></svg></div>
             <p class="kpi-lbl">Chiffre d'Affaires Global</p>
-            <div class="kpi-val" id="kv-ca"><div class="kpi-skel"></div></div>
+            <div class="kpi-val" id="kv-ca" aria-live="polite"><div class="kpi-skel"></div></div>
             <p class="kpi-meta" id="km-ca">Vente eau + travaux remboursables</p>
         </div>
         <div class="kpi-card c2 r">
-            <div class="kpi-ico">💰</div>
+            <div class="kpi-ico" aria-hidden="true"><svg width="20" height="20"><use href="#ic-banknote"/></svg></div>
             <p class="kpi-lbl">Encaissements Totaux</p>
-            <div class="kpi-val" id="kv-enc"><div class="kpi-skel"></div></div>
+            <div class="kpi-val" id="kv-enc" aria-live="polite"><div class="kpi-skel"></div></div>
             <p class="kpi-meta" id="km-enc">Caisse + banques + travaux</p>
         </div>
         <div class="kpi-card c3 r">
-            <div class="kpi-ico">🔧</div>
+            <div class="kpi-ico" aria-hidden="true"><svg width="20" height="20"><use href="#ic-wrench"/></svg></div>
             <p class="kpi-lbl">Branchements Vendus</p>
-            <div class="kpi-val" id="kv-brch"><div class="kpi-skel"></div></div>
+            <div class="kpi-val" id="kv-brch" aria-live="polite"><div class="kpi-skel"></div></div>
             <p class="kpi-meta" id="km-brch">Nouveaux raccordements au réseau</p>
         </div>
         <div class="kpi-card c4 r">
-            <div class="kpi-ico">🎯</div>
+            <div class="kpi-ico" aria-hidden="true"><svg width="20" height="20"><use href="#ic-target"/></svg></div>
             <p class="kpi-lbl">Taux de Réalisation Objectif</p>
-            <div class="kpi-val" id="kv-obj"><div class="kpi-skel"></div></div>
-            <div class="kpi-prog"><div class="kpi-prog-fill" id="kpb" style="width:0%"></div></div>
+            <div class="kpi-val" id="kv-obj" aria-live="polite"><div class="kpi-skel"></div></div>
+            <div class="kpi-prog" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="kpb-wrap">
+                <div class="kpi-prog-fill" id="kpb" style="width:0%"></div>
+            </div>
             <p class="kpi-meta" id="km-obj" style="margin-top:5px;">Encaissements vs objectif proratisé</p>
         </div>
     </div>
@@ -456,47 +518,47 @@
     <p class="sec-sub r">Chaque espace est conçu pour un rôle précis. Partagez le lien correspondant à chaque profil.</p>
 
     <div class="spaces-grid">
-        <a href="/central" class="sp-card s1 r">
+        <a href="/central" class="sp-card s1 r" aria-label="Espace Centralisation">
             <div class="sp-num">Espace 01</div>
-            <div class="sp-ico">📋</div>
+            <div class="sp-ico" aria-hidden="true"><svg width="22" height="22"><use href="#ic-clipboard"/></svg></div>
             <div class="sp-title">Centralisation</div>
             <p class="sp-desc">Saisie complète des données commerciales — volumes, CA, encaissements, impayés, objectifs. Exports Excel. <strong>Identification requise.</strong></p>
-            <span class="sp-cta">Accéder à la saisie →</span>
+            <span class="sp-cta" aria-hidden="true">Accéder à la saisie →</span>
         </a>
-        <a href="/agences" class="sp-card s2 r">
+        <a href="/agences" class="sp-card s2 r" aria-label="Portail Agents Terrain">
             <div class="sp-num">Espace 02</div>
-            <div class="sp-ico">🏘️</div>
+            <div class="sp-ico" aria-hidden="true"><svg width="22" height="22"><use href="#ic-mappin"/></svg></div>
             <div class="sp-title">Agents Terrain</div>
             <p class="sp-desc">Saisie quotidienne à distance des recettes et branchements par agence. Interface simplifiée, mobile-first. <strong>Accès restreint.</strong></p>
-            <span class="sp-cta">Accéder au portail terrain →</span>
+            <span class="sp-cta" aria-hidden="true">Accéder au portail terrain →</span>
         </a>
-        <a href="/direction" class="sp-card s3 r">
+        <a href="/direction" class="sp-card s3 r" aria-label="Tableau de bord Direction">
             <div class="sp-num">Espace 03</div>
-            <div class="sp-ico">📈</div>
+            <div class="sp-ico" aria-hidden="true"><svg width="22" height="22"><use href="#ic-trending"/></svg></div>
             <div class="sp-title">Direction &amp; Responsables</div>
             <p class="sp-desc">Tableau de bord décisionnel — synthèses nationales, comparaisons N/N-1, classement des DR. <strong>Lecture seule, sans login.</strong></p>
-            <span class="sp-cta">Consulter le tableau de bord →</span>
+            <span class="sp-cta" aria-hidden="true">Consulter le tableau de bord →</span>
         </a>
-        <a href="/monitoring" class="sp-card s4 r">
+        <a href="/monitoring" class="sp-card s4 r" aria-label="Surveillance et Alertes">
             <div class="sp-num">Espace 04</div>
-            <div class="sp-ico">🔴</div>
+            <div class="sp-ico" aria-hidden="true"><svg width="22" height="22"><use href="#ic-alert"/></svg></div>
             <div class="sp-title">Surveillance &amp; Alertes</div>
             <p class="sp-desc">Monitoring automatisé des 6 ratios prudentiels — taux de facturation, recouvrement, délais branchements, réémissions. Détection de tendances.</p>
-            <span class="sp-cta">Accéder au monitoring →</span>
+            <span class="sp-cta" aria-hidden="true">Accéder au monitoring →</span>
         </a>
-        <a href="javascript:void(0)" onclick="openAbout()" class="sp-card s5 r">
+        <a href="javascript:void(0)" onclick="openAbout()" class="sp-card s5 r" aria-label="Guide d'utilisation" role="button">
             <div class="sp-num">Espace 05</div>
-            <div class="sp-ico">💡</div>
+            <div class="sp-ico" aria-hidden="true"><svg width="22" height="22"><use href="#ic-info"/></svg></div>
             <div class="sp-title">À propos &amp; Guide</div>
             <p class="sp-desc">Architecture de la plateforme, rôles, flux de données et bonnes pratiques pour une saisie fiable et une exploitation optimale des indicateurs.</p>
-            <span class="sp-cta">Lire le guide →</span>
+            <span class="sp-cta" aria-hidden="true">Lire le guide →</span>
         </a>
-        <a href="/dashboard" class="sp-card s6 r">
+        <a href="/dashboard" class="sp-card s6 r" aria-label="Tableau de bord commercial">
             <div class="sp-num">Espace 06</div>
-            <div class="sp-ico">⚡</div>
+            <div class="sp-ico" aria-hidden="true"><svg width="22" height="22"><use href="#ic-dashboard"/></svg></div>
             <div class="sp-title">Tableau de Bord Commercial</div>
             <p class="sp-desc">Vue consolidée — KPIs, graphiques mensuels, comparaisons inter-DRs, paiements électroniques, exports Excel &amp; PDF.</p>
-            <span class="sp-cta">Ouvrir le tableau de bord →</span>
+            <span class="sp-cta" aria-hidden="true">Ouvrir le tableau de bord →</span>
         </a>
     </div>
 </section>
@@ -646,16 +708,17 @@ function closeAboutBg(e){if(e.target===document.getElementById('about-modal'))cl
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeAbout();});
 
 /* ── Scroll Reveal ───────────────────────────────────────────────────────── */
-new IntersectionObserver((entries)=>{
-    entries.forEach((en,i)=>{
-        if(en.isIntersecting){setTimeout(()=>en.target.classList.add('v'),i*70);new IntersectionObserver(()=>{}).observe(en.target);}
-    });
-},{threshold:.1}).observe||
-(()=>{
-    const obs=new IntersectionObserver((entries)=>{
-        entries.forEach((en,i)=>{if(en.isIntersecting){setTimeout(()=>en.target.classList.add('v'),i*70);obs.unobserve(en.target);}});
-    },{threshold:.1});
-    document.querySelectorAll('.r').forEach(el=>obs.observe(el));
+document.documentElement.classList.add('js-loaded');
+(function(){
+    var obs = new IntersectionObserver(function(entries){
+        entries.forEach(function(en, i){
+            if(en.isIntersecting){
+                setTimeout(function(){ en.target.classList.add('v'); }, i * 70);
+                obs.unobserve(en.target);
+            }
+        });
+    }, {threshold: 0.08});
+    document.querySelectorAll('.r').forEach(function(el){ obs.observe(el); });
 })();
 </script>
 </body>
