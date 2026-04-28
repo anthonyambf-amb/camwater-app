@@ -260,18 +260,28 @@ var _agent={};
         });
 })();
 
-/* Remplir les 7 derniers jours dans le sélecteur date */
+/* Remplir tous les jours du mois en cours (du 1er à aujourd'hui) */
 function remplirDates(){
     var sel=document.getElementById('tp-date');
     var today=new Date();
-    for(var i=0;i<7;i++){
-        var d=new Date(today);
-        d.setDate(today.getDate()-i);
-        var iso=d.toISOString().split('T')[0];
-        var label=d.toLocaleDateString('fr-FR',{weekday:'short',day:'2-digit',month:'short'});
+    var annee=today.getFullYear();
+    var mois=today.getMonth(); // 0-based
+
+    // Construire liste du 1er au jour actuel (ordre inverse : aujourd'hui en premier)
+    var jours=[];
+    for(var j=1;j<=today.getDate();j++){
+        var d=new Date(annee,mois,j);
+        var iso=d.getFullYear()+'-'+
+            String(d.getMonth()+1).padStart(2,'0')+'-'+
+            String(d.getDate()).padStart(2,'0');
+        var label=d.toLocaleDateString('fr-FR',{weekday:'short',day:'2-digit',month:'long'});
+        jours.push({iso:iso,label:label,isToday:(j===today.getDate())});
+    }
+    // Afficher du plus récent au plus ancien
+    for(var i=jours.length-1;i>=0;i--){
         var o=document.createElement('option');
-        o.value=iso;
-        o.textContent=(i===0?'Aujourd\'hui — ':'')+label;
+        o.value=jours[i].iso;
+        o.textContent=jours[i].isToday?'Aujourd\'hui — '+jours[i].label:jours[i].label;
         sel.appendChild(o);
     }
 }
@@ -292,7 +302,7 @@ function chargerAgencesTerrain(){
     });
 }
 
-/* Accéder à la saisie */
+/* Accéder à la saisie — stocke les clés localStorage attendues par les JS de saisie */
 function accederSaisieTerrain(e,type){
     e.preventDefault();
     var drSel=document.getElementById('tp-dr');
@@ -308,6 +318,10 @@ function accederSaisieTerrain(e,type){
     var btn=e.currentTarget;
     btn.style.opacity='.6';btn.style.pointerEvents='none';
 
+    var agenceId=parseInt(agSel.value);
+    var agenceNom=agSel.options[agSel.selectedIndex].text;
+    var drCode=drSel.options[drSel.selectedIndex].text.split(' — ')[0]||'';
+
     var endpoint=type==='recettes'?'/api/recettes-jour/login':'/api/branchements-jour/login';
     fetch(endpoint,{
         method:'POST',
@@ -315,14 +329,28 @@ function accederSaisieTerrain(e,type){
         body:JSON.stringify({
             nom:_agent.nom,
             matricule:_agent.matricule,
-            agence_id:parseInt(agSel.value),
+            agence_id:agenceId,
             date_saisie:date
         })
     }).then(function(r){return r.json();})
     .then(function(d){
         if(d.status==='ok'||d.status==='locked'){
-            var cible=type==='recettes'?'/recettes-jour/saisie':'/branchements-jour/saisie';
-            window.location.href=cible;
+            /* Stocker dans localStorage pour que les JS de saisie ne redirigent
+               pas vers la page d'identification (ils lisent camwater_rj_op / camwater_bj_op) */
+            var opPayload={
+                matricule:_agent.matricule,
+                agence_id:agenceId,
+                agence_nom:d.agence_nom||agenceNom,
+                dr_code:d.dr_code||drCode,
+                date_saisie:date
+            };
+            if(type==='recettes'){
+                localStorage.setItem('camwater_rj_op',JSON.stringify(opPayload));
+                window.location.href='/recettes-jour/saisie';
+            } else {
+                localStorage.setItem('camwater_bj_op',JSON.stringify(opPayload));
+                window.location.href='/branchements-jour/saisie';
+            }
         } else {
             err.textContent=d.error||'Erreur de connexion.';
             btn.style.opacity='';btn.style.pointerEvents='';
