@@ -246,6 +246,67 @@
         }
         .cx-definitive-warn strong { display:block; margin-bottom:3px; font-size:.82rem; }
 
+        /* ══ Water illustrations & animations ════════════════════════════ */
+
+        /* Bulles d'eau flottantes */
+        .water-bubbles {
+            position:absolute; inset:0; overflow:hidden; pointer-events:none; z-index:1;
+        }
+        .bubble {
+            position:absolute; bottom:-60px; border-radius:50%;
+            background:radial-gradient(circle at 35% 35%,
+                rgba(168,216,242,.55) 0%,
+                rgba(91,172,216,.18) 50%,
+                transparent 70%);
+            border:1px solid rgba(168,216,242,.22);
+            animation:floatUp linear infinite;
+        }
+        .bubble:nth-child(1){width:28px;height:28px;left:10%;animation-duration:9s;animation-delay:0s;}
+        .bubble:nth-child(2){width:16px;height:16px;left:25%;animation-duration:12s;animation-delay:2s;}
+        .bubble:nth-child(3){width:42px;height:42px;left:40%;animation-duration:8s;animation-delay:4s;}
+        .bubble:nth-child(4){width:12px;height:12px;left:55%;animation-duration:14s;animation-delay:1s;}
+        .bubble:nth-child(5){width:32px;height:32px;left:70%;animation-duration:10s;animation-delay:3s;}
+        .bubble:nth-child(6){width:20px;height:20px;left:85%;animation-duration:11s;animation-delay:5s;}
+        .bubble:nth-child(7){width:22px;height:22px;left:18%;animation-duration:13s;animation-delay:6s;}
+        .bubble:nth-child(8){width:36px;height:36px;left:62%;animation-duration:9.5s;animation-delay:2.5s;}
+
+        @keyframes floatUp {
+            0%  { transform:translateY(0) scale(1); opacity:.7; }
+            60% { opacity:.9; }
+            100%{ transform:translateY(-110vh) scale(.7); opacity:0; }
+        }
+
+        /* Illustration goutte d'eau centrale */
+        .hero-drop-illo {
+            position:absolute; right:8%; top:50%; transform:translateY(-50%);
+            opacity:.12; pointer-events:none; z-index:1;
+            animation:dropFloat 6s ease-in-out infinite;
+        }
+        @keyframes dropFloat {
+            0%,100%{ transform:translateY(-50%) rotate(-4deg); }
+            50%    { transform:translateY(calc(-50% - 18px)) rotate(4deg); }
+        }
+
+        /* Ripple au hover sur les cards KPI */
+        .kpi-card { overflow:hidden; }
+        .kpi-card::after {
+            content:''; position:absolute; inset:0; border-radius:inherit;
+            background:radial-gradient(circle at var(--mx,50%) var(--my,50%),
+                rgba(91,172,216,.18) 0%, transparent 65%);
+            opacity:0; transition:opacity .35s;
+        }
+        .kpi-card:hover::after { opacity:1; }
+
+        /* Section qualité — texture eau subtile */
+        .quality-sec::after {
+            content:''; position:absolute; inset:0; pointer-events:none;
+            background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60'%3E%3Ccircle cx='30' cy='30' r='1.5' fill='rgba(91,172,216,.08)'/%3E%3Ccircle cx='10' cy='10' r='1' fill='rgba(91,172,216,.06)'/%3E%3Ccircle cx='50' cy='50' r='1' fill='rgba(91,172,216,.06)'/%3E%3C/svg%3E");
+        }
+
+        /* Ondulation supplémentaire entre KPI et qualité */
+        .wave-divider { line-height:0; position:relative; z-index:2; }
+        .wave-divider svg { display:block; width:100%; }
+
         /* ── Hero Body — padding-top pour compenser navbar fixe ── */
         .hero-body {
             position:relative; z-index:10; flex:1;
@@ -550,6 +611,31 @@
 <section class="hero" id="hero">
     <div class="hero-glow"></div>
 
+    <!-- Bulles d'eau flottantes -->
+    <div class="water-bubbles" aria-hidden="true">
+        <div class="bubble"></div><div class="bubble"></div><div class="bubble"></div>
+        <div class="bubble"></div><div class="bubble"></div><div class="bubble"></div>
+        <div class="bubble"></div><div class="bubble"></div>
+    </div>
+
+    <!-- Illustration goutte d'eau SVG -->
+    <div class="hero-drop-illo" aria-hidden="true">
+        <svg width="320" height="420" viewBox="0 0 320 420" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <!-- Grande goutte principale -->
+            <path d="M160 10 C160 10 30 170 30 270 C30 345 88 400 160 400 C232 400 290 345 290 270 C290 170 160 10 160 10Z"
+                  fill="rgba(91,172,216,.18)" stroke="rgba(168,216,242,.35)" stroke-width="1.5"/>
+            <!-- Reflet intérieur -->
+            <ellipse cx="125" cy="190" rx="22" ry="48"
+                     fill="rgba(255,255,255,.12)" transform="rotate(-18 125 190)"/>
+            <ellipse cx="115" cy="160" rx="8" ry="16"
+                     fill="rgba(255,255,255,.18)" transform="rotate(-18 115 160)"/>
+            <!-- Cercles concentriques ondulants -->
+            <circle cx="160" cy="370" r="55" stroke="rgba(91,172,216,.12)" stroke-width="1.5" fill="none"/>
+            <circle cx="160" cy="370" r="80" stroke="rgba(91,172,216,.08)" stroke-width="1" fill="none"/>
+            <circle cx="160" cy="370" r="108" stroke="rgba(91,172,216,.05)" stroke-width="1" fill="none"/>
+        </svg>
+    </div>
+
     <nav class="nav">
         <div class="nav-brand">
             <!-- Emblem SVG CAMWATER (fidèle au logo) -->
@@ -611,8 +697,7 @@
         </p>
 
         <div class="hero-ctas">
-            <a href="/central" class="btn-hero-p">Accéder à la centralisation</a>
-            <a href="#espaces" class="btn-hero-g">Découvrir les espaces ↓</a>
+            <button onclick="openConnexion()" class="btn-hero-p">Connectez-vous</button>
         </div>
     </div>
 
@@ -631,13 +716,25 @@
 
     <div class="kpi-grid">
         <div class="kpi-card c1 r">
-            <div class="kpi-ico" aria-hidden="true"><svg width="20" height="20"><use href="#ic-chart"/></svg></div>
+            <!-- Goutte d'eau = vente eau -->
+            <div class="kpi-ico" aria-hidden="true">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#1B53AB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 2.69l5.66 5.66a8 8 0 11-11.31 0z"/>
+                </svg>
+            </div>
             <p class="kpi-lbl">Chiffre d'Affaires Global</p>
             <div class="kpi-val" id="kv-ca" aria-live="polite"><div class="kpi-skel"></div></div>
             <p class="kpi-meta" id="km-ca">Vente eau + travaux remboursables</p>
         </div>
         <div class="kpi-card c2 r">
-            <div class="kpi-ico" aria-hidden="true"><svg width="20" height="20"><use href="#ic-banknote"/></svg></div>
+            <!-- Vagues = encaissements flux -->
+            <div class="kpi-ico" aria-hidden="true">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#5BACD8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M2 12c1.5-2 3.5-2 5 0s3.5 2 5 0 3.5-2 5 0"/>
+                    <path d="M2 17c1.5-2 3.5-2 5 0s3.5 2 5 0 3.5-2 5 0"/>
+                    <path d="M2 7c1.5-2 3.5-2 5 0s3.5 2 5 0 3.5-2 5 0"/>
+                </svg>
+            </div>
             <p class="kpi-lbl">Encaissements Totaux</p>
             <div class="kpi-val" id="kv-enc" aria-live="polite"><div class="kpi-skel"></div></div>
             <p class="kpi-meta" id="km-enc">Caisse + banques + travaux</p>
@@ -661,6 +758,23 @@
 </section>
 
 <!-- ══ ESPACES ══════════════════════════════════════════════════════════════ -->
+<!-- Séparateur vague eau entre KPI et Qualité -->
+<div class="wave-divider" aria-hidden="true" style="background:var(--bg);">
+    <svg viewBox="0 0 1440 80" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M0,40 C180,80 360,0 540,40 C720,80 900,0 1080,40 C1260,80 1380,20 1440,40 L1440,80 L0,80 Z"
+              fill="linear-gradient(90deg,#0D2B5E,#1B53AB)" style="fill:url(#waveGrad)"/>
+        <defs>
+            <linearGradient id="waveGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stop-color="#091E3E"/>
+                <stop offset="50%" stop-color="#0D2B5E"/>
+                <stop offset="100%" stop-color="#1B53AB"/>
+            </linearGradient>
+        </defs>
+        <path d="M0,40 C180,80 360,0 540,40 C720,80 900,0 1080,40 C1260,80 1380,20 1440,40 L1440,80 L0,80 Z"
+              fill="#091E3E"/>
+    </svg>
+</div>
+
 <!-- ══ QUALITÉ ══════════════════════════════════════════════════════════════ -->
 <section class="quality-sec" id="qualite">
     <div class="q-inner">

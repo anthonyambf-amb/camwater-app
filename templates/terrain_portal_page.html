@@ -141,6 +141,53 @@
 
         .tp-err{color:#B91C1C;font-size:.8rem;font-weight:600;margin:6px 0 10px;min-height:1rem;}
 
+        /* Date grisée (déjà saisie) */
+        .tp-field select option:disabled{color:#B0C4DE;background:#F0F5FA;font-style:italic;}
+        .tp-date-legend{font-size:.68rem;color:#8FA6C2;margin-top:4px;display:flex;align-items:center;gap:6px;}
+        .tp-date-legend i{display:inline-block;width:10px;height:10px;border-radius:2px;background:#E8EFF8;border:1px solid #C8D9EE;}
+
+        /* Popup Retour — glassmorphism élégant */
+        .tp-popup-bg{
+            display:none;position:fixed;inset:0;z-index:500;
+            background:rgba(7,15,32,.68);backdrop-filter:blur(8px);
+            -webkit-backdrop-filter:blur(8px);
+            align-items:center;justify-content:center;
+        }
+        .tp-popup-bg.open{display:flex;}
+        .tp-popup{
+            background:rgba(255,255,255,.97);border-radius:20px;
+            padding:38px 40px;max-width:420px;width:92%;
+            box-shadow:0 30px 80px rgba(0,0,0,.32),
+                       inset 0 1px 0 rgba(255,255,255,.9);
+            border-top:4px solid #1B53AB;text-align:center;
+            animation:popIn .25s cubic-bezier(.4,0,.2,1);
+        }
+        @keyframes popIn{from{opacity:0;transform:scale(.93) translateY(16px)}to{opacity:1;transform:none}}
+        .tp-popup-ico{
+            width:56px;height:56px;border-radius:50%;
+            background:linear-gradient(135deg,#EBF3FA,#D6EDF8);
+            display:flex;align-items:center;justify-content:center;
+            margin:0 auto 16px;
+        }
+        .tp-popup-ico svg{width:26px;height:26px;stroke:#1B53AB;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+        .tp-popup h3{font-size:1.05rem;font-weight:800;color:#0D2B5E;margin-bottom:8px;}
+        .tp-popup p{font-size:.84rem;color:#5B7399;line-height:1.6;margin-bottom:24px;}
+        .tp-popup-btns{display:flex;gap:10px;justify-content:center;}
+        .tp-popup-oui{
+            flex:1;max-width:160px;padding:12px 0;border:none;border-radius:9px;
+            background:#B91C1C;color:#fff;font-family:'Raleway',sans-serif;
+            font-size:.88rem;font-weight:800;cursor:pointer;
+            transition:background .2s,transform .15s;
+        }
+        .tp-popup-oui:hover{background:#991B1B;transform:translateY(-1px);}
+        .tp-popup-non{
+            flex:1;max-width:160px;padding:12px 0;border:2px solid #C8D9EE;border-radius:9px;
+            background:#fff;color:#1B53AB;font-family:'Raleway',sans-serif;
+            font-size:.88rem;font-weight:800;cursor:pointer;
+            transition:all .2s;
+        }
+        .tp-popup-non:hover{background:#EBF3FA;border-color:#1B53AB;}
+
         /* ── Wave de fond ── */
         .tp-wave{position:fixed;bottom:0;left:0;right:0;line-height:0;z-index:0;pointer-events:none;opacity:.4;}
         .tp-wave svg{display:block;width:100%;}
@@ -165,7 +212,7 @@
     </div>
     <div class="tp-nav-agent" id="tp-agent-info">—</div>
     <div class="tp-nav-right">
-        <button onclick="history.back()" class="tp-btn-back">← Retour</button>
+        <button onclick="demanderRetour()" class="tp-btn-back">← Retour</button>
         <a href="/" class="tp-btn-back">⌂ Accueil</a>
         <button class="tp-btn-deconnect" onclick="deconnexionTerrain()">⏏ Déconnexion</button>
     </div>
@@ -193,6 +240,9 @@
         <div class="tp-field">
             <label for="tp-date">Date de saisie</label>
             <select id="tp-date"></select>
+            <div class="tp-date-legend" id="tp-date-legend" style="display:none">
+                <i></i> Date déjà saisie (grisée = données enregistrées)
+            </div>
         </div>
 
         <div class="tp-err" id="tp-err" role="alert"></div>
@@ -218,6 +268,22 @@
                 <strong>Branchements du Jour</strong>
                 <small>Raccordements de la journée</small>
             </a>
+        </div>
+    </div>
+</div>
+
+<!-- Popup déconnexion sur Retour -->
+<div class="tp-popup-bg" id="popup-retour" role="dialog" aria-modal="true" aria-labelledby="popup-retour-title">
+    <div class="tp-popup">
+        <div class="tp-popup-ico">
+            <svg viewBox="0 0 24 24"><path d="M12 2.69l5.66 5.66a8 8 0 11-11.31 0z"/></svg>
+        </div>
+        <h3 id="popup-retour-title">Quitter cette page ?</h3>
+        <p>Souhaitez-vous vous déconnecter avant de retourner en arrière ?<br>
+        <strong>Confirmez d'abord l'enregistrement définitif de vos saisies.</strong></p>
+        <div class="tp-popup-btns">
+            <button class="tp-popup-oui" onclick="popupRetourOui()">Oui — Déconnexion</button>
+            <button class="tp-popup-non" onclick="popupRetourNon()">Non — Continuer</button>
         </div>
     </div>
 </div>
@@ -286,7 +352,14 @@ function remplirDates(){
     }
 }
 
-/* Charger agences selon DR */
+/* Clés localStorage pour les dates déjà soumises */
+function keyDone(type,agenceId){ return 'cw_done_'+type+'_'+agenceId; }
+function getDonesDates(type,agenceId){
+    try{ return JSON.parse(localStorage.getItem(keyDone(type,agenceId))||'[]'); }
+    catch(e){ return []; }
+}
+
+/* Charger agences selon DR + actualiser les dates grisées */
 function chargerAgencesTerrain(){
     var drId=parseInt(document.getElementById('tp-dr').value);
     var selA=document.getElementById('tp-agence');
@@ -300,7 +373,44 @@ function chargerAgencesTerrain(){
         o.value=a.id; o.textContent=a.nom;
         selA.appendChild(o);
     });
+    // Réinitialiser les dates grisées quand on change de DR
+    actualiserDatesGrisees();
 }
+
+/* Griser les dates déjà soumises en fonction de l'agence sélectionnée */
+function actualiserDatesGrisees(){
+    var agId=document.getElementById('tp-agence').value;
+    var selD=document.getElementById('tp-date');
+    var legend=document.getElementById('tp-date-legend');
+    var hasDone=false;
+
+    Array.from(selD.options).forEach(function(opt){
+        if(!opt.value)return;
+        var doneR=getDonesDates('rj',agId);
+        var doneB=getDonesDates('bj',agId);
+        var submittedR=doneR.indexOf(opt.value)>=0;
+        var submittedB=doneB.indexOf(opt.value)>=0;
+        var submitted=submittedR&&submittedB; // grisée seulement si les DEUX types sont faits
+        opt.disabled=submitted;
+        if(submitted){
+            opt.textContent=(opt.textContent.replace(' ✓','')+' ✓');
+            hasDone=true;
+        }
+    });
+    legend.style.display=hasDone?'flex':'none';
+    // Si la date actuellement sélectionnée est grisée, choisir la suivante dispo
+    if(selD.options[selD.selectedIndex]&&selD.options[selD.selectedIndex].disabled){
+        for(var i=0;i<selD.options.length;i++){
+            if(!selD.options[i].disabled){selD.selectedIndex=i;break;}
+        }
+    }
+}
+
+/* Écouter le changement d'agence pour mettre à jour les dates grisées */
+document.addEventListener('DOMContentLoaded',function(){
+    var selA=document.getElementById('tp-agence');
+    if(selA) selA.addEventListener('change',actualiserDatesGrisees);
+});
 
 /* Accéder à la saisie — stocke les clés localStorage attendues par les JS de saisie */
 function accederSaisieTerrain(e,type){
@@ -360,6 +470,23 @@ function accederSaisieTerrain(e,type){
         btn.style.opacity='';btn.style.pointerEvents='';
     });
 }
+
+/* Popup Retour */
+function demanderRetour(){
+    document.getElementById('popup-retour').classList.add('open');
+    document.body.style.overflow='hidden';
+}
+function popupRetourOui(){
+    document.body.style.overflow='';
+    deconnexionTerrain();
+}
+function popupRetourNon(){
+    document.getElementById('popup-retour').classList.remove('open');
+    document.body.style.overflow='';
+}
+document.addEventListener('keydown',function(e){
+    if(e.key==='Escape') popupRetourNon();
+});
 
 /* Déconnexion avec vérification enregistrement définitif */
 function deconnexionTerrain(){

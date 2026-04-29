@@ -298,13 +298,8 @@ def direction_portal():
 
 @app.route('/terrain')
 def terrain_portal():
-    """Portail simplifié pour les agents de terrain (saisie à distance)."""
-    op_r = session.get('op_recettes_jour') or {}
-    op_b = session.get('op_branchements_jour') or {}
-    return render_template('terrain_portal.html',
-                           op_recettes=op_r,
-                           op_branchements=op_b,
-                           role=session.get('role'))
+    """Ancienne route /terrain — redirigée vers /terrain-portal (nouvelle page dédiée)."""
+    return redirect(url_for('terrain_portal_page'), code=301)
 
 
 @app.route('/saisie/<fenetre>')

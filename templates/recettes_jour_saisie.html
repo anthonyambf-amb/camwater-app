@@ -122,6 +122,44 @@
 
     <script src="/static/js/recettes_jour.js"></script>
     <script>
+    /* ── Stocker la date après enregistrement réussi ── */
+    (function(){
+        var _origSubmit=window.submitRecetteJour;
+        window.submitRecetteJour=function(){
+            _origSubmit&&_origSubmit.apply(this,arguments);
+            /* Écoute le status pour détecter le succès et griser la date */
+            setTimeout(function(){
+                var st=document.getElementById('rj-save-status');
+                if(st&&st.textContent.indexOf('succès')>=0){
+                    var op=JSON.parse(localStorage.getItem('camwater_rj_op')||'{}');
+                    if(op.agence_id&&op.date_saisie){
+                        var key='cw_done_rj_'+op.agence_id;
+                        var done=JSON.parse(localStorage.getItem(key)||'[]');
+                        if(done.indexOf(op.date_saisie)<0){
+                            done.push(op.date_saisie);
+                            localStorage.setItem(key,JSON.stringify(done));
+                        }
+                    }
+                }
+            },800);
+        };
+    })();
+
+    /* ── Popup Retour ── */
+    var _popupRetourShown=false;
+    document.querySelector('.rj-btn-back').addEventListener('click',function(e){
+        e.preventDefault();
+        if(_popupRetourShown)return;
+        _popupRetourShown=true;
+        document.getElementById('rj-popup-retour').classList.add('open');
+    });
+    function popupRetourOui(){
+        deconnexionTerrain();
+    }
+    function popupRetourNon(){
+        _popupRetourShown=false;
+        document.getElementById('rj-popup-retour').classList.remove('open');
+    }
     function deconnexionTerrain(){
         if(!confirm('⚠️ CONDITION OBLIGATOIRE\n\nConfirmez avoir effectué l\'ENREGISTREMENT DÉFINITIF\nde votre saisie avant de vous déconnecter.\n\nConfirmer ?')) return;
         localStorage.removeItem('cw_terrain_agent');
@@ -130,6 +168,23 @@
             window.location.href='/terrain-portal';
         });
     }
+    document.addEventListener('keydown',function(e){if(e.key==='Escape')popupRetourNon();});
     </script>
+
+    <!-- Popup Retour -->
+    <div id="rj-popup-retour" style="display:none;position:fixed;inset:0;z-index:500;background:rgba(7,15,32,.68);backdrop-filter:blur(8px);align-items:center;justify-content:center;" class="rj-popup-bg">
+        <div style="background:#fff;border-radius:20px;padding:36px 38px;max-width:400px;width:92%;text-align:center;box-shadow:0 30px 80px rgba(0,0,0,.3);border-top:4px solid #1B53AB;">
+            <div style="width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,#EBF3FA,#D6EDF8);display:flex;align-items:center;justify-content:center;margin:0 auto 14px;">
+                <svg width="24" height="24" fill="none" stroke="#1B53AB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M12 2.69l5.66 5.66a8 8 0 11-11.31 0z"/></svg>
+            </div>
+            <h3 style="font-size:1rem;font-weight:800;color:#0D2B5E;margin-bottom:8px;">Quitter cette page ?</h3>
+            <p style="font-size:.82rem;color:#5B7399;line-height:1.6;margin-bottom:22px;">Souhaitez-vous vous déconnecter avant de retourner en arrière ?<br><strong>Vérifiez d'abord l'enregistrement définitif.</strong></p>
+            <div style="display:flex;gap:10px;justify-content:center;">
+                <button onclick="popupRetourOui()" style="flex:1;max-width:160px;padding:11px 0;border:none;border-radius:9px;background:#B91C1C;color:#fff;font-family:'Raleway',sans-serif;font-size:.86rem;font-weight:800;cursor:pointer;">Oui — Déconnexion</button>
+                <button onclick="popupRetourNon()" style="flex:1;max-width:160px;padding:11px 0;border:2px solid #C8D9EE;border-radius:9px;background:#fff;color:#1B53AB;font-family:'Raleway',sans-serif;font-size:.86rem;font-weight:800;cursor:pointer;">Non — Continuer</button>
+            </div>
+        </div>
+    </div>
+    <script>document.getElementById('rj-popup-retour').style.display='flex';document.getElementById('rj-popup-retour').style.display='none';</script>
 </body>
 </html>
