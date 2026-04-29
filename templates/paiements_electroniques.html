@@ -7,6 +7,16 @@
     <link rel="stylesheet" href="/static/css/style.css">
 </head>
 <body>
+<div class="page-with-topbar">
+    <div class="page-topbar">
+        <div class="ptb-brand">cam<span>water</span></div>
+        <div class="ptb-space">Paiements &Eacute;lectroniques</div>
+        <nav class="ptb-nav">
+            <button onclick="history.back()" class="ptb-btn ptb-btn-ghost">&#8592; Retour</button>
+            <a href="/" class="ptb-btn ptb-btn-ghost">&#8962; Accueil</a>
+            <a href="/dashboard" class="ptb-btn ptb-btn-primary">&#9889; Tableau de bord</a>
+        </nav>
+    </div>
     <div class="app-layout">
         <nav class="sidebar">
             <div class="sidebar-header">
@@ -14,12 +24,9 @@
                 <span class="sidebar-date" id="sidebar-date"></span>
                 <span class="exercice">Exercice 2026</span>
             </div>
-            <a href="/" class="nav-btn accueil-btn">&#127968; Accueil</a>
 
             <div class="nav-section">PAIEMENTS &Eacute;LECTRONIQUES</div>
             <a href="/paiements-electroniques" class="nav-link active">Charger &amp; Analyser</a>
-
-            <a href="/dashboard" class="nav-btn dashboard-btn" style="margin-top:auto;">&#9889; Tableau de bord Commercial</a>
         </nav>
 
         <main class="main-content" style="max-width:1200px;">
@@ -441,5 +448,6 @@
     // Auto-load
     loadResultats();
     </script>
+</div><!-- /page-with-topbar -->
 </body>
 </html>

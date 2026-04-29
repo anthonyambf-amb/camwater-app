@@ -287,6 +287,7 @@ def api_import_template():
 @app.route('/api/import-historique/preview', methods=['POST'])
 def api_import_preview():
     """Analyse le fichier uploadé et retourne un résumé SANS écrire en base.
+    Si dr_id est fourni, restreint la résolution des agences à cette DR.
     Traitement 100 % éphémère : le fichier n'est jamais écrit sur disque."""
     if 'file' not in request.files:
         return jsonify({'error': 'Aucun fichier reçu'}), 400
@@ -294,12 +295,12 @@ def api_import_preview():
     if not f.filename or not f.filename.lower().endswith(('.xlsx', '.xls')):
         return jsonify({'error': 'Format requis : .xlsx ou .xls'}), 400
     exercice = request.form.get('exercice', 2026, type=int)
+    dr_id = request.form.get('dr_id', type=int)
 
     try:
-        # Lecture en mémoire — jamais sur disque
         file_bytes = f.stream.read()
-        result = previsualiser_fichier(file_bytes, exercice)
-        del file_bytes  # libération mémoire explicite
+        result = previsualiser_fichier(file_bytes, exercice, dr_id=dr_id)
+        del file_bytes
         return jsonify(result)
     except Exception as exc:
         logger.error('Erreur preview import : %s\n%s', exc, traceback.format_exc())
@@ -309,9 +310,8 @@ def api_import_preview():
 @app.route('/api/import-historique', methods=['POST'])
 def api_import_historique():
     """Import définitif des données historiques depuis un fichier Excel.
-    Le fichier est traité en mémoire pure (BytesIO) et immédiatement détruit.
-    Seules les données numériques extraites sont écrites dans la base.
-    Transactionnel : tout ou rien."""
+    Si dr_id est fourni : import restreint aux agences de cette DR (mode DR par DR).
+    Le fichier est traité en mémoire pure et immédiatement détruit."""
     if session.get('role') != 'central':
         return jsonify({'error': 'Authentification requise (rôle central)'}), 403
     if 'file' not in request.files:
@@ -320,16 +320,16 @@ def api_import_historique():
     if not f.filename or not f.filename.lower().endswith(('.xlsx', '.xls')):
         return jsonify({'error': 'Format requis : .xlsx ou .xls'}), 400
     exercice = request.form.get('exercice', 2026, type=int)
+    dr_id = request.form.get('dr_id', type=int)
 
     try:
-        # Le fichier n'est JAMAIS écrit sur disque — traitement pur BytesIO
         file_bytes = f.stream.read()
-        result = importer_fichier(file_bytes, exercice)
-        del file_bytes  # destruction immédiate après extraction
+        result = importer_fichier(file_bytes, exercice, dr_id=dr_id)
+        del file_bytes
         logger.info(
-            'Import historique %s : %s — total=%s lignes',
-            exercice,
-            'OK' if result['success'] else 'ERREUR',
+            'Import historique %s DR=%s : %s — %s lignes',
+            exercice, dr_id or 'ALL',
+            'OK' if result['success'] else 'ERR',
             result.get('total_lignes', 0),
         )
         return jsonify(result), 200 if result['success'] else 422
@@ -457,8 +457,14 @@ def saisie(fenetre):
 @app.route('/consultations')
 @app.route('/consultations/<fenetre>')
 def consultations(fenetre='impayes_detail'):
+    db = get_db()
+    drs = db.execute(
+        "SELECT id, code, nom FROM directions_regionales ORDER BY code"
+    ).fetchall()
+    db.close()
     return render_template('consultations.html', fenetre=fenetre,
                            mois=MOIS,
+                           drs=drs,
                            structure_keys=list(STRUCTURE_CW.keys()),
                            structure=STRUCTURE_CW)
 

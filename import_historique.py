@@ -61,19 +61,26 @@ def _safe_int(v: Any, default: int = 0) -> int:
 
 # ── Index agences ──────────────────────────────────────────────────────────────
 
-def _build_agence_index(db) -> dict:
-    """Construit {slug_nom → id} et {slug_code_dr_nom → id} pour résolution flexible."""
-    rows = db.execute(
-        "SELECT a.id, a.nom, d.code as dr_code "
-        "FROM agences a JOIN directions_regionales d ON a.dr_id = d.id"
-    ).fetchall()
+def _build_agence_index(db, dr_id=None) -> dict:
+    """Construit {slug_nom → id} pour résolution flexible.
+    Si dr_id est fourni, restreint aux agences de cette DR (mode DR par DR)."""
+    if dr_id:
+        rows = db.execute(
+            "SELECT a.id, a.nom, d.code as dr_code "
+            "FROM agences a JOIN directions_regionales d ON a.dr_id = d.id "
+            "WHERE a.dr_id = ?", (dr_id,)
+        ).fetchall()
+    else:
+        rows = db.execute(
+            "SELECT a.id, a.nom, d.code as dr_code "
+            "FROM agences a JOIN directions_regionales d ON a.dr_id = d.id"
+        ).fetchall()
     idx: dict = {}
     for r in rows:
         key1 = _slug(r['nom'])
         idx[key1] = r['id']
         key2 = _slug(r['dr_code']) + '__' + _slug(r['nom'])
         idx[key2] = r['id']
-        # variante : code DR seul si agence unique dans cette DR (utile pour petites DRs)
     return idx
 
 
@@ -485,7 +492,7 @@ _SHEET_DISPATCH = {
 
 # ══ Point d'entrée principal ═══════════════════════════════════════════════════
 
-def importer_fichier(file_bytes: bytes, exercice: int) -> dict:
+def importer_fichier(file_bytes: bytes, exercice: int, dr_id=None) -> dict:
     """
     Importe les données historiques depuis un fichier Excel en mémoire.
 
@@ -523,10 +530,10 @@ def importer_fichier(file_bytes: bytes, exercice: int) -> dict:
 
     db = get_db()
     try:
-        agence_idx = _build_agence_index(db)
+        agence_idx = _build_agence_index(db, dr_id=dr_id)
         cat_aliases = _build_cat_aliases(db)
 
-        parsed: dict[str, list] = {k: [] for k in stats}
+        parsed = {k: [] for k in stats}
         sheet_errors: list = []
 
         for sheet_name in wb.sheetnames:
@@ -667,7 +674,7 @@ def importer_fichier(file_bytes: bytes, exercice: int) -> dict:
 
 # ══ Prévisualisation (sans écriture DB) ════════════════════════════════════════
 
-def previsualiser_fichier(file_bytes: bytes, exercice: int) -> dict:
+def previsualiser_fichier(file_bytes: bytes, exercice: int, dr_id=None) -> dict:
     """Analyse le fichier et retourne un résumé SANS toucher à la base.
     Identique à importer_fichier() mais s'arrête avant l'INSERT."""
     stats = {'volumes': 0, 'encaissements': 0, 'ca_spec': 0,
@@ -684,7 +691,7 @@ def previsualiser_fichier(file_bytes: bytes, exercice: int) -> dict:
 
     db = get_db()
     try:
-        agence_idx = _build_agence_index(db)
+        agence_idx = _build_agence_index(db, dr_id=dr_id)
         cat_aliases = _build_cat_aliases(db)
 
         for sheet_name in wb.sheetnames:

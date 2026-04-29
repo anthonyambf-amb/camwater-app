@@ -50,6 +50,72 @@
     --transition: .2s cubic-bezier(.4,0,.2,1);
 }
 
+/* ══ Page Top Bar — barre de navigation récurrente (Retour, Accueil, Dashboard) ═
+   Présente sur tous les espaces de travail avec sidebar.
+   Assure l'harmonie visuelle en maintenant les boutons récurrents au même endroit.
+═══════════════════════════════════════════════════════════════════════════════ */
+.page-topbar {
+    display:flex; align-items:center; justify-content:space-between;
+    padding:0 20px; height:46px; flex-shrink:0;
+    background:var(--cw-navy);
+    border-bottom:1px solid rgba(255,255,255,.08);
+    position:sticky; top:0; z-index:90;
+    gap:8px;
+}
+.ptb-brand {
+    font-weight:800; font-size:.92rem; color:#fff;
+    letter-spacing:.04em; white-space:nowrap; flex-shrink:0;
+}
+.ptb-brand span { color:var(--cw-pale); }
+.ptb-space {
+    font-size:.68rem; font-weight:600; color:rgba(255,255,255,.45);
+    text-transform:uppercase; letter-spacing:.1em; flex-shrink:0;
+    padding:2px 10px; background:rgba(255,255,255,.07); border-radius:10px;
+}
+.ptb-nav {
+    display:flex; align-items:center; gap:5px; margin-left:auto;
+}
+.ptb-btn {
+    display:inline-flex; align-items:center; gap:5px;
+    padding:6px 13px; border-radius:var(--radius-sm);
+    font-family:'Raleway',sans-serif; font-size:.76rem; font-weight:700;
+    cursor:pointer; border:none; min-height:30px;
+    transition:all var(--transition); white-space:nowrap; text-decoration:none;
+}
+.ptb-btn-ghost {
+    background:rgba(255,255,255,.08); color:rgba(255,255,255,.75);
+    border:1px solid rgba(255,255,255,.12);
+}
+.ptb-btn-ghost:hover { background:rgba(255,255,255,.16); color:#fff; }
+.ptb-btn-primary {
+    background:var(--cw-primary); color:#fff;
+}
+.ptb-btn-primary:hover { background:var(--cw-blue); }
+.ptb-btn-danger {
+    background:rgba(185,28,28,.25); color:rgba(255,255,255,.85);
+    border:1px solid rgba(252,165,165,.25);
+}
+.ptb-btn-danger:hover { background:rgba(185,28,28,.5); color:#fff; }
+
+/* Layout : quand le topbar est présent, le body a une structure verticale */
+.page-with-topbar {
+    display:flex; flex-direction:column; min-height:100vh;
+}
+.page-with-topbar .app-layout {
+    flex:1;
+}
+
+/* Sidebar allégée (sans Accueil/Dashboard déplacés dans le topbar) */
+.sidebar-slim .accueil-btn,
+.sidebar-slim .dashboard-btn { display:none; }
+
+@media (max-width:768px) {
+    .page-topbar { padding:0 12px; }
+    .ptb-space { display:none; }
+    .ptb-btn { padding:5px 8px; font-size:.7rem; }
+    .ptb-brand { font-size:.82rem; }
+}
+
 /* ══ Reset & Base ═══════════════════════════════════════════════════════════ */
 *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
 html { scroll-behavior:smooth; -webkit-text-size-adjust:100%; }

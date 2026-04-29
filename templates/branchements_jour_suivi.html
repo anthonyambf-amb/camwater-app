@@ -7,15 +7,21 @@
     <link rel="stylesheet" href="/static/css/style.css">
 </head>
 <body>
-    <div class="rj-suivi-container">
+<div class="page-with-topbar">
+    <div class="page-topbar">
+        <div class="ptb-brand">cam<span>water</span></div>
+        <div class="ptb-space">Suivi Branchements Quotidiens</div>
+        <nav class="ptb-nav">
+            <button onclick="history.back()" class="ptb-btn ptb-btn-ghost">&#8592; Retour</button>
+            <a href="/" class="ptb-btn ptb-btn-ghost">&#8962; Accueil</a>
+            <a href="/branchements-jour" class="ptb-btn ptb-btn-primary">Saisie</a>
+        </nav>
+    </div>
+    <div class="rj-suivi-container" style="padding-top:14px;">
         <header class="rj-suivi-header">
             <div>
                 <h1>Suivi des Branchements Quotidiens</h1>
-                <p>CAMWATER - Exercice 2026</p>
-            </div>
-            <div class="rj-suivi-actions">
-                <a href="/" class="btn-home">Accueil</a>
-                <a href="/branchements-jour" class="btn-saisie">Saisie</a>
+                <p>CAMWATER &mdash; Exercice 2026</p>
             </div>
         </header>
 
@@ -205,5 +211,6 @@
         loadSuivi();
         setInterval(loadSuivi, 30000);
     </script>
+</div><!-- /page-with-topbar -->
 </body>
 </html>

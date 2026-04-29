@@ -7,15 +7,26 @@
     <link rel="stylesheet" href="/static/css/style.css">
 </head>
 <body>
+<div class="page-with-topbar">
+    <!-- ── Barre de navigation récurrente ── -->
+    <div class="page-topbar">
+        <div class="ptb-brand">cam<span>water</span></div>
+        <div class="ptb-space">Consultations</div>
+        <nav class="ptb-nav">
+            <button onclick="history.back()" class="ptb-btn ptb-btn-ghost">&#8592; Retour</button>
+            <a href="/" class="ptb-btn ptb-btn-ghost">&#8962; Accueil</a>
+            <a href="/dashboard" class="ptb-btn ptb-btn-primary">&#9889; Tableau de bord</a>
+        </nav>
+    </div>
+
     <div class="app-layout">
-        <!-- Sidebar -->
+        <!-- Sidebar — navigation spécifique aux consultations -->
         <nav class="sidebar">
             <div class="sidebar-header">
                 <h2>CAMWATER</h2>
                 <span class="sidebar-date" id="sidebar-date"></span>
                 <span class="exercice">Exercice 2026</span>
             </div>
-            <a href="/" class="nav-btn accueil-btn">&#127968; Accueil</a>
 
             <div class="nav-section">CONSULTATIONS</div>
             <a href="/consultations/impayes_detail" class="nav-link {% if fenetre=='impayes_detail' %}active{% endif %}">Portefeuille Impay&eacute;s</a>
@@ -27,10 +38,8 @@
             <a href="/consultations/objectifs" class="nav-link {% if fenetre=='objectifs' %}active{% endif %}">Objectifs Commerciaux</a>
             <a href="/consultations/realisations" class="nav-link {% if fenetre=='realisations' %}active{% endif %}">R&eacute;alisations N-1</a>
 
-            <div class="nav-section">PAIEMENTS</div>
-            <a href="/paiements-electroniques" class="nav-link">Paiements &Eacute;lectroniques</a>
-
-            <a href="/dashboard" class="nav-btn dashboard-btn" style="margin-top:auto;">&#9889; Tableau de bord Commercial</a>
+            <div class="nav-section">IMPORT HISTORIQUE</div>
+            <a href="/consultations/import_historique" class="nav-link {% if fenetre=='import_historique' %}active{% endif %}">&#8601; Import DR par DR</a>
         </nav>
 
         <!-- Main content -->
@@ -357,13 +366,80 @@
             </table>
             <div id="real-pagination"></div>
 
+            {% elif fenetre == 'import_historique' %}
+            <!-- ══ IMPORT HISTORIQUE DR PAR DR ══════════════════════════════ -->
+            <h1>Import de Donn&eacute;es Historiques</h1>
+            <p class="form-desc">Chargez un fichier Excel pour renseigner des mois ant&eacute;rieurs <strong>direction r&eacute;gionale par direction r&eacute;gionale</strong>.
+            Le fichier est trait&eacute; exclusivement en m&eacute;moire et d&eacute;truit imm&eacute;diatement apr&egrave;s extraction.</p>
+
+            <!-- Template -->
+            <div style="background:linear-gradient(135deg,#EBF3FA,#D6EDF8);border-radius:12px;padding:16px 20px;margin-bottom:20px;border-left:4px solid #1B53AB;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
+                <div>
+                    <strong style="color:#0D2B5E;font-size:.9rem;">Télécharger le template Excel DR</strong>
+                    <p style="color:#5B7399;font-size:.78rem;margin-top:2px;">Format pré-structuré : onglets Volumes, Encaissements, CA_Spécifiques, Branchements, Impayés — colonnes Agence | Mois | données</p>
+                </div>
+                <a href="/api/import-historique/template?exercice=2026" download style="display:inline-flex;align-items:center;gap:7px;padding:9px 18px;background:#1B53AB;color:#fff;border-radius:8px;font-weight:700;font-size:.82rem;white-space:nowrap;text-decoration:none;">
+                    &#8595; Template 2026
+                </a>
+            </div>
+
+            <!-- Sélection DR + Exercice -->
+            <div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:18px;background:#fff;border-radius:10px;padding:16px 20px;box-shadow:0 2px 10px rgba(13,43,94,.07);">
+                <div style="flex:1;min-width:160px;">
+                    <label style="display:block;font-size:.7rem;font-weight:800;color:#4A6285;text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px;">Direction R&eacute;gionale</label>
+                    <select id="ih-dr" style="width:100%;padding:10px 12px;border:1.5px solid #C8D9EE;border-radius:8px;font-family:'Raleway',sans-serif;font-size:.9rem;font-weight:600;color:#0D2B5E;">
+                        <option value="">— Choisissez une DR —</option>
+                        {% for dr in drs %}
+                        <option value="{{ dr.id }}">{{ dr.code }} — {{ dr.nom }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div style="flex:0 0 120px;">
+                    <label style="display:block;font-size:.7rem;font-weight:800;color:#4A6285;text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px;">Exercice</label>
+                    <select id="ih-exercice" style="width:100%;padding:10px 12px;border:1.5px solid #C8D9EE;border-radius:8px;font-family:'Raleway',sans-serif;font-size:.9rem;color:#0D2B5E;">
+                        <option value="2026">2026</option><option value="2025">2025</option><option value="2024">2024</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Zone d'upload -->
+            <div style="border:2px dashed #C8D9EE;border-radius:12px;padding:28px;text-align:center;cursor:pointer;transition:all .2s;margin-bottom:14px;"
+                 ondragover="ihDropOver(event)" ondragleave="ihDropLeave(event)" ondrop="ihDrop(event)">
+                <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#5BACD8" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom:10px;display:block;margin-left:auto;margin-right:auto;"><path d="M12 2.69l5.66 5.66a8 8 0 11-11.31 0z"/></svg>
+                <p style="color:#0D2B5E;font-weight:700;margin-bottom:6px;">Déposez le fichier Excel de la DR ici</p>
+                <label style="display:inline-block;margin-top:8px;padding:9px 20px;background:#1B53AB;color:#fff;border-radius:8px;font-weight:700;font-size:.82rem;cursor:pointer;">
+                    Parcourir…<input type="file" id="ih-file" accept=".xlsx,.xls" style="display:none" onchange="onIhFileChange(this)">
+                </label>
+                <p style="color:#8FA6C2;font-size:.72rem;margin-top:10px;">.xlsx · .xls · Max 32 Mo</p>
+            </div>
+
+            <!-- Boutons action -->
+            <div style="display:none;gap:10px;flex-wrap:wrap;margin-bottom:14px;" id="ih-actions">
+                <button class="btn-save" onclick="ihPreview()" id="ih-btn-preview">&#128269; Analyser le fichier</button>
+                <button class="btn-save" onclick="ihImport()" id="ih-btn-import" style="background:#219653;display:none">&#10003; Confirmer l'import</button>
+                <button onclick="ihReset()" style="padding:10px 16px;background:#fff;color:#B91C1C;border:2px solid #B91C1C;border-radius:7px;font-weight:700;cursor:pointer;">&#10005; Annuler</button>
+            </div>
+
+            <!-- Résultat analyse -->
+            <div id="ih-preview-result" style="display:none;background:#fff;border-radius:12px;padding:18px 22px;box-shadow:0 2px 12px rgba(13,43,94,.08);margin-bottom:14px;">
+                <h3 style="font-size:.88rem;color:#0D2B5E;margin-bottom:12px;font-weight:800;">Analyse du fichier</h3>
+                <div id="ih-stats-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:9px;margin-bottom:12px;"></div>
+                <div id="ih-errors-wrap" style="display:none;background:#FEF0EE;border-radius:8px;padding:10px 14px;margin-top:8px;">
+                    <strong style="color:#B91C1C;font-size:.8rem;">Avertissements :</strong>
+                    <ul id="ih-errors-list" style="margin-top:6px;padding-left:14px;font-size:.76rem;color:#7A1D1D;"></ul>
+                </div>
+                <p id="ih-confirm-msg" style="font-size:.82rem;color:#5B7399;margin-top:10px;"></p>
+            </div>
+            <div id="ih-status" class="save-status" style="font-size:.88rem;"></div>
+
             {% else %}
             <h1>Consultations</h1>
             <p class="form-desc">S&eacute;lectionnez une rubrique dans le volet de gauche.</p>
             {% endif %}
 
         </main>
-    </div>
+    </div><!-- /app-layout -->
+</div><!-- /page-with-topbar -->
 
     <script>
         // --- Date du jour ---
@@ -883,6 +959,94 @@
                     realCurrentPage = 1;
                     loadRealisations();
                 });
+        }
+
+        /* \u2500\u2500 Import Historique DR \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 */
+        var _ihFile = null, _ihPreviewDone = false;
+
+        function onIhFileChange(input) {
+            if (!input.files.length) return;
+            _ihFile = input.files[0]; _ihPreviewDone = false;
+            document.getElementById('ih-actions').style.display = 'flex';
+            document.getElementById('ih-btn-import').style.display = 'none';
+            document.getElementById('ih-preview-result').style.display = 'none';
+            document.getElementById('ih-status').textContent = 'Fichier : ' + _ihFile.name;
+            document.getElementById('ih-status').style.color = '#1B53AB';
+        }
+
+        function ihDropOver(e){e.preventDefault();e.currentTarget.style.borderColor='#1B53AB';}
+        function ihDropLeave(e){e.currentTarget.style.borderColor='#C8D9EE';}
+        function ihDrop(e){
+            e.preventDefault(); e.currentTarget.style.borderColor='#C8D9EE';
+            var f=e.dataTransfer.files[0];
+            if(!f||!f.name.match(/\.xlsx?$/i)){document.getElementById('ih-status').textContent='Format invalide (.xlsx requis)';return;}
+            document.getElementById('ih-file').files; // non modifiable
+            _ihFile=f; _ihPreviewDone=false;
+            document.getElementById('ih-actions').style.display='flex';
+            document.getElementById('ih-btn-import').style.display='none';
+            document.getElementById('ih-status').textContent='Fichier : '+f.name;
+            document.getElementById('ih-status').style.color='#1B53AB';
+        }
+
+        function ihPreview(){
+            if(!_ihFile) return;
+            var drId = document.getElementById('ih-dr').value;
+            if(!drId){document.getElementById('ih-status').textContent='S\u00e9lectionnez une DR.';document.getElementById('ih-status').style.color='#B91C1C';return;}
+            var btn=document.getElementById('ih-btn-preview');
+            btn.disabled=true; btn.textContent='Analyse\u2026';
+            var fd=new FormData();
+            fd.append('file',_ihFile);
+            fd.append('exercice',document.getElementById('ih-exercice').value);
+            fd.append('dr_id',drId);
+            fetch('/api/import-historique/preview',{method:'POST',body:fd})
+                .then(function(r){return r.json();})
+                .then(function(d){
+                    btn.disabled=false; btn.textContent='\ud83d\udd0d Analyser';
+                    _ihPreviewDone=true;
+                    var labels={volumes:'Volumes',encaissements:'Encaissements',ca_spec:'CA Sp\u00e9c.',branchements:'Branchements',impayes:'Impay\u00e9s',complements:'Compl\u00e9ments'};
+                    var colors={volumes:'#1B53AB',encaissements:'#5BACD8',ca_spec:'#219653',branchements:'#2E6CBF',impayes:'#D68910',complements:'#B91C1C'};
+                    var grid=document.getElementById('ih-stats-grid'); grid.innerHTML='';
+                    var total=0;
+                    for(var k in labels){var n=(d.stats||{})[k]||0;total+=n;
+                        grid.innerHTML+='<div style="background:#F4F8FC;border-radius:8px;padding:10px;text-align:center;border-top:3px solid '+colors[k]+';"><div style="font-size:1.3rem;font-weight:800;color:'+colors[k]+';">'+n.toLocaleString('fr-FR')+'</div><div style="font-size:.68rem;color:#5B7399;">'+labels[k]+'</div></div>';
+                    }
+                    var errEl=document.getElementById('ih-errors-wrap'),errList=document.getElementById('ih-errors-list');
+                    var allErr=(d.errors||[]).concat(d.warnings||[]);
+                    errEl.style.display=allErr.length?'block':'none';
+                    errList.innerHTML=allErr.slice(0,15).map(function(e){return '<li>'+e+'</li>';}).join('');
+                    var msg=document.getElementById('ih-confirm-msg');
+                    if(total>0){msg.textContent=total.toLocaleString('fr-FR')+' enregistrement(s) pr\u00eats \u00e0 importer.';msg.style.color='#219653';document.getElementById('ih-btn-import').style.display='inline-block';}
+                    else{msg.textContent='Aucune donn\u00e9e d\u00e9tect\u00e9e \u2014 v\u00e9rifiez le format.';msg.style.color='#B91C1C';}
+                    document.getElementById('ih-preview-result').style.display='block';
+                }).catch(function(e){btn.disabled=false;btn.textContent='\ud83d\udd0d Analyser';document.getElementById('ih-status').textContent='Erreur : '+e;document.getElementById('ih-status').style.color='#B91C1C';});
+        }
+
+        function ihImport(){
+            if(!_ihFile||!_ihPreviewDone) return;
+            if(!confirm('Confirmer l\'import DR ? Les donn\u00e9es existantes pour ces agences/mois seront \u00e9cras\u00e9es.')) return;
+            var drId=document.getElementById('ih-dr').value;
+            var btn=document.getElementById('ih-btn-import');
+            btn.disabled=true; btn.textContent='Import\u2026';
+            var fd=new FormData();
+            fd.append('file',_ihFile);
+            fd.append('exercice',document.getElementById('ih-exercice').value);
+            fd.append('dr_id',drId);
+            fetch('/api/import-historique',{method:'POST',body:fd})
+                .then(function(r){return r.json();})
+                .then(function(d){
+                    btn.disabled=false; btn.textContent='\u2713 Confirmer l\'import';
+                    var st=document.getElementById('ih-status');
+                    if(d.success){st.textContent='\u2713 '+d.message;st.style.color='#219653';ihReset();}
+                    else{st.textContent='\u2717 '+(d.error||'\u00c9chec');st.style.color='#B91C1C';}
+                }).catch(function(e){btn.disabled=false;document.getElementById('ih-status').textContent='Erreur r\u00e9seau : '+e;document.getElementById('ih-status').style.color='#B91C1C';});
+        }
+
+        function ihReset(){
+            _ihFile=null;_ihPreviewDone=false;
+            var fi=document.getElementById('ih-file'); if(fi) fi.value='';
+            document.getElementById('ih-actions').style.display='none';
+            document.getElementById('ih-preview-result').style.display='none';
+            document.getElementById('ih-btn-import').style.display='none';
         }
     </script>
 </body>

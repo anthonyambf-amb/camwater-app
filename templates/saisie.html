@@ -8,16 +8,27 @@
     <link rel="stylesheet" href="/static/css/style.css">
 </head>
 <body>
+<div class="page-with-topbar">
+    <!-- ── Barre de navigation récurrente (commune à tous les espaces) ── -->
+    <div class="page-topbar">
+        <div class="ptb-brand">cam<span>water</span></div>
+        <div class="ptb-space">Saisie des données</div>
+        <nav class="ptb-nav">
+            <button onclick="history.back()" class="ptb-btn ptb-btn-ghost">&#8592; Retour</button>
+            <a href="/" class="ptb-btn ptb-btn-ghost">&#8962; Accueil</a>
+            <a href="#" onclick="goToDashboard();return false;" class="ptb-btn ptb-btn-primary">&#9889; Tableau de bord</a>
+            <button onclick="doLogoutSaisie()" class="ptb-btn ptb-btn-danger">&#9167; D&eacute;connexion</button>
+        </nav>
+    </div>
+
     <div class="app-layout">
-        <!-- Sidebar -->
+        <!-- Sidebar — navigation spécifique à la saisie -->
         <nav class="sidebar">
             <div class="sidebar-header">
                 <h2>CAMWATER</h2>
                 <span class="sidebar-date" id="sidebar-date"></span>
                 <span class="exercice">Exercice 2026</span>
             </div>
-            <a href="/" class="nav-btn accueil-btn">&#8962; Accueil</a>
-            <button onclick="history.back()" class="nav-btn dashboard-btn" style="width:100%;border:none;cursor:pointer;font-family:'Raleway',sans-serif;font-size:.8rem;margin:4px 0 14px;" title="Page précédente">&#8592; Retour</button>
 
             <div class="nav-section">S&Eacute;LECTION</div>
             <div class="selector-group">
@@ -61,11 +72,6 @@
             <a href="/saisie/facturation_abonnes" class="nav-link {% if fenetre=='facturation_abonnes' %}active{% endif %}">Facturation Abonn&eacute;s</a>
             <a href="/saisie/branchements_delais" class="nav-link {% if fenetre=='branchements_delais' %}active{% endif %}">Branchements D&eacute;lais</a>
             <a href="/saisie/reemissions" class="nav-link {% if fenetre=='reemissions' %}active{% endif %}">R&eacute;&eacute;missions Factures</a>
-
-            <div class="nav-section">6. IMPORT HISTORIQUE</div>
-            <a href="/saisie/import_historique" class="nav-link {% if fenetre=='import_historique' %}active{% endif %}">&#8601; Import Donn&eacute;es Ant&eacute;rieures</a>
-
-            <a href="#" id="btn-dashboard" onclick="goToDashboard(); return false;" class="nav-btn dashboard-btn" style="margin-top:auto;">&#9889; Tableau de bord Commercial</a>
         </nav>
 
         <!-- Main content -->
@@ -659,7 +665,8 @@
 
             {% endif %}
         </main>
-    </div>
+    </div><!-- /app-layout -->
+</div><!-- /page-with-topbar -->
 
     <script src="/static/js/app.js"></script>
     <script>
@@ -757,6 +764,13 @@
             agSel.disabled = true;
             selectionReady = false;
             showOverlay();
+        }
+
+        // --- D\u00e9connexion depuis la saisie ---
+        function doLogoutSaisie() {
+            if (!confirm('Confirmez avoir effectu\u00e9 l\'enregistrement D\u00c9FINITIF de toutes vos saisies.\n\nConfirmer la d\u00e9connexion ?')) return;
+            localStorage.removeItem('camwater_operateur');
+            fetch('/api/logout', {method: 'POST'}).finally(function() { window.location.href = '/'; });
         }
 
         // --- Navigation vers le tableau de bord avec DR pr\u00e9-s\u00e9lectionn\u00e9e ---
