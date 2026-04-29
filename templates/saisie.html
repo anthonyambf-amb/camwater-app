@@ -62,6 +62,9 @@
             <a href="/saisie/branchements_delais" class="nav-link {% if fenetre=='branchements_delais' %}active{% endif %}">Branchements D&eacute;lais</a>
             <a href="/saisie/reemissions" class="nav-link {% if fenetre=='reemissions' %}active{% endif %}">R&eacute;&eacute;missions Factures</a>
 
+            <div class="nav-section">6. IMPORT HISTORIQUE</div>
+            <a href="/saisie/import_historique" class="nav-link {% if fenetre=='import_historique' %}active{% endif %}">&#8601; Import Donn&eacute;es Ant&eacute;rieures</a>
+
             <a href="#" id="btn-dashboard" onclick="goToDashboard(); return false;" class="nav-btn dashboard-btn" style="margin-top:auto;">&#9889; Tableau de bord Commercial</a>
         </nav>
 
@@ -450,6 +453,209 @@
                     <div class="save-status" id="save-status"></div>
                 </div>
             </div>
+
+            {% elif fenetre == 'import_historique' %}
+            <!-- ══ IMPORT HISTORIQUE ══════════════════════════════════════════ -->
+            <h1>Import de Données Antérieures</h1>
+            <p class="form-desc">Chargez un fichier Excel pour renseigner des mois antérieurs sans saisie manuelle.
+            Le fichier est traité <strong>exclusivement en mémoire</strong> et immédiatement détruit — seules les données numériques extraites sont conservées en base.</p>
+
+            <!-- Template téléchargeable -->
+            <div style="background:linear-gradient(135deg,#EBF3FA,#D6EDF8);border-radius:12px;padding:18px 22px;margin-bottom:22px;border-left:4px solid #1B53AB;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+                <div>
+                    <strong style="color:#0D2B5E;font-size:.92rem;">Télécharger le template Excel</strong>
+                    <p style="color:#5B7399;font-size:.8rem;margin-top:3px;">Format pré-structuré avec instructions intégrées (onglets : Volumes, Encaissements, CA_Spécifiques, Branchements, Impayés, Compléments_Travaux)</p>
+                </div>
+                <a href="/api/import-historique/template?exercice=2026" download
+                   style="display:inline-flex;align-items:center;gap:8px;padding:10px 20px;background:#1B53AB;color:#fff;border-radius:8px;font-weight:700;font-size:.84rem;white-space:nowrap;text-decoration:none;">
+                    &#8595; Template CAMWATER 2026
+                </a>
+            </div>
+
+            <!-- Zone d'upload -->
+            <div class="upload-zone" id="import-zone" style="border:2px dashed #C8D9EE;border-radius:12px;padding:32px;text-align:center;cursor:pointer;transition:all .2s;"
+                 ondragover="event.preventDefault();this.style.borderColor='#1B53AB';this.style.background='#EBF3FA';"
+                 ondragleave="this.style.borderColor='#C8D9EE';this.style.background='';"
+                 ondrop="handleImportDrop(event)">
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#5BACD8" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom:12px;">
+                    <path d="M12 2.69l5.66 5.66a8 8 0 11-11.31 0z"/>
+                </svg>
+                <p style="color:#0D2B5E;font-weight:700;margin-bottom:6px;">Déposez votre fichier Excel ici</p>
+                <p style="color:#5B7399;font-size:.82rem;margin-bottom:16px;">ou</p>
+                <label style="display:inline-block;padding:10px 22px;background:#1B53AB;color:#fff;border-radius:8px;font-weight:700;font-size:.84rem;cursor:pointer;">
+                    Parcourir…
+                    <input type="file" id="import-file" accept=".xlsx,.xls" style="display:none" onchange="onImportFileChange(this)">
+                </label>
+                <p style="color:#8FA6C2;font-size:.74rem;margin-top:12px;">Formats : .xlsx · .xls · Max 32 Mo</p>
+            </div>
+
+            <!-- Exercice -->
+            <div style="display:flex;align-items:center;gap:14px;margin:16px 0;">
+                <label style="font-size:.8rem;font-weight:700;color:#4A6285;">Exercice :</label>
+                <select id="import-exercice" style="width:110px;padding:8px 12px;">
+                    <option value="2026">2026</option>
+                    <option value="2025">2025</option>
+                    <option value="2024">2024</option>
+                </select>
+                <span style="font-size:.76rem;color:#8FA6C2;">Année à laquelle rattacher les données importées</span>
+            </div>
+
+            <!-- Boutons action -->
+            <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;" id="import-actions" style="display:none">
+                <button class="btn-save" onclick="previewImport()" id="btn-preview">&#128269; Analyser le fichier</button>
+                <button class="btn-save" onclick="confirmerImport()" id="btn-import" style="background:#219653;display:none">&#10003; Confirmer l'import</button>
+                <button onclick="resetImport()" style="padding:10px 18px;background:#fff;color:#B91C1C;border:2px solid #B91C1C;border-radius:7px;font-weight:700;cursor:pointer;">&#10005; Annuler</button>
+            </div>
+
+            <!-- Résultat analyse -->
+            <div id="import-preview-result" style="display:none;background:#fff;border-radius:12px;padding:20px 24px;box-shadow:0 2px 12px rgba(13,43,94,.08);margin-bottom:16px;">
+                <h3 style="font-size:.92rem;color:#0D2B5E;margin-bottom:14px;font-weight:800;">Résultat de l'analyse du fichier</h3>
+                <div id="import-stats-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:14px;"></div>
+                <div id="import-errors-wrap" style="display:none;background:#FEF0EE;border-radius:8px;padding:12px 16px;margin-top:10px;">
+                    <strong style="color:#B91C1C;font-size:.82rem;">Avertissements (lignes ignorées) :</strong>
+                    <ul id="import-errors-list" style="margin-top:8px;padding-left:16px;font-size:.78rem;color:#7A1D1D;"></ul>
+                </div>
+                <p id="import-confirm-msg" style="font-size:.84rem;color:#5B7399;margin-top:12px;"></p>
+            </div>
+
+            <!-- Statut import -->
+            <div id="import-status" class="save-status" style="margin-top:8px;font-size:.9rem;"></div>
+
+            <script>
+            var _importFile = null;
+            var _previewDone = false;
+
+            function onImportFileChange(input) {
+                if (!input.files.length) return;
+                _importFile = input.files[0];
+                _previewDone = false;
+                document.getElementById('import-actions').style.display = 'flex';
+                document.getElementById('btn-import').style.display = 'none';
+                document.getElementById('import-preview-result').style.display = 'none';
+                document.getElementById('import-status').textContent = 'Fichier sélectionné : ' + _importFile.name;
+                document.getElementById('import-status').style.color = '#1B53AB';
+            }
+
+            function handleImportDrop(e) {
+                e.preventDefault();
+                document.getElementById('import-zone').style.borderColor = '#C8D9EE';
+                document.getElementById('import-zone').style.background = '';
+                var files = e.dataTransfer.files;
+                if (!files.length) return;
+                var f = files[0];
+                if (!f.name.match(/\.xlsx?$/i)) {
+                    document.getElementById('import-status').textContent = 'Format invalide — seuls .xlsx et .xls sont acceptés';
+                    document.getElementById('import-status').style.color = '#B91C1C';
+                    return;
+                }
+                _importFile = f;
+                _previewDone = false;
+                document.getElementById('import-actions').style.display = 'flex';
+                document.getElementById('btn-import').style.display = 'none';
+                document.getElementById('import-status').textContent = 'Fichier sélectionné : ' + f.name;
+                document.getElementById('import-status').style.color = '#1B53AB';
+            }
+
+            function previewImport() {
+                if (!_importFile) return;
+                var btn = document.getElementById('btn-preview');
+                btn.disabled = true; btn.textContent = 'Analyse en cours…';
+                var fd = new FormData();
+                fd.append('file', _importFile);
+                fd.append('exercice', document.getElementById('import-exercice').value);
+                fetch('/api/import-historique/preview', {method:'POST', body:fd})
+                    .then(function(r){return r.json();})
+                    .then(function(d){
+                        btn.disabled = false; btn.textContent = '🔍 Analyser le fichier';
+                        _previewDone = true;
+                        afficherPreview(d);
+                    }).catch(function(e){
+                        btn.disabled = false; btn.textContent = '🔍 Analyser le fichier';
+                        document.getElementById('import-status').textContent = 'Erreur réseau : ' + e;
+                        document.getElementById('import-status').style.color = '#B91C1C';
+                    });
+            }
+
+            function afficherPreview(d) {
+                var res = document.getElementById('import-preview-result');
+                res.style.display = 'block';
+                var stats = d.stats || {};
+                var grid = document.getElementById('import-stats-grid');
+                var labels = {
+                    volumes:'Volumes', encaissements:'Encaissements',
+                    ca_spec:'CA Spécifiques', branchements:'Branchements',
+                    impayes:'Impayés', complements:'Compléments Travaux'
+                };
+                var colors = {
+                    volumes:'#1B53AB', encaissements:'#5BACD8', ca_spec:'#219653',
+                    branchements:'#2E6CBF', impayes:'#D68910', complements:'#B91C1C'
+                };
+                grid.innerHTML = '';
+                var total = 0;
+                for (var k in labels) {
+                    var n = stats[k] || 0;
+                    total += n;
+                    grid.innerHTML += '<div style="background:#F4F8FC;border-radius:8px;padding:12px;text-align:center;border-top:3px solid ' + colors[k] + ';">' +
+                        '<div style="font-size:1.4rem;font-weight:800;color:' + colors[k] + ';">' + n.toLocaleString('fr-FR') + '</div>' +
+                        '<div style="font-size:.7rem;color:#5B7399;font-weight:600;">' + labels[k] + '</div></div>';
+                }
+                var errWrap = document.getElementById('import-errors-wrap');
+                var errList = document.getElementById('import-errors-list');
+                var allErrors = (d.errors||[]).concat(d.warnings||[]);
+                if (allErrors.length) {
+                    errWrap.style.display = 'block';
+                    errList.innerHTML = allErrors.slice(0,20).map(function(e){return '<li>'+e+'</li>';}).join('');
+                    if (allErrors.length > 20) errList.innerHTML += '<li>... et ' + (allErrors.length - 20) + ' autres</li>';
+                } else {
+                    errWrap.style.display = 'none';
+                }
+                var msg = document.getElementById('import-confirm-msg');
+                if (total > 0) {
+                    msg.textContent = total.toLocaleString('fr-FR') + ' enregistrement(s) prêt(s) à importer en base. Cliquez sur "Confirmer l\'import" pour finaliser.';
+                    msg.style.color = '#219653';
+                    document.getElementById('btn-import').style.display = 'inline-block';
+                } else {
+                    msg.textContent = 'Aucune donnée exploitable détectée. Vérifiez le format du fichier.';
+                    msg.style.color = '#B91C1C';
+                }
+            }
+
+            function confirmerImport() {
+                if (!_importFile || !_previewDone) return;
+                if (!confirm('Confirmer l\'import définitif en base ?\n\nLes données existantes pour les mêmes agences/mois seront écrasées (UPSERT).\nLe fichier source sera immédiatement détruit après traitement.')) return;
+                var btn = document.getElementById('btn-import');
+                btn.disabled = true; btn.textContent = 'Import en cours…';
+                var fd = new FormData();
+                fd.append('file', _importFile);
+                fd.append('exercice', document.getElementById('import-exercice').value);
+                fetch('/api/import-historique', {method:'POST', body:fd})
+                    .then(function(r){return r.json();})
+                    .then(function(d){
+                        btn.disabled = false; btn.textContent = '✓ Confirmer l\'import';
+                        var st = document.getElementById('import-status');
+                        if (d.success) {
+                            st.textContent = '✓ ' + d.message;
+                            st.style.color = '#219653';
+                            resetImport();
+                        } else {
+                            st.textContent = '✗ ' + (d.error || 'Échec de l\'import');
+                            st.style.color = '#B91C1C';
+                        }
+                    }).catch(function(e){
+                        btn.disabled = false; btn.textContent = '✓ Confirmer l\'import';
+                        document.getElementById('import-status').textContent = 'Erreur réseau : ' + e;
+                        document.getElementById('import-status').style.color = '#B91C1C';
+                    });
+            }
+
+            function resetImport() {
+                _importFile = null; _previewDone = false;
+                document.getElementById('import-file').value = '';
+                document.getElementById('import-actions').style.display = 'none';
+                document.getElementById('import-preview-result').style.display = 'none';
+                document.getElementById('btn-import').style.display = 'none';
+            }
+            </script>
 
             {% endif %}
         </main>

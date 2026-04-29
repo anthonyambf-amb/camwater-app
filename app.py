@@ -1,7 +1,11 @@
 """Application Flask CAMWATER v2 - Données Commerciales."""
 import os
+import io
+import logging
+import traceback
 from flask import (Flask, render_template, request, jsonify,
                    send_file, session, redirect, url_for)
+from werkzeug.exceptions import RequestEntityTooLarge
 from werkzeug.utils import secure_filename
 from database import (init_db, get_db, STRUCTURE_CW, MOIS,
                        RUBRIQUES_ENC_CCIALE, RUBRIQUES_ENC_ADM, RUBRIQUES_ENC_BANQUES,
@@ -14,18 +18,31 @@ from export_excel import (export_consolidation, export_budget,
                           export_fiscal, export_reporting)
 from monitoring import (generer_alertes, synthese_par_dr, get_params,
                         save_params, indicateurs_agence)
-import io
+from import_historique import (importer_fichier, previsualiser_fichier,
+                                generer_template_excel)
+
+# ─── Logging ────────────────────────────────────────────────────────
+logging.basicConfig(
+    level=logging.WARNING,
+    format='%(asctime)s [%(levelname)s] %(name)s: %(message)s',
+)
+logger = logging.getLogger('camwater')
 
 app = Flask(__name__)
-# Clé secrète : récupérée depuis l'environnement en production (Render
-# en génère automatiquement une via render.yaml). Fallback local pour le dev.
+
+# ─── Configuration robustesse ────────────────────────────────────────
 app.secret_key = os.environ.get(
     'CAMWATER_SECRET_KEY',
     'camwater-local-2026-secret-key'
 )
+# Taille maximale d'un upload : 32 Mo (protection contre les fichiers géants)
+app.config['MAX_CONTENT_LENGTH'] = 32 * 1024 * 1024
+# JSON compact + UTF-8 garanti
+app.config['JSON_AS_ASCII'] = False
+app.config['JSONIFY_PRETTYPRINT_REGULAR'] = False
 
-# Dossier d'upload (objectifs Excel) — placé sous le même répertoire de
-# données que la base SQLite, donc persistant sur Render via le disk monté.
+# Dossier d'upload objectifs (seul cas où on écrit encore sur disque —
+# les imports historiques, eux, sont 100 % éphémères BytesIO).
 _DATA_DIR = os.environ.get(
     'CAMWATER_DATA_DIR',
     os.path.join(os.path.dirname(__file__), 'data')
@@ -33,8 +50,53 @@ _DATA_DIR = os.environ.get(
 UPLOAD_FOLDER = os.path.join(_DATA_DIR, 'objectifs')
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
-# ─── Init DB au démarrage ───────────────────────────────────────────
+# ─── Init DB au démarrage ────────────────────────────────────────────
 init_db()
+
+# ─── Gestionnaires d'erreurs globaux ────────────────────────────────
+@app.errorhandler(400)
+def bad_request(e):
+    if request.path.startswith('/api/'):
+        return jsonify({'error': 'Requête invalide', 'detail': str(e)}), 400
+    return render_template('erreur.html', code=400,
+                           message='Requête invalide'), 400
+
+@app.errorhandler(403)
+def forbidden(e):
+    if request.path.startswith('/api/'):
+        return jsonify({'error': 'Accès refusé'}), 403
+    return render_template('erreur.html', code=403,
+                           message='Accès non autorisé'), 403
+
+@app.errorhandler(404)
+def not_found(e):
+    if request.path.startswith('/api/'):
+        return jsonify({'error': 'Ressource introuvable'}), 404
+    return render_template('erreur.html', code=404,
+                           message='Page introuvable'), 404
+
+@app.errorhandler(RequestEntityTooLarge)
+def too_large(e):
+    return jsonify({
+        'error': f'Fichier trop volumineux (max {app.config["MAX_CONTENT_LENGTH"] // 1024 // 1024} Mo)'
+    }), 413
+
+@app.errorhandler(500)
+def server_error(e):
+    logger.error('Erreur 500 : %s\n%s', e, traceback.format_exc())
+    if request.path.startswith('/api/'):
+        return jsonify({'error': 'Erreur serveur interne — l\'équipe a été notifiée'}), 500
+    return render_template('erreur.html', code=500,
+                           message='Erreur interne du serveur'), 500
+
+@app.errorhandler(Exception)
+def unhandled(e):
+    """Filet de sécurité absolu — aucune exception ne doit atteindre le client brut."""
+    logger.error('Exception non gérée : %s\n%s', e, traceback.format_exc())
+    if request.path.startswith('/api/'):
+        return jsonify({'error': 'Erreur inattendue — opération annulée'}), 500
+    return render_template('erreur.html', code=500,
+                           message='Une erreur inattendue est survenue'), 500
 
 
 # ─── Contrôle d'accès par rôle ─────────────────────────────────────
@@ -201,6 +263,79 @@ def api_drs_agences():
         })
     db.close()
     return jsonify(result)
+
+
+# ─── Import Historique ──────────────────────────────────────────────
+
+@app.route('/api/import-historique/template')
+def api_import_template():
+    """Télécharge le template Excel vierge (sans auth — pour diffusion)."""
+    exercice = request.args.get('exercice', 2026, type=int)
+    try:
+        xls_bytes = generer_template_excel(exercice)
+        return send_file(
+            io.BytesIO(xls_bytes),
+            mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            as_attachment=True,
+            download_name=f'CAMWATER_Template_Import_{exercice}.xlsx',
+        )
+    except Exception as exc:
+        logger.error('Erreur génération template : %s', exc)
+        return jsonify({'error': str(exc)}), 500
+
+
+@app.route('/api/import-historique/preview', methods=['POST'])
+def api_import_preview():
+    """Analyse le fichier uploadé et retourne un résumé SANS écrire en base.
+    Traitement 100 % éphémère : le fichier n'est jamais écrit sur disque."""
+    if 'file' not in request.files:
+        return jsonify({'error': 'Aucun fichier reçu'}), 400
+    f = request.files['file']
+    if not f.filename or not f.filename.lower().endswith(('.xlsx', '.xls')):
+        return jsonify({'error': 'Format requis : .xlsx ou .xls'}), 400
+    exercice = request.form.get('exercice', 2026, type=int)
+
+    try:
+        # Lecture en mémoire — jamais sur disque
+        file_bytes = f.stream.read()
+        result = previsualiser_fichier(file_bytes, exercice)
+        del file_bytes  # libération mémoire explicite
+        return jsonify(result)
+    except Exception as exc:
+        logger.error('Erreur preview import : %s\n%s', exc, traceback.format_exc())
+        return jsonify({'error': f'Erreur analyse : {exc}'}), 500
+
+
+@app.route('/api/import-historique', methods=['POST'])
+def api_import_historique():
+    """Import définitif des données historiques depuis un fichier Excel.
+    Le fichier est traité en mémoire pure (BytesIO) et immédiatement détruit.
+    Seules les données numériques extraites sont écrites dans la base.
+    Transactionnel : tout ou rien."""
+    if session.get('role') != 'central':
+        return jsonify({'error': 'Authentification requise (rôle central)'}), 403
+    if 'file' not in request.files:
+        return jsonify({'error': 'Aucun fichier reçu'}), 400
+    f = request.files['file']
+    if not f.filename or not f.filename.lower().endswith(('.xlsx', '.xls')):
+        return jsonify({'error': 'Format requis : .xlsx ou .xls'}), 400
+    exercice = request.form.get('exercice', 2026, type=int)
+
+    try:
+        # Le fichier n'est JAMAIS écrit sur disque — traitement pur BytesIO
+        file_bytes = f.stream.read()
+        result = importer_fichier(file_bytes, exercice)
+        del file_bytes  # destruction immédiate après extraction
+        logger.info(
+            'Import historique %s : %s — total=%s lignes',
+            exercice,
+            'OK' if result['success'] else 'ERREUR',
+            result.get('total_lignes', 0),
+        )
+        return jsonify(result), 200 if result['success'] else 422
+    except Exception as exc:
+        logger.error('Erreur import historique : %s\n%s', exc, traceback.format_exc())
+        return jsonify({'error': f'Erreur critique : {exc}', 'success': False}), 500
 
 
 # ─── API Vitrine (publique, sans auth) ──────────────────────────────
@@ -1322,19 +1457,20 @@ def api_upload_objectifs():
     if 'file' not in request.files:
         return jsonify({"error": "Aucun fichier"}), 400
     f = request.files['file']
-    if not f.filename.endswith(('.xlsx', '.xls')):
+    if not f.filename.lower().endswith(('.xlsx', '.xls')):
         return jsonify({"error": "Format Excel requis (.xlsx)"}), 400
 
+    # ── Lecture en mémoire — le fichier n'est JAMAIS écrit sur disque ──────────
+    import openpyxl
     filename = secure_filename(f.filename)
-    filepath = os.path.join(UPLOAD_FOLDER, filename)
-    f.save(filepath)
+    file_bytes = f.stream.read()
 
     # Codes DR connus (en lowercase pour comparaison)
     dr_codes_lower = {c.lower(): c for c in STRUCTURE_CW.keys()}
 
     try:
-        import openpyxl
-        wb = openpyxl.load_workbook(filepath, read_only=True)
+        wb = openpyxl.load_workbook(io.BytesIO(file_bytes), read_only=True)
+        del file_bytes  # destruction immédiate
         ws = wb.active
         db = get_db()
         count = 0

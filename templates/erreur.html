@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CAMWATER — Erreur {{ code }}</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <style>
+        body{margin:0;min-height:100svh;display:flex;align-items:center;justify-content:center;
+             background:linear-gradient(155deg,#060E1E 0%,#0D2B5E 40%,#1B53AB 80%,#5BACD8 100%);}
+        .err-box{background:rgba(255,255,255,.97);border-radius:20px;padding:48px 44px;
+                 max-width:480px;width:92%;text-align:center;
+                 box-shadow:0 24px 60px rgba(0,0,0,.28);border-top:4px solid #B91C1C;}
+        .err-code{font-size:4rem;font-weight:800;color:#B91C1C;line-height:1;margin-bottom:8px;
+                  font-family:'Raleway',sans-serif;}
+        .err-msg{font-size:1rem;font-weight:700;color:#0D2B5E;margin-bottom:12px;}
+        .err-sub{font-size:.84rem;color:#5B7399;line-height:1.65;margin-bottom:28px;}
+        .err-btn{display:inline-block;padding:12px 28px;background:#1B53AB;color:#fff;
+                 border-radius:9px;font-weight:800;font-size:.9rem;
+                 font-family:'Raleway',sans-serif;text-decoration:none;
+                 transition:background .2s;}
+        .err-btn:hover{background:#0D2B5E;}
+        .err-btn-sec{background:#fff;color:#1B53AB;border:2px solid #1B53AB;margin-left:10px;}
+        .err-btn-sec:hover{background:#EBF3FA;}
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Raleway:wght@400;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="err-box">
+        <div class="err-code">{{ code }}</div>
+        <div class="err-msg">{{ message }}</div>
+        <p class="err-sub">
+            {% if code == 404 %}La page que vous cherchez n'existe pas ou a été déplacée.
+            {% elif code == 403 %}Vous n'êtes pas autorisé à accéder à cette ressource.
+            {% elif code == 413 %}Le fichier envoyé dépasse la taille maximale autorisée (32 Mo).
+            {% else %}Une erreur est survenue côté serveur. Vos données ne sont pas affectées.{% endif %}
+        </p>
+        <a href="/" class="err-btn">⌂ Retour à l'accueil</a>
+        <a href="javascript:history.back()" class="err-btn err-btn-sec">← Page précédente</a>
+    </div>
+</body>
+</html>
