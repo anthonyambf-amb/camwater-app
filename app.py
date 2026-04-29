@@ -20,6 +20,7 @@ from monitoring import (generer_alertes, synthese_par_dr, get_params,
                         save_params, indicateurs_agence)
 from import_historique import (importer_fichier, previsualiser_fichier,
                                 generer_template_excel)
+from import_legacy import (detect_file_type, preview_legacy, import_legacy)
 
 # ─── Logging ────────────────────────────────────────────────────────
 logging.basicConfig(
@@ -335,6 +336,94 @@ def api_import_historique():
         return jsonify(result), 200 if result['success'] else 422
     except Exception as exc:
         logger.error('Erreur import historique : %s\n%s', exc, traceback.format_exc())
+        return jsonify({'error': f'Erreur critique : {exc}', 'success': False}), 500
+
+
+# ─── Import Legacy (fichiers Excel matriciels CAMWATER) ─────────────
+
+@app.route('/import-legacy')
+def page_import_legacy():
+    """Page d'import des fichiers Excel matriciels (réservé Centralisation)."""
+    if session.get('role') != 'central':
+        return redirect(url_for('central_login'))
+    return render_template('import_legacy.html', mois=MOIS, drs=list(STRUCTURE_CW.keys()))
+
+
+@app.route('/api/import-legacy/detect', methods=['POST'])
+def api_import_legacy_detect():
+    """Détecte le type de fichier (volumes_ca / encaissements / impayes) +
+    DR + année + agences trouvées. SANS écrire en base."""
+    if session.get('role') != 'central':
+        return jsonify({'error': 'Authentification requise (rôle central)'}), 403
+    if 'file' not in request.files:
+        return jsonify({'error': 'Aucun fichier reçu'}), 400
+    f = request.files['file']
+    if not f.filename or not f.filename.lower().endswith(('.xlsx', '.xls')):
+        return jsonify({'error': 'Format requis : .xlsx ou .xls'}), 400
+    try:
+        file_bytes = f.stream.read()
+        result = detect_file_type(f.filename, file_bytes)
+        return jsonify(result)
+    except Exception as exc:
+        logger.error('Erreur detect legacy : %s\n%s', exc, traceback.format_exc())
+        return jsonify({'error': f'Erreur détection : {exc}'}), 500
+
+
+@app.route('/api/import-legacy/preview', methods=['POST'])
+def api_import_legacy_preview():
+    """Aperçu : analyse le fichier sans écrire en base."""
+    if session.get('role') != 'central':
+        return jsonify({'error': 'Authentification requise (rôle central)'}), 403
+    if 'file' not in request.files:
+        return jsonify({'error': 'Aucun fichier reçu'}), 400
+    f = request.files['file']
+    if not f.filename or not f.filename.lower().endswith(('.xlsx', '.xls')):
+        return jsonify({'error': 'Format requis : .xlsx ou .xls'}), 400
+    file_type = request.form.get('file_type', '').strip()
+    exercice = request.form.get('exercice', 2026, type=int)
+    dr_code = request.form.get('dr_code', '').strip() or None
+    if file_type not in ('volumes_ca', 'encaissements', 'impayes'):
+        return jsonify({'error': 'Type de fichier invalide'}), 400
+    try:
+        file_bytes = f.stream.read()
+        result = preview_legacy(file_bytes, file_type, exercice, dr_code=dr_code)
+        return jsonify(result)
+    except Exception as exc:
+        logger.error('Erreur preview legacy : %s\n%s', exc, traceback.format_exc())
+        return jsonify({'error': f'Erreur analyse : {exc}'}), 500
+
+
+@app.route('/api/import-legacy/commit', methods=['POST'])
+def api_import_legacy_commit():
+    """Import effectif après confirmation utilisateur."""
+    if session.get('role') != 'central':
+        return jsonify({'error': 'Authentification requise (rôle central)'}), 403
+    if 'file' not in request.files:
+        return jsonify({'error': 'Aucun fichier reçu'}), 400
+    f = request.files['file']
+    if not f.filename or not f.filename.lower().endswith(('.xlsx', '.xls')):
+        return jsonify({'error': 'Format requis : .xlsx ou .xls'}), 400
+    file_type = request.form.get('file_type', '').strip()
+    exercice = request.form.get('exercice', 2026, type=int)
+    dr_code = request.form.get('dr_code', '').strip() or None
+    mois_csv = request.form.get('mois', '').strip()
+    if file_type not in ('volumes_ca', 'encaissements', 'impayes'):
+        return jsonify({'error': 'Type de fichier invalide'}), 400
+    try:
+        mois_to_keep = [int(x) for x in mois_csv.split(',') if x.strip().isdigit()] if mois_csv else None
+    except ValueError:
+        return jsonify({'error': 'Liste de mois invalide'}), 400
+    try:
+        file_bytes = f.stream.read()
+        result = import_legacy(file_bytes, file_type, exercice,
+                                dr_code=dr_code, mois_to_keep=mois_to_keep)
+        logger.info('Import legacy %s/%s/%s : %s — %s lignes',
+                    exercice, dr_code or 'ALL', file_type,
+                    'OK' if result.get('success') else 'ERR',
+                    result.get('total_lignes', 0))
+        return jsonify(result), 200 if result.get('success') else 422
+    except Exception as exc:
+        logger.error('Erreur commit legacy : %s\n%s', exc, traceback.format_exc())
         return jsonify({'error': f'Erreur critique : {exc}', 'success': False}), 500
 
 

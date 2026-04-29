@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CAMWATER — Import Excel historique</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <style>
+        body { font-family: 'DM Sans', sans-serif; background: #f4f7fb; margin: 0; }
+        .il-container { max-width: 1100px; margin: 24px auto; padding: 0 16px; }
+        .il-header {
+            background: #133672; color: #fff; padding: 18px 22px; border-radius: 10px;
+            display: flex; justify-content: space-between; align-items: center;
+            box-shadow: 0 4px 12px rgba(13, 43, 94, 0.15);
+        }
+        .il-header h1 { margin: 0; font-size: 1.4rem; font-weight: 700; }
+        .il-header p { margin: 4px 0 0 0; font-size: 0.85rem; opacity: 0.85; }
+        .il-back {
+            color: #fff; text-decoration: none; padding: 7px 14px;
+            background: rgba(255,255,255,0.15); border-radius: 5px; font-size: 0.85rem;
+        }
+        .il-back:hover { background: rgba(255,255,255,0.25); }
+
+        .il-tabs { display: flex; gap: 4px; margin: 22px 0 0 0; }
+        .il-tab {
+            flex: 1; padding: 14px 12px; background: #e6ecf5; color: #5b7399;
+            border: none; cursor: pointer; font-size: 0.95rem; font-weight: 600;
+            border-radius: 8px 8px 0 0; transition: all 0.15s;
+            border-top: 3px solid transparent;
+        }
+        .il-tab:hover { background: #d0dbed; color: #133672; }
+        .il-tab.active {
+            background: #fff; color: #133672; border-top: 3px solid #1B53AB;
+            box-shadow: 0 -2px 6px rgba(0,0,0,0.04);
+        }
+        .il-tab .il-num {
+            display: inline-block; width: 22px; height: 22px; line-height: 22px;
+            background: #1B53AB; color: #fff; border-radius: 50%; margin-right: 6px;
+            font-weight: 700;
+        }
+
+        .il-panel {
+            background: #fff; padding: 24px; border-radius: 0 0 10px 10px;
+            box-shadow: 0 2px 10px rgba(13, 43, 94, 0.06);
+        }
+        .il-panel h2 { margin-top: 0; color: #0D2B5E; font-size: 1.15rem; }
+
+        .il-form-row {
+            display: flex; flex-wrap: wrap; gap: 12px; align-items: end;
+            margin: 16px 0;
+        }
+        .il-form-row label {
+            display: flex; flex-direction: column; gap: 4px;
+            font-size: 0.85rem; color: #5b7399; font-weight: 600;
+        }
+        .il-form-row select, .il-form-row input[type=file] {
+            padding: 8px 10px; border: 1px solid #c8d9ee; border-radius: 5px;
+            font-size: 0.9rem; background: #fff; min-width: 140px;
+        }
+
+        .il-btn {
+            background: #1B53AB; color: #fff; border: none; padding: 10px 18px;
+            border-radius: 6px; cursor: pointer; font-size: 0.92rem; font-weight: 600;
+            transition: all 0.15s;
+        }
+        .il-btn:hover { background: #133672; transform: translateY(-1px); }
+        .il-btn:disabled { background: #c8d9ee; cursor: not-allowed; transform: none; }
+        .il-btn-success { background: #219653; }
+        .il-btn-success:hover { background: #1d8047; }
+        .il-btn-secondary { background: #6b7c93; }
+        .il-btn-secondary:hover { background: #556475; }
+
+        .il-detection {
+            background: #f0f7ff; border-left: 4px solid #1B53AB; padding: 14px 16px;
+            border-radius: 0 6px 6px 0; margin: 16px 0; font-size: 0.9rem;
+        }
+        .il-detection h3 { margin: 0 0 8px 0; color: #0D2B5E; font-size: 0.95rem; }
+        .il-detection .il-row { display: flex; gap: 14px; flex-wrap: wrap; }
+        .il-detection .il-row span { font-weight: 600; color: #133672; }
+        .il-detection .il-tag {
+            display: inline-block; padding: 2px 8px; background: #fff;
+            border: 1px solid #c8d9ee; border-radius: 12px; font-size: 0.78rem; margin: 2px;
+        }
+
+        .il-mois-grid {
+            display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px;
+            margin: 14px 0;
+        }
+        .il-mois-grid label {
+            display: flex; align-items: center; gap: 6px; padding: 6px 10px;
+            background: #f4f7fb; border-radius: 5px; cursor: pointer;
+            border: 1px solid transparent; font-size: 0.86rem;
+        }
+        .il-mois-grid label:hover { background: #e6ecf5; }
+        .il-mois-grid label.checked { background: #d4ecda; border-color: #219653; }
+        .il-mois-grid input { margin: 0; }
+
+        .il-summary {
+            background: #fff8e6; border-left: 4px solid #d68910; padding: 14px 16px;
+            border-radius: 0 6px 6px 0; margin: 14px 0; font-size: 0.88rem;
+        }
+        .il-summary table { width: 100%; border-collapse: collapse; margin-top: 8px; }
+        .il-summary td, .il-summary th {
+            padding: 6px 10px; text-align: left; border-bottom: 1px solid #f0e0b8;
+            font-size: 0.85rem;
+        }
+        .il-summary th { background: #fff4d4; color: #875211; font-weight: 700; }
+
+        .il-warnings { background: #fff3e0; border-left: 4px solid #f59e0b; }
+        .il-errors { background: #fee; border-left: 4px solid #b91c1c; color: #7a1010; }
+        .il-success { background: #e6f7ec; border-left: 4px solid #219653; color: #0d5c2e; }
+
+        .il-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 18px; }
+        .il-status { padding: 10px 14px; border-radius: 6px; font-size: 0.88rem; margin: 12px 0; }
+        .il-status.loading { background: #f0f7ff; color: #0d2b5e; }
+
+        .il-help {
+            font-size: 0.83rem; color: #5b7399; line-height: 1.55;
+            background: #f8fbff; border: 1px dashed #c8d9ee; padding: 12px 14px;
+            border-radius: 6px; margin-bottom: 16px;
+        }
+        .il-help strong { color: #133672; }
+        .il-help code {
+            background: #fff; padding: 1px 6px; border-radius: 3px;
+            font-size: 0.82rem; border: 1px solid #c8d9ee;
+        }
+    </style>
+</head>
+<body>
+    <div class="il-container">
+        <div class="il-header">
+            <div>
+                <h1>📥 Import Excel — Historique CAMWATER</h1>
+                <p>Centralisation : intégration des fichiers métier (volumes, CA, encaissements, impayés).</p>
+            </div>
+            <a href="/dashboard" class="il-back">← Retour tableau de bord</a>
+        </div>
+
+        <div class="il-tabs">
+            <button class="il-tab active" data-tab="volumes_ca" onclick="switchTab('volumes_ca')">
+                <span class="il-num">1</span> Volumes &amp; Chiffre d'affaires
+            </button>
+            <button class="il-tab" data-tab="encaissements" onclick="switchTab('encaissements')">
+                <span class="il-num">2</span> Encaissements
+            </button>
+            <button class="il-tab" data-tab="impayes" onclick="switchTab('impayes')">
+                <span class="il-num">3</span> Impayés
+            </button>
+        </div>
+
+        <div class="il-panel">
+            <div id="il-help-volumes_ca" class="il-help">
+                <strong>Onglet 1 — Volumes &amp; CA.</strong>
+                Importez les fichiers du type <code>CA &lt;DR&gt; &lt;année&gt;.xls</code>
+                (par exemple <code>CA DRDA 2025.xls</code>). Chaque feuille agence (Koumassi, Deido…) est
+                lue pour extraire les volumes en m³ ; les feuilles suffixées « 1 »
+                (Koumassi1, Deido1…) fournissent les compléments CA spécifiques (locations
+                de compteurs, etc.).
+            </div>
+            <div id="il-help-encaissements" class="il-help" style="display:none;">
+                <strong>Onglet 2 — Encaissements.</strong>
+                Fichiers du type <code>encais &lt;DR&gt; &lt;année&gt;.xls</code>.
+                Chaque feuille agence est lue pour extraire les rubriques d'encaissement
+                (Part. 1 &amp; 2, Enc. Électroniques, Chèques, etc.) par mois.
+            </div>
+            <div id="il-help-impayes" class="il-help" style="display:none;">
+                <strong>Onglet 3 — Impayés.</strong>
+                Fichier unique de type <code>SSP IMPAYÉS &lt;année&gt;.xls</code> contenant
+                une feuille par DR avec des blocs mensuels (Particuliers actifs, GCO, Résiliés,
+                Communes…).
+            </div>
+
+            <h2 id="il-panel-title">📤 Étape 1 — Téléverser le fichier</h2>
+
+            <div class="il-form-row">
+                <label>
+                    Année (exercice)
+                    <select id="il-exercice">
+                        <option value="2022">2022</option>
+                        <option value="2023">2023</option>
+                        <option value="2024">2024</option>
+                        <option value="2025" selected>2025</option>
+                        <option value="2026">2026</option>
+                    </select>
+                </label>
+                <label>
+                    Direction Régionale
+                    <select id="il-dr">
+                        <option value="">Auto-détecter depuis le fichier</option>
+                        {% for dr in drs %}
+                        <option value="{{ dr }}">{{ dr }}</option>
+                        {% endfor %}
+                    </select>
+                </label>
+                <label>
+                    Fichier Excel (.xls / .xlsx)
+                    <input type="file" id="il-file" accept=".xls,.xlsx">
+                </label>
+                <button class="il-btn" id="il-btn-upload" onclick="uploadFile()">Analyser</button>
+            </div>
+
+            <div id="il-status"></div>
+            <div id="il-detection" style="display:none;"></div>
+            <div id="il-mois-section" style="display:none;">
+                <h2>📅 Étape 2 — Choisir les mois à importer</h2>
+                <div class="il-form-row">
+                    <button class="il-btn-secondary il-btn" onclick="toggleAllMois(true)">Tout cocher</button>
+                    <button class="il-btn-secondary il-btn" onclick="toggleAllMois(false)">Tout décocher</button>
+                </div>
+                <div class="il-mois-grid" id="il-mois-grid"></div>
+
+                <h2>✅ Étape 3 — Confirmer l'import</h2>
+                <div id="il-summary"></div>
+                <div class="il-actions">
+                    <button class="il-btn il-btn-secondary" onclick="resetForm()">Annuler</button>
+                    <button class="il-btn il-btn-success" id="il-btn-commit" onclick="commitImport()">
+                        🚀 Importer en base
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    const MOIS = [{% for i in range(1, 13) %}'{{ mois[i-1] }}'{% if i < 12 %}, {% endif %}{% endfor %}];
+    let currentTab = 'volumes_ca';
+    let currentFile = null;
+    let currentDetection = null;
+    let currentPreview = null;
+
+    function switchTab(tab) {
+        currentTab = tab;
+        document.querySelectorAll('.il-tab').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
+        ['volumes_ca','encaissements','impayes'].forEach(t => {
+            document.getElementById('il-help-' + t).style.display = (t === tab ? 'block' : 'none');
+        });
+        resetForm();
+    }
+
+    function resetForm() {
+        document.getElementById('il-file').value = '';
+        document.getElementById('il-detection').style.display = 'none';
+        document.getElementById('il-mois-section').style.display = 'none';
+        document.getElementById('il-status').innerHTML = '';
+        currentFile = null;
+        currentDetection = null;
+        currentPreview = null;
+    }
+
+    function setStatus(html, cls) {
+        const el = document.getElementById('il-status');
+        el.className = 'il-status ' + (cls || '');
+        el.innerHTML = html;
+    }
+
+    async function uploadFile() {
+        const fileInput = document.getElementById('il-file');
+        if (!fileInput.files.length) {
+            setStatus('⚠️ Sélectionnez un fichier .xls ou .xlsx', 'il-warnings');
+            return;
+        }
+        const f = fileInput.files[0];
+        currentFile = f;
+        setStatus('⏳ Analyse du fichier en cours...', 'loading');
+        document.getElementById('il-btn-upload').disabled = true;
+
+        // 1) Détection
+        const fdDetect = new FormData();
+        fdDetect.append('file', f);
+        let detectRes;
+        try {
+            const r = await fetch('/api/import-legacy/detect', {method:'POST', body: fdDetect});
+            detectRes = await r.json();
+        } catch (e) {
+            setStatus('❌ Erreur réseau : ' + e, 'il-errors');
+            document.getElementById('il-btn-upload').disabled = false;
+            return;
+        }
+        if (detectRes.error) {
+            setStatus('❌ ' + detectRes.error, 'il-errors');
+            document.getElementById('il-btn-upload').disabled = false;
+            return;
+        }
+        currentDetection = detectRes;
+
+        // Vérifier cohérence type
+        if (detectRes.type !== currentTab && detectRes.type !== 'unknown') {
+            setStatus(
+                `⚠️ Le fichier semble être de type <strong>${detectRes.type}</strong> mais vous êtes
+                 sur l'onglet <strong>${currentTab}</strong>. Changez d'onglet ou de fichier.`,
+                'il-warnings'
+            );
+            document.getElementById('il-btn-upload').disabled = false;
+            return;
+        }
+
+        // Override exercice/DR si détectés
+        if (detectRes.annee) document.getElementById('il-exercice').value = String(detectRes.annee);
+        if (detectRes.dr && !document.getElementById('il-dr').value) {
+            document.getElementById('il-dr').value = detectRes.dr;
+        }
+
+        // 2) Preview
+        const fdPrev = new FormData();
+        fdPrev.append('file', f);
+        fdPrev.append('file_type', currentTab);
+        fdPrev.append('exercice', document.getElementById('il-exercice').value);
+        const drVal = document.getElementById('il-dr').value;
+        if (drVal) fdPrev.append('dr_code', drVal);
+
+        let previewRes;
+        try {
+            const r = await fetch('/api/import-legacy/preview', {method:'POST', body: fdPrev});
+            previewRes = await r.json();
+        } catch (e) {
+            setStatus('❌ Erreur réseau : ' + e, 'il-errors');
+            document.getElementById('il-btn-upload').disabled = false;
+            return;
+        }
+        if (previewRes.error || !previewRes.success) {
+            setStatus('❌ ' + (previewRes.error || 'Analyse échouée'), 'il-errors');
+            document.getElementById('il-btn-upload').disabled = false;
+            return;
+        }
+        currentPreview = previewRes;
+
+        renderDetection(detectRes, previewRes);
+        renderMoisGrid(previewRes.mois_detectes || []);
+        renderSummary();
+        document.getElementById('il-detection').style.display = 'block';
+        document.getElementById('il-mois-section').style.display = 'block';
+        setStatus(`✅ Fichier analysé : ${previewRes.nb_cellules_estime} cellule(s) prête(s) à l'import`, 'il-success');
+        document.getElementById('il-btn-upload').disabled = false;
+    }
+
+    function renderDetection(d, p) {
+        const agences = (p.agences_traitees || []).map(a => a.feuille).filter((v,i,a) => a.indexOf(v) === i);
+        const inconnues = p.agences_inconnues || [];
+        const html = `
+          <div class="il-detection">
+            <h3>📑 Fichier reconnu</h3>
+            <div class="il-row">
+              <div>Type : <span>${d.type || '—'}</span></div>
+              <div>DR : <span>${d.dr || p.dr || '(toutes)'}</span></div>
+              <div>Année : <span>${d.annee || p.exercice}</span></div>
+              <div>Agences trouvées : <span>${agences.length}</span></div>
+              <div>Mois disponibles : <span>${(p.mois_detectes || []).map(m => MOIS[m-1]).join(', ') || '—'}</span></div>
+            </div>
+            <div style="margin-top:8px;">
+              ${agences.map(a => `<span class="il-tag">${a}</span>`).join('')}
+              ${inconnues.length ? `<div style="color:#b91c1c;margin-top:6px;">⚠️ Feuilles non reconnues : ${inconnues.join(', ')}</div>` : ''}
+            </div>
+          </div>
+        `;
+        document.getElementById('il-detection').innerHTML = html;
+    }
+
+    function renderMoisGrid(moisList) {
+        const grid = document.getElementById('il-mois-grid');
+        grid.innerHTML = '';
+        for (let m = 1; m <= 12; m++) {
+            const present = moisList.includes(m);
+            const lab = document.createElement('label');
+            lab.className = present ? 'checked' : '';
+            lab.innerHTML = `
+              <input type="checkbox" value="${m}" ${present ? 'checked' : ''} ${present ? '' : 'disabled'}
+                     onchange="this.parentElement.classList.toggle('checked', this.checked); renderSummary();">
+              ${MOIS[m-1]}`;
+            grid.appendChild(lab);
+        }
+    }
+
+    function toggleAllMois(state) {
+        document.querySelectorAll('#il-mois-grid input:not([disabled])').forEach(cb => {
+            cb.checked = state;
+            cb.parentElement.classList.toggle('checked', state);
+        });
+        renderSummary();
+    }
+
+    function renderSummary() {
+        if (!currentPreview) return;
+        const moisSelected = Array.from(document.querySelectorAll('#il-mois-grid input:checked'))
+                                  .map(cb => parseInt(cb.value, 10));
+        const moisAvailable = currentPreview.mois_detectes || [];
+        const moisActifs = moisSelected.filter(m => moisAvailable.includes(m));
+
+        const sheets = currentPreview.agences_traitees || [];
+        const totalCells = sheets.reduce((acc, s) => acc + (s.lignes_data || s.nb_champs || 0), 0);
+        const cellsToWrite = Math.round(totalCells * (moisActifs.length / Math.max(moisAvailable.length, 1)));
+
+        const tbl = sheets.map(s => `
+          <tr>
+            <td>${s.feuille}</td>
+            <td>${s.kind}</td>
+            <td>${s.rubriques || (s.mois_couverts || []).length}</td>
+            <td>${s.lignes_data || s.nb_champs || 0}</td>
+          </tr>
+        `).join('');
+
+        document.getElementById('il-summary').innerHTML = `
+          <div class="il-summary">
+            <strong>Récapitulatif</strong> — ${moisActifs.length} mois × ${sheets.length} feuilles ≈
+            <strong>${cellsToWrite}</strong> cellule(s) à écrire en base.
+            <table>
+              <tr><th>Feuille</th><th>Type</th><th>Rubriques</th><th>Cellules totales</th></tr>
+              ${tbl}
+            </table>
+          </div>
+        `;
+    }
+
+    async function commitImport() {
+        if (!currentFile || !currentPreview) return;
+        const moisSelected = Array.from(document.querySelectorAll('#il-mois-grid input:checked'))
+                                  .map(cb => cb.value).join(',');
+        if (!moisSelected) {
+            alert('Sélectionnez au moins un mois.');
+            return;
+        }
+        if (!confirm(
+            `Confirmez l'import en base de données ?\n\n` +
+            `Année : ${document.getElementById('il-exercice').value}\n` +
+            `DR : ${document.getElementById('il-dr').value || '(auto)'}\n` +
+            `Mois : ${moisSelected}\n\n` +
+            `Cette action est idempotente : un re-import écrasera proprement les données existantes.`
+        )) return;
+
+        const fd = new FormData();
+        fd.append('file', currentFile);
+        fd.append('file_type', currentTab);
+        fd.append('exercice', document.getElementById('il-exercice').value);
+        const drVal = document.getElementById('il-dr').value;
+        if (drVal) fd.append('dr_code', drVal);
+        fd.append('mois', moisSelected);
+
+        setStatus('⏳ Import en cours — écriture en base...', 'loading');
+        document.getElementById('il-btn-commit').disabled = true;
+        try {
+            const r = await fetch('/api/import-legacy/commit', {method:'POST', body: fd});
+            const res = await r.json();
+            if (res.success) {
+                setStatus(`✅ ${res.message}`, 'il-success');
+                document.getElementById('il-mois-section').style.display = 'none';
+                document.getElementById('il-detection').style.display = 'none';
+            } else {
+                setStatus('❌ ' + (res.error || 'Échec de l\'import'), 'il-errors');
+            }
+        } catch (e) {
+            setStatus('❌ Erreur réseau : ' + e, 'il-errors');
+        }
+        document.getElementById('il-btn-commit').disabled = false;
+    }
+    </script>
+</body>
+</html>
